@@ -563,7 +563,7 @@ export default function ForensicsTab({ forensicsData, threats, campaigns, agents
                       return (
                         <tr key={sig.id || idx} className="hover:bg-[#1A2542]/45 transition">
                           <td className="py-3 px-3">
-                            <span className="text-slate-200 font-bold block">{sig.agentName || sig.deviceId}</span>
+                            <span className="text-slate-200 font-bold block">{sig.deviceId}</span>
                             <span className="text-[10px] text-[#3B82F6] block">{sig.location}</span>
                           </td>
                           <td className="py-3 px-3">
@@ -1191,7 +1191,7 @@ export default function ForensicsTab({ forensicsData, threats, campaigns, agents
                   <tbody>
                     {relatedSignals.map((rel, rIdx) => (
                       <tr key={rel.id || rIdx} className="border-b hover:bg-slate-50">
-                        <td className="py-2 px-2 border-r font-bold text-slate-700">{rel.agentName || rel.deviceId}</td>
+                        <td className="py-2 px-2 border-r font-bold text-slate-700">{rel.deviceId}</td>
                         <td className="py-2 px-2 border-r">{rel.location}</td>
                         <td className="py-2 px-2 border-r italic text-slate-600 text-[9px] font-sans max-w-xs">&ldquo;{rel.evidenceText}&rdquo;</td>
                         <td className="py-2 px-2 text-slate-500">{new Date(rel.timestamp).toLocaleString("fr-FR")}</td>

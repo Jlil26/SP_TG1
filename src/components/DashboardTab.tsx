@@ -195,6 +195,38 @@ export default function DashboardTab({
   return (
     <div className="space-y-6">
       
+      {/* Premium DriveNets-inspired Royal Blue Cyber Hero Banner */}
+      <div className="relative bg-gradient-to-r from-[#0F296D] via-[#1C4ED8] to-[#0D1F4D] border border-blue-500/20 shadow-xl rounded-2xl p-6 md:p-8 text-white overflow-hidden select-none">
+        {/* Subtle decorative security grid background inside hero */}
+        <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none"></div>
+        <div className="absolute -top-12 -left-12 w-48 h-48 bg-cyan-400/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-blue-400/15 rounded-full blur-3xl pointer-events-none"></div>
+
+        {/* Vector custom vertical glowing bars representing network stream intelligence - DIRECTLY matches the DriveNets design */}
+        <div className="absolute right-0 bottom-0 top-0 w-2/5 hidden md:flex items-end justify-between px-10 pb-0 opacity-90 select-none pointer-events-none gap-2">
+          <div className="w-4 bg-gradient-to-t from-[#2563EB]/40 to-[#06B6D4] rounded-t-md animate-pulse" style={{ height: '35%', animationDuration: '3s' }}></div>
+          <div className="w-4 bg-gradient-to-t from-[#2563EB]/50 to-white rounded-t-md animate-pulse" style={{ height: '60%', animationDuration: '4.5s' }}></div>
+          <div className="w-4 bg-gradient-to-t from-[#2563EB] to-[#06B6D4] rounded-t-md" style={{ height: '85%' }}></div>
+          <div className="w-4 bg-gradient-to-t from-[#2563EB]/30 to-white rounded-t-md animate-pulse" style={{ height: '45%', animationDuration: '3.5s' }}></div>
+          <div className="w-4 bg-gradient-to-t from-[#06B6D4] to-white rounded-t-md" style={{ height: '95%' }}></div>
+          <div className="w-4 bg-gradient-to-t from-[#2563EB]/60 to-[#06B6D4] rounded-t-md animate-pulse" style={{ height: '70%', animationDuration: '5s' }}></div>
+          <div className="w-4 bg-gradient-to-t from-[#2563EB]/40 to-white rounded-t-md" style={{ height: '50%' }}></div>
+        </div>
+
+        <div className="relative z-10 max-w-xl space-y-3">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-cyan-500/20 border border-cyan-400/30 rounded-full text-xs font-mono font-bold text-cyan-300 uppercase tracking-widest leading-none">
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-300 animate-ping"></span>
+            SP SENTINEL NETWORK COGNITIVE
+          </div>
+          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight font-display text-white">
+            Supervision Bivalente &amp; Renseignements Cyber en Temps Réel
+          </h1>
+          <p className="text-sm text-blue-100 font-sans leading-relaxed max-w-lg opacity-90">
+            Plateforme souveraine d'échange de signatures de menaces (COI) et de détection automatique d'ingénierie sociale par modèle IA cognitif pour la République du Togo.
+          </p>
+        </div>
+      </div>
+
       {/* 0. Real-time synchronised TOGO Network Time zone bar */}
       <div className="bg-[#121A2F] border border-white/5 rounded-xl px-5 py-3 flex flex-col sm:flex-row justify-between items-center gap-3 shadow-md">
         <div className="flex items-center gap-2">

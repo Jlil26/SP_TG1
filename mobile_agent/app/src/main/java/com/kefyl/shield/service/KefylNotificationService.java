@@ -75,8 +75,20 @@ public class KefylNotificationService extends NotificationListenerService {
         Bundle extras = notification.extras;
         if (extras == null) return;
 
-        final String title = extras.getString(Notification.EXTRA_TITLE, ""); // Nom ou numéro de l'expéditeur
-        final String text = extras.getCharSequence(Notification.EXTRA_TEXT, "").toString(); // Contenu du message
+        CharSequence titleCharSeq = extras.getCharSequence(Notification.EXTRA_TITLE);
+        final String title = titleCharSeq != null ? titleCharSeq.toString().trim() : "";
+
+        CharSequence textCharSeq = extras.getCharSequence(Notification.EXTRA_TEXT);
+        if (textCharSeq == null) {
+            textCharSeq = extras.getCharSequence(Notification.EXTRA_BIG_TEXT);
+        }
+        if (textCharSeq == null) {
+            textCharSeq = extras.getCharSequence(Notification.EXTRA_INFO_TEXT);
+        }
+        if (textCharSeq == null) {
+            textCharSeq = extras.getCharSequence(Notification.EXTRA_SUB_TEXT);
+        }
+        final String text = textCharSeq != null ? textCharSeq.toString().trim() : "";
 
         if (text.isEmpty() || title.isEmpty()) return;
 
@@ -94,6 +106,14 @@ public class KefylNotificationService extends NotificationListenerService {
                 if (contactPhone.isEmpty()) {
                     contactPhone = "UNKNOWN_SENDER";
                 }
+            }
+
+            // --- FILTRAGE SOURCE DE CONFIANCE (TRUSTED SOURCES / GROUPS) ---
+            SharedPreferences prefs = getSharedPreferences("kefyl_prefs", MODE_PRIVATE);
+            java.util.Set<String> trustedSources = prefs.getStringSet("trusted_sources", new java.util.HashSet<>());
+            if (trustedSources.contains(title) || trustedSources.contains(contactPhone)) {
+                Log.i(TAG, "🛡️ Source de confiance détectée (" + title + " / " + contactPhone + "). On ignore l'analyse de sécurité.");
+                return;
             }
 
             // Si c'est un expéditeur inconnu (ou pas dans le carnet), on initialise son suivi dans Room
@@ -201,20 +221,12 @@ public class KefylNotificationService extends NotificationListenerService {
                 }
             }
         } catch (SecurityException e) {
-            Log.w(TAG, "Permission READ_CONTACTS manquante. Analyse heuristique.");
+            Log.w(TAG, "Permission READ_CONTACTS manquante. Analyse de sécurité active par défaut.");
         }
         
-        // Si la permission READ_CONTACTS n'est pas accordée ou lookup vide, on filtre les shortcodes connus
-        String lower = titleOrPhone.toLowerCase();
-        if (lower.contains("total") || lower.contains("moov") || lower.contains("tmoney") 
-                || lower.contains("flooz") || lower.contains("ceet") || lower.contains("otr") 
-                || lower.contains("telecom") || lower.contains("unite") || lower.contains("gagn")
-                || lower.contains("anniv") || lower.contains("promo")) {
-            return false; // Traiter comme expéditeur inconnu/suspect !
-        }
-        
-        // En cas d'erreur ou d'absence de permission, si le nom contient uniquement des lettres, on déduit que c'est un contact enregistré
-        return titleOrPhone.replaceAll("\\s+", "").matches("^[a-zA-ZáàâäãåçéèêëíìîïñóòôöõúùûüýÿÆæŒœ]+$");
+        // Par défaut, si l'expéditeur n'est pas explicitement trouvé dans l'annuaire (ou permission manquante),
+        // nous le traitons comme inconnu pour appliquer l'analyse de vulnérabilité heuristique fine (NLP/Social Eng).
+        return false;
     }
 
     private String getCleanedPhoneNumber(String title) {
@@ -238,11 +250,11 @@ public class KefylNotificationService extends NotificationListenerService {
                 this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
-        String alertMessage = "Menace active identifiée ! Source : " + signature.getPattern() + "\n(" + signature.getDetails() + ")";
+        String alertMessage = "⚠️ Ce message cherche à vous voler votre argent (Flooz ou Tmoney) ! Ne cliquez sur aucun lien !";
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.stat_notify_error)
-                .setContentTitle("🚨 KÉFYL : BLOCK ROUGE CRITIQUE")
+                .setContentTitle("🚨 DANGER : ARNAQUE FLOOZ/TMONEY BLOQUÉE")
                 .setContentText(alertMessage)
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(alertMessage))
                 .setPriority(NotificationCompat.PRIORITY_MAX)
@@ -252,6 +264,7 @@ public class KefylNotificationService extends NotificationListenerService {
                 .setContentIntent(pendingIntent);
 
         notificationManager.notify((int) System.currentTimeMillis(), builder.build());
+        launchInAppAlert(sender, messageText, "CRITICAL", "Signature identifiée : " + signature.getPattern(), signature.getDetails());
     }
 
     /**
@@ -266,18 +279,28 @@ public class KefylNotificationService extends NotificationListenerService {
                 this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
-        StringBuilder explanation = new StringBuilder("Contenu suspect : ce message de ")
+        StringBuilder explanation = new StringBuilder("Ce message suspect de ")
                 .append(sender)
-                .append(" utilise des techniques de manipulation courantes :\n");
+                .append(" présente des pièges d'arnaques ;\n");
         for (String lever : detectedLevers) {
-            explanation.append("- ").append(lever).append("\n");
+            String simpleLever = lever;
+            if ("Urgency".equals(lever)) {
+                simpleLever = "Fausse urgence (Pression)";
+            } else if ("Scarcity".equals(lever)) {
+                simpleLever = "Faux gains / Cadeau gratuit";
+            } else if ("Authority".equals(lever)) {
+                simpleLever = "Fausse identité / CEET / Moov / Togocom";
+            } else if ("Fear".equals(lever)) {
+                simpleLever = "Tentative d'intimidation";
+            }
+            explanation.append("- ").append(simpleLever).append("\n");
         }
-        explanation.append("Restez vigilants, ne transmettez aucun code Flooz / Tmoney.");
+        explanation.append("Soyez prudents : ne donnez jamais vos codes Flooz ou Tmoney !");
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.stat_sys_warning)
-                .setContentTitle("⚠️ KÉFYL : ALERTE VIGILANCE JAUNE")
-                .setContentText("Tentative de manipulation psychologique suspectée.")
+                .setContentTitle("⚠️ ATTENTION : MESSAGE SUSPECT / DOUTEUX")
+                .setContentText("Ce message ressemble à une technique d'arnaque.")
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(explanation.toString()))
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setColor(0xFFFBBF24) // Couleur jaune/orange ambrée
@@ -285,6 +308,7 @@ public class KefylNotificationService extends NotificationListenerService {
                 .setContentIntent(pendingIntent);
 
         notificationManager.notify((int) System.currentTimeMillis(), builder.build());
+        launchInAppAlert(sender, messageText, "VIGILANCE", "Manipulation psychologique suspectée", String.join(", ", detectedLevers));
     }
 
     private void incrementBlockedThreatsCount() {
@@ -349,6 +373,32 @@ public class KefylNotificationService extends NotificationListenerService {
             if (manager != null) {
                 manager.createNotificationChannel(channel);
             }
+        }
+    }
+
+    private void launchInAppAlert(String sender, String text, String type, String details, String extraLevers) {
+        // 1. Envoyer un Broadcast avec tous les détails de la menace
+        Intent broadcastIntent = new Intent("com.kefyl.shield.NEW_THREAT");
+        broadcastIntent.putExtra("sender", sender);
+        broadcastIntent.putExtra("message_text", text);
+        broadcastIntent.putExtra("threat_type", type);
+        broadcastIntent.putExtra("details", details);
+        broadcastIntent.putExtra("extra_levers", extraLevers);
+        sendBroadcast(broadcastIntent);
+
+        // 2. Tenter de lancer MainActivity pour afficher la fenêtre d'alerte instantanément
+        try {
+            Intent mainIntent = new Intent(this, MainActivity.class);
+            mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            mainIntent.putExtra("show_threat_dialog", true);
+            mainIntent.putExtra("sender", sender);
+            mainIntent.putExtra("message_text", text);
+            mainIntent.putExtra("threat_type", type);
+            mainIntent.putExtra("details", details);
+            mainIntent.putExtra("extra_levers", extraLevers);
+            startActivity(mainIntent);
+        } catch (Exception e) {
+            Log.e(TAG, "Impossible de démarrer l'activité d'alerte de cyber-fraude depuis l'arrière-plan.", e);
         }
     }
 

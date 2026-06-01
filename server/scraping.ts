@@ -2,7 +2,7 @@ import { analyzeScrapedArticle, ScraperAnalysisResult } from "./ai";
 
 export interface ScrapedArticle {
   id: string;
-  source: "CERT.TG" | "ANCY.GOUV.TG" | "CDA.TG";
+  source: "CERT.TG" | "ANCY.GOUV.TG";
   sourceUrl: string;
   title: string;
   date: string;
@@ -52,26 +52,6 @@ const mockScrapedDatabase: ScrapedArticle[] = [
     date: "2026-05-18T10:00:00Z",
     snippet: "Le Directeur Général de l'ANCY rappelle les directives pour sécuriser les messageries professionnelles de l'État togolais face au phishing régulier.",
     fullText: "L'ancy.gouv.tg publie de nouvelles consignes d'administration pour éliminer l'intrusion par usurpation d'identité sur les serveurs institutionnels togolais. Les attaques s'illustrent par des courriels piégés prétendant provenir de l'administration publique togolaise, redirigeant vers des formulaires d'enquête extorquant des numéros de téléphone et des pièces nationales d'identité.",
-    processed: false
-  },
-  {
-    id: "sc-005",
-    source: "CDA.TG",
-    sourceUrl: "https://cda.tg/alertes/fausses-loteries-whatsapp",
-    title: "ALERTE SURVEILLANCE : Campagnes virales de fausses cagnottes sur WhatsApp",
-    date: "2026-05-24T12:00:00Z",
-    snippet: "La Commission de Défense Cyber (CDA) signale une diffusion virale de liens de loteries usurpant de grandes marques de Lomé (Total, Togocom, Moov) promettant des primes de 100.000F.",
-    fullText: "La Cellule d'Analyse Cyber de la CDA Togo a intercepté une vague de messages viraux sur WhatsApp. Les fraudeurs incitent les utilisateurs à cliquer sur des liens suspects comme 'total-recompense-togo.xyz' ou 'moov-gain-gratuit.cc' pour participer à un tirage au sort des 60 ans d'existence des marques. Après avoir cliqué, les utilisateurs doivent partager l'arnaque à 15 contacts WhatsApp pour recevoir leur prix fictif. Si vous les recevez, supprimez-le immédiatement.",
-    processed: false
-  },
-  {
-    id: "sc-006",
-    source: "CDA.TG",
-    sourceUrl: "https://cda.tg/actualites/piratage-comptes-whatsapp-togo",
-    title: "CYBERVIGILANCE : Vols de comptes WhatsApp via codes de vérification SMS",
-    date: "2026-05-25T15:30:00Z",
-    snippet: "La CDA met en garde contre l'usurpation de numéros de contacts connus demandant d'envoyer d'urgence un code SMS de validation à six chiffres sous de faux prétextes d'assistance.",
-    fullText: "Des pirates togolais usurpent l'identité de membres de la famille ou de collègues via des comptes déjà compromis. Ils envoient des messages WhatsApp formulés ainsi : 'Bonjour, j'ai envoyé par mégarde un code de vérification sur ton numéro, peux-tu me le renvoyer s'il te plaît ?'. Ce code à 6 chiffres est en réalité le code d’activation de votre propre compte WhatsApp. La CDA vous rappelle solennellement de NE JAMAIS PARTAGER de code d'activation SMS.",
     processed: false
   }
 ];

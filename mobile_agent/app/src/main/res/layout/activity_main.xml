@@ -20,223 +20,245 @@
             android:gravity="center_vertical"
             android:layout_marginBottom="24dp">
 
-            <ImageView
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:src="@android:drawable/ic_lock_lock"
-                android:tint="#6366F1" />
+            <!-- Logo capsule circular similar to the SOC dashboard -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                app:cardCornerRadius="22dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#1A2542">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="S"
+                        android:textColor="#FFFFFF"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="P"
+                        android:textColor="#06B6D4"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:layout_marginStart="1dp" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
 
             <LinearLayout
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
+                android:layout_weight="1"
                 android:layout_marginStart="12dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="SP SHIELD v1.2"
+                    android:text="SP Sentinel Mobile"
                     android:textColor="#FFFFFF"
                     android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Votre gardien contre les arnaques Flooz et Tmoney"
+                    android:textColor="#06B6D4"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/tvStatusHeader"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="🟢 PROTECTION ACTIVE"
+                    android:text="🟢 VOTRE APPAREIL EST SÛR ET PROTÉGÉ"
                     android:textColor="#10B981"
                     android:textSize="11sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    android:layout_marginTop="2dp" />
             </LinearLayout>
+
+            <!-- Small Settings gear icon to configure URL privately -->
+            <ImageButton
+                android:id="@+id/btnOpenSettings"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_preferences"
+                android:tint="#718096"
+                android:contentDescription="Paramètres" />
         </LinearLayout>
 
-        <!-- Dynamic Warning about notifications listener permissions -->
-        <LinearLayout
+        <!-- Dynamic Warning about notifications listener permissions with rounded corners -->
+        <androidx.cardview.widget.CardView
             android:id="@+id/tvPermissionWarningLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="#2A1616"
-            android:padding="18dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#2A1616"
             android:layout_marginBottom="24dp"
             android:visibility="gone">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginBottom="8dp">
+                android:orientation="vertical"
+                android:padding="18dp">
 
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@android:drawable/stat_sys_warning"
-                    android:tint="#F87171" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="8dp">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@android:drawable/stat_sys_warning"
+                        android:tint="#F87171" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="SÉCURITÉ SUSPENDUE ! ACTION REQUISE"
+                        android:textColor="#F87171"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:id="@+id/tvPermissionWarning"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="SÉCURITÉ SUSPENDUE ! ACTION REQUISE"
-                    android:textColor="#F87171"
+                    android:text="L'agent de sécurité SP Sentinel ne pourra pas analyser et bloquer les arnaques de vol d'argent sur WhatsApp ou SMS sans l'autorisation d'accéder aux notifications."
+                    android:textColor="#FCA5A5"
+                    android:textSize="12sp"
+                    android:lineSpacingExtra="3sp" />
+
+                <Button
+                    android:id="@+id/btnEnablePermission"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="👉 ACTIVER LA PROTECTION MAINTENANT 👈"
+                    android:backgroundTint="#EF4444"
+                    android:textColor="#FFFFFF"
                     android:textSize="13sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    app:cornerRadius="8dp" />
             </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
-            <TextView
-                android:id="@+id/tvPermissionWarning"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="L'agent de cybersécurité SP SENTINEL ne peut pas intercepter les messages et attaques de phishing d'argent (Moov/Tmoney sur WhatsApp ou SMS) sans l'accès aux notifications de l'appareil."
-                android:textColor="#FCA5A5"
-                android:textSize="12sp"
-                android:lineSpacingExtra="3sp" />
-
-            <Button
-                android:id="@+id/btnEnablePermission"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:text="👉 ACTIVER SP SENTINEL MAINTENANT 👈"
-                android:backgroundTint="#EF4444"
-                android:textColor="#FFFFFF"
-                android:textSize="13sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <!-- Stats Dashboard Block -->
+        <!-- Stats Dashboard Block with card shapes -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:weightSum="2"
-            android:layout_marginBottom="20dp">
+            android:layout_marginBottom="24dp">
 
             <!-- Card 1: Blocked threats -->
-            <LinearLayout
+            <androidx.cardview.widget.CardView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:orientation="vertical"
-                android:background="#0F172A"
-                android:padding="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#0F172A"
                 android:layout_marginEnd="8dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="INTRUSIONS BLOQUÉES"
-                    android:textColor="#94A3B8"
-                    android:textSize="10sp"
-                    android:textStyle="bold" />
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-                <TextView
-                    android:id="@+id/tvBlockedCount"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0"
-                    android:textColor="#EF4444"
-                    android:textSize="32sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ARNAQUES BLOQUÉES"
+                        android:textColor="#94A3B8"
+                        android:textSize="10sp"
+                        android:textStyle="bold" />
 
-            <!-- Card 2: Local DB Signatures count -->
-            <LinearLayout
+                    <TextView
+                        android:id="@+id/tvBlockedCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0"
+                        android:textColor="#F87171"
+                        android:textSize="32sp"
+                        android:textStyle="bold"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Card 2: Security points/signatures count -->
+            <androidx.cardview.widget.CardView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:orientation="vertical"
-                android:background="#0F172A"
-                android:padding="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#0F172A"
                 android:layout_marginStart="8dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="SIGNATURES ACTIVES"
-                    android:textColor="#94A3B8"
-                    android:textSize="10sp"
-                    android:textStyle="bold" />
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-                <TextView
-                    android:id="@+id/tvSignaturesCount"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0"
-                    android:textColor="#3B82F6"
-                    android:textSize="32sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="POINTS DE SÉCURITÉ"
+                        android:textColor="#94A3B8"
+                        android:textSize="10sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvSignaturesCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0"
+                        android:textColor="#06B6D4"
+                        android:textSize="32sp"
+                        android:textStyle="bold"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
         </LinearLayout>
 
-        <!-- Synced server binding section details -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="#0F172A"
-            android:padding="16dp"
-            android:layout_marginBottom="20dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="CONFIGURATION RESEAU DU SOC"
-                android:textColor="#FFFFFF"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Configurez l'IP hôte de votre serveur pour s'ajuster lors des tests à Lomé."
-                android:textColor="#64748B"
-                android:textSize="10sp"
-                android:layout_marginTop="2dp"
-                android:layout_marginBottom="12dp" />
-
-            <EditText
-                android:id="@+id/etServerIp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Ex: 192.168.1.15:8000"
-                android:textColorHint="#475569"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:background="#020617"
-                android:padding="12dp"
-                android:inputType="text" />
-
-            <Button
-                android:id="@+id/btnSaveIp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="SAUVEGARDER L'IP SERVEUR"
-                android:backgroundTint="#4F46E5"
-                android:textColor="#FFFFFF"
-                android:layout_marginTop="8dp" />
-
-        </LinearLayout>
-
-        <!-- Command interactions buttons -->
+        <!-- Big Simplified Security Status Button -->
         <Button
             android:id="@+id/btnSyncNow"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="FORCER LA SYNCHRONISATION"
-            android:backgroundTint="#1E293B"
+            android:text="🔴 SÉCURITÉ INACTIVE\n(Touchez ici pour activer la protection)"
+            android:backgroundTint="#EF4444"
             android:textColor="#FFFFFF"
-            android:padding="14dp"
-            android:layout_marginBottom="12dp" />
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:padding="20dp"
+            android:layout_marginBottom="16dp"
+            app:cornerRadius="12dp" />
 
         <!-- Footer status -->
         <TextView
             android:id="@+id/tvLastUpdate"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Dernière Sync: Jamais"
+            android:text="Dernier contrôle de sécurité effectué : Jamais"
             android:textColor="#475569"
             android:textSize="11sp"
             android:gravity="center"

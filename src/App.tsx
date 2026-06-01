@@ -62,6 +62,14 @@ export default function App() {
     flashUpdateStatus: "Idle"
   });
   const [scrapedArticles, setScrapedArticles] = useState<ScrapedArticle[]>([]);
+  const [deletedArticleIds, setDeletedArticleIds] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem("kelashield_deleted_articles");
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
   const [forensicsData, setForensicsData] = useState<ForensicsData | null>(null);
 
   // Loading indicator states
@@ -307,6 +315,19 @@ export default function App() {
     setActiveTab("dashboard");
   };
 
+  const handleDeleteArticle = (id: string) => {
+    setDeletedArticleIds(prev => {
+      const updated = [...prev, id];
+      localStorage.setItem("kelashield_deleted_articles", JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const handleResetDeletedArticles = () => {
+    setDeletedArticleIds([]);
+    localStorage.removeItem("kelashield_deleted_articles");
+  };
+
   // Trigger manual scrap scan refresh
   const triggerScrapeRefresh = async () => {
     setFetchingFeed(true);
@@ -325,24 +346,38 @@ export default function App() {
 
   if (!currentAdmin) {
     return (
-      <div className="min-h-screen bg-[#0B1020] text-[#E5E7EB] flex items-center justify-center font-sans overflow-x-hidden relative p-4">
+      <div className="min-h-screen bg-gradient-to-tr from-[#051026] via-[#09224E] to-[#010612] text-[#E5E7EB] flex items-center justify-center font-sans overflow-x-hidden relative p-4 login-wrapper">
         {/* Subtle dot pattern grid matching Palo Alto Dashboard */}
         <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.03)_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
         
         {/* Crisp professional accent highlights */}
-        <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-        <div className="w-full max-w-md bg-[#121A2F] border border-white/5 rounded-2xl shadow-xl p-8 backdrop-blur-md relative z-10">
+        <div className="w-full max-w-md bg-[#0F1E3D]/75 border border-white/10 rounded-2xl shadow-2xl p-8 backdrop-blur-md relative z-10 login-panel">
           <div className="text-center mb-8">
-            <div className="relative w-14 h-14 mx-auto bg-[#1A2542] border border-white/10 rounded-xl flex items-center justify-center shadow-inner mb-4 select-none">
-              <div className="font-mono font-black text-xl tracking-tighter flex items-center justify-center">
-                <span className="text-[#3B82F6] drop-shadow-[0_0_12px_rgba(59,130,246,0.3)]">S</span>
-                <span className="text-[#06B6D4] drop-shadow-[0_0_12px_rgba(6,182,212,0.3)] ml-0.5">P</span>
+            {/* Custom high-tech logo similar to DriveNets custom emblem cuts representing safe streaming */}
+            <div className="flex justify-center mb-4">
+              <div className="relative flex items-center justify-center">
+                <div className="absolute w-20 h-20 bg-blue-500/20 rounded-full blur-xl animate-pulse"></div>
+                <svg className="w-16 h-16 relative z-10" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  {/* Outer shield frame */}
+                  <path d="M50 15 L80 25 L73 68 L50 85 L27 68 L20 25 Z" fill="url(#loginShieldGlow)" stroke="#2563EB" strokeWidth="2.5" strokeLinejoin="round" />
+                  {/* Custom horizontal slash bars similar to DriveNets custom emblem cuts representing safe streaming */}
+                  <path d="M38 38 L62 38" stroke="#FFFFFF" strokeWidth="4.5" strokeLinecap="round" />
+                  <path d="M34 48 L66 48" stroke="#06B6D4" strokeWidth="4.5" strokeLinecap="round" />
+                  <path d="M40 58 L60 58" stroke="#2563EB" strokeWidth="4.5" strokeLinecap="round" />
+                  <defs>
+                    <linearGradient id="loginShieldGlow" x1="50" y1="15" x2="50" y2="85" gradientUnits="userSpaceOnUse">
+                      <stop stopColor="#0B1530" />
+                      <stop offset="1" stopColor="#122554" />
+                    </linearGradient>
+                  </defs>
+                </svg>
               </div>
             </div>
-            <strong className="text-white text-lg font-bold tracking-widest block uppercase font-mono">SOC PHISHING TOGO</strong>
-            <span className="text-[10px] text-[#94A3B8] font-mono tracking-widest uppercase block mt-1">PORTAIL DE SÉCURITÉ GOUVERNEMENTAL</span>
+            <strong className="text-white text-xl font-bold tracking-widest block uppercase font-display">SOC PHISHING TOGO</strong>
+            <span className="text-[10px] text-[#94A3B8] font-mono tracking-widest uppercase block mt-1.5">PORTAIL NATIONAL DE SÉCURITÉ DES TRANSACTIONS</span>
           </div>
 
           {loginError && (
@@ -352,7 +387,7 @@ export default function App() {
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-5 font-mono text-xs">
+          <form onSubmit={handleLogin} className="space-y-5 font-sans text-xs">
             <div>
               <label className="text-[#94A3B8] block mb-1.5 font-bold tracking-wider uppercase text-[10px]">IDENTIFIANT OPÉRATEUR :</label>
               <div className="relative">
@@ -361,7 +396,7 @@ export default function App() {
                   value={loginUsername}
                   onChange={(e) => setLoginUsername(e.target.value)}
                   placeholder="NOM D'ACCÈS (EX: ANANIVI)"
-                  className="w-full bg-[#0B1020] border border-white/5 rounded-xl py-3 px-4 pl-10 text-slate-100 placeholder-slate-600 font-bold focus:outline-none focus:border-[#3B82F6] transition uppercase tracking-wider"
+                  className="w-full bg-[#050D1C]/80 border border-white/10 rounded-xl py-3 px-4 pl-10 text-slate-100 placeholder-slate-600 font-bold focus:outline-none focus:border-[#2563EB] transition uppercase tracking-wider font-mono"
                   required
                 />
                 <Users className="w-4 h-4 text-slate-500 absolute left-3.5 top-3.5" />
@@ -376,7 +411,7 @@ export default function App() {
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full bg-[#0B1020] border border-white/5 rounded-xl py-3 px-4 pl-10 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#3B82F6] transition tracking-widest"
+                  className="w-full bg-[#050D1C]/80 border border-white/10 rounded-xl py-3 px-4 pl-10 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#2563EB] transition tracking-widest font-mono"
                   required
                 />
                 <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-3.5" />
@@ -386,7 +421,7 @@ export default function App() {
             <button
               type="submit"
               disabled={loginLoading}
-              className="w-full py-3 bg-[#3B82F6] hover:bg-[#3B82F6]/90 active:scale-[0.99] text-white font-extrabold rounded-xl transition-all shadow-md font-mono text-xs flex items-center justify-center gap-2 mt-2 uppercase tracking-widest cursor-pointer"
+              className="w-full py-3 bg-[#2563EB] hover:bg-[#2563EB]/90 active:scale-[0.99] text-white font-extrabold rounded-xl transition-all shadow-md font-mono text-xs flex items-center justify-center gap-2 mt-2 uppercase tracking-widest cursor-pointer"
             >
               {loginLoading ? (
                 <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
@@ -404,7 +439,7 @@ export default function App() {
             </div>
             <div>
               <span className="text-slate-500 block">Identifiants standard : <strong className="text-slate-400">ANANIVI</strong>, <strong className="text-slate-400">RADJI</strong>, etc.</span>
-              <span className="bg-[#0B1020] px-2 py-0.5 mt-1 rounded border border-white/5 text-[#94A3B8] inline-block font-sans">Mot de passe initial : admin12345</span>
+              <span className="bg-[#050D1C]/60 px-2 py-0.5 mt-1 rounded border border-white/5 text-[#94A3B8] inline-block font-sans">Mot de passe initial : admin12345</span>
             </div>
           </div>
         </div>
@@ -431,15 +466,18 @@ export default function App() {
         
         <div>
           {/* Brand/Logo Section (SOC PHISHING TOGO - SP) */}
-          <div className="px-6 py-5 border-b border-white/5 flex items-center justify-between">
+          <div className="px-6 py-5 border-b border-white/5 flex items-center justify-between bg-[#040B1D]">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 bg-[#1A2542] border border-white/10 rounded-lg flex items-center justify-center select-none shadow-inner">
-                <span className="font-mono font-black text-xs text-white">
-                  S<span className="text-[#06B6D4]">P</span>
-                </span>
+              <div className="shrink-0 relative">
+                <svg className="w-8 h-8 relative z-10" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M50 15 L80 25 L73 68 L50 85 L27 68 L20 25 Z" fill="#0C1938" stroke="#2563EB" strokeWidth="3" strokeLinejoin="round" />
+                  <path d="M38 38 L62 38" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" />
+                  <path d="M34 48 L66 48" stroke="#06B6D4" strokeWidth="5" strokeLinecap="round" />
+                  <path d="M40 58 L60 58" stroke="#2563EB" strokeWidth="5" strokeLinecap="round" />
+                </svg>
               </div>
               <div>
-                <strong className="text-white font-bold tracking-widest text-xs block font-mono">SOC PHISHING TG</strong>
+                <strong className="text-white font-bold tracking-widest text-xs block font-display">SOC PHISHING TG</strong>
                 <span className="text-[9px] text-[#06B6D4] font-mono tracking-wider uppercase block font-semibold">COGNITIVE STATION</span>
               </div>
             </div>
@@ -666,11 +704,14 @@ export default function App() {
 
               {activeTab === "intel" && (
                 <ThreatIntelTab 
-                  scrapedArticles={scrapedArticles}
+                  scrapedArticles={scrapedArticles.filter(art => !deletedArticleIds.includes(art.id))}
                   fetchingFeed={fetchingFeed}
                   onRefreshFeeds={triggerScrapeRefresh}
                   onAIAnalyzeArticle={handleAIAnalyzeArticle}
                   onAddIoCToDatabase={handleQuickAddThreat}
+                  onDeleteArticle={handleDeleteArticle}
+                  totalDeletedCount={deletedArticleIds.length}
+                  onResetDeleted={handleResetDeletedArticles}
                 />
               )}
 

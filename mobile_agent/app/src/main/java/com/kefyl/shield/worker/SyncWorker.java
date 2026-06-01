@@ -53,11 +53,25 @@ public class SyncWorker extends Worker {
                 deviceId = "TG-MOBILE-" + java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase();
             }
             
+            boolean isAnonymous = prefs.getBoolean("agent_anonymous", true);
+            String regName = prefs.getString("agent_registered_name", "");
+            String regPhone = prefs.getString("agent_registered_phone", "");
+            String regCity = prefs.getString("agent_registered_city", "Lomé");
+
+            String agentDisplayName;
+            if (isAnonymous) {
+                agentDisplayName = "TG-Secure-" + deviceId.substring(Math.max(0, Math.min(6, deviceId.length()))).toUpperCase();
+            } else if (!regName.isEmpty() && !regPhone.isEmpty()) {
+                agentDisplayName = regName + " (" + regPhone + ")";
+            } else {
+                agentDisplayName = "TG-Secure-" + deviceId.substring(Math.max(0, Math.min(6, deviceId.length()))).toUpperCase();
+            }
+
             KefylApiService registerService = RetrofitClient.getApiService(context);
             com.kefyl.shield.api.RegisterRequest req = new com.kefyl.shield.api.RegisterRequest(
                     deviceId,
-                    "TG-Mobile-" + deviceId.substring(Math.max(0, deviceId.length() - 6)).toUpperCase(),
-                    "Lomé"
+                    agentDisplayName,
+                    regCity
             );
             
             try {

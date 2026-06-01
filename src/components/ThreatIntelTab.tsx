@@ -14,7 +14,8 @@ import {
   Globe,
   Smartphone,
   Copy,
-  X
+  X,
+  Trash2
 } from "lucide-react";
 import { ScrapedArticle } from "../types";
 
@@ -24,6 +25,9 @@ interface Props {
   onRefreshFeeds: () => void;
   onAIAnalyzeArticle: (articleId: string) => Promise<any>;
   onAddIoCToDatabase: (type: string, value: string, severity: string, details: string) => void;
+  onDeleteArticle?: (id: string) => void;
+  totalDeletedCount?: number;
+  onResetDeleted?: () => void;
 }
 
 export default function ThreatIntelTab({ 
@@ -31,7 +35,10 @@ export default function ThreatIntelTab({
   fetchingFeed, 
   onRefreshFeeds, 
   onAIAnalyzeArticle,
-  onAddIoCToDatabase
+  onAddIoCToDatabase,
+  onDeleteArticle,
+  totalDeletedCount = 0,
+  onResetDeleted
 }: Props) {
   
   // Scraper Tab State
@@ -152,6 +159,21 @@ export default function ThreatIntelTab({
               </button>
             </div>
 
+            {totalDeletedCount > 0 && onResetDeleted && (
+              <div className="mt-5 px-4 py-3 bg-red-500/10 border border-[#EF4444]/20 rounded-xl flex items-center justify-between text-xs text-slate-300">
+                <span className="font-mono flex items-center gap-2">
+                  <AlertOctagon className="w-4 h-4 text-[#EF4444]" />
+                  <span><strong>{totalDeletedCount}</strong> annonce{totalDeletedCount > 1 ? "s" : ""} exfiltrée{totalDeletedCount > 1 ? "s" : ""} masquée{totalDeletedCount > 1 ? "s" : ""} de l&apos;espace de travail actif.</span>
+                </span>
+                <button
+                  onClick={onResetDeleted}
+                  className="px-3 py-1.5 bg-[#3B82F6] hover:bg-[#3B82F6]/90 text-white rounded text-[10px] font-bold uppercase tracking-wider font-mono transition cursor-pointer"
+                >
+                  Tout réafficher
+                </button>
+              </div>
+            )}
+
             {/* List of articles */}
             <div className="mt-6 grid grid-cols-1 gap-6">
               {scrapedArticles.map((article) => (
@@ -160,13 +182,30 @@ export default function ThreatIntelTab({
                   {/* Left Column: Article basic */}
                   <div className="p-5 xl:col-span-7 flex flex-col justify-between border-b xl:border-b-0 xl:border-r border-white/5">
                     <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <span className={`px-2 py-0.5 rounded text-[9px] uppercase font-mono font-bold border ${article.source === "CERT.TG" ? "bg-[#EF4444]/15 text-[#EF4444] border-[#EF4444]/25" : "bg-teal-500/10 text-teal-400 border border-teal-500/20"}`}>
-                          {article.source}
-                        </span>
-                        <span className="text-[10px] font-mono text-slate-550 uppercase">
-                          {new Date(article.date).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
-                        </span>
+                      <div className="flex items-center justify-between mb-3 gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className={`px-2 py-0.5 rounded text-[9px] uppercase font-mono font-bold border ${article.source === "CERT.TG" ? "bg-[#EF4444]/15 text-[#EF4444] border-[#EF4444]/25" : "bg-teal-500/10 text-teal-400 border border-teal-500/20"}`}>
+                            {article.source}
+                          </span>
+                          <span className="text-[10px] font-mono text-slate-550 uppercase">
+                            {new Date(article.date).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
+                          </span>
+                        </div>
+                        
+                        {onDeleteArticle && (
+                          <button
+                            onClick={() => {
+                              if (confirm("Voulez-vous supprimer cette annonce de la liste ?")) {
+                                onDeleteArticle(article.id);
+                              }
+                            }}
+                            className="text-slate-500 hover:text-rose-500 transition-colors uppercase font-mono font-bold text-[9px] flex items-center gap-1.5 px-2 py-1 bg-red-500/5 hover:bg-red-500/10 rounded-md border border-white/5 cursor-pointer hover:border-rose-500/30"
+                            title="Supprimer l'annonce"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                            Supprimer
+                          </button>
+                        )}
                       </div>
                       
                       <h4 className="text-xs font-bold text-white tracking-wider mb-2 font-mono uppercase">{article.title}</h4>

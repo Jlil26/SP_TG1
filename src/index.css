@@ -1,22 +1,22 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: "Inter", var(--font-sans);
+  --font-mono: "Inter", var(--font-sans);
 }
 
-/* Custom CSS variables for the Enterprise SOC Phishing Togo (SP) */
 :root {
-  --bg-principal: #0B1020;
-  --bg-card: #121A2F;
-  --bg-hover: #1A2542;
-  --border-color: rgba(255, 255, 255, 0.05);
+  --bg-principal: #050B1B;
+  --bg-card: #0A132C;
+  --bg-hover: #122147;
+  --border-color: rgba(37, 99, 235, 0.18);
   
-  --text-principal: #E5E7EB;
+  --text-principal: #FFFFFF;
   --text-secondary: #94A3B8;
   
-  --color-accent: #3B82F6;
+  --color-accent: #2563EB;
   --color-accent-secondary: #06B6D4;
   --color-danger: #EF4444;
   --color-warning: #F59E0B;
@@ -25,27 +25,149 @@
 
 @layer base {
   body {
-    background-color: #0B1020;
-    color: #E5E7EB;
-    font-family: var(--font-sans);
+    background-color: #050B1B !important;
+    color: #E2E8F0 !important;
+    font-family: "Inter", sans-serif !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
-/* Custom scrollbar matching Wazuh/SentinelOne dashboards */
+/* Force global uniform typography across everything */
+* {
+  font-family: "Inter", sans-serif !important;
+}
+
+/* Overrides for absolute dark mode cohesion & maximum readability */
+
+/* Main backdrop */
+.bg-\[\#0B1020\] {
+  background-color: #050B1B !important;
+  color: #FFFFFF !important;
+}
+
+/* Premium Dark Steel Royal Blue Cards with high contrast cyber borders */
+.bg-\[\#121A2F\] {
+  background-color: #0A132C !important;
+  color: #FFFFFF !important;
+  border-color: rgba(37, 99, 235, 0.22) !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+  box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Custom Header area */
+header.bg-\[\#121A2F\]\/45 {
+  background-color: rgba(5, 11, 27, 0.8) !important;
+  backdrop-filter: blur(12px) !important;
+  border-color: rgba(37, 99, 235, 0.22) !important;
+  border-bottom-width: 1px !important;
+}
+
+/* Sub-containers & panels */
+.bg-\[\#0B1020\]\/45 {
+  background-color: #070F24 !important;
+  color: #FFFFFF !important;
+  border-color: rgba(37, 99, 235, 0.15) !important;
+  border-width: 1px !important;
+}
+
+/* Hover areas, selected list rows, and accents inside cards */
+.bg-\[\#1A2542\] {
+  background-color: #122147 !important;
+  color: #FFFFFF !important;
+  border-color: rgba(37, 99, 235, 0.35) !important;
+}
+
+/* Ensure absolute legibility of all texts within dark containers, no dark-on-dark! */
+.text-white,
+h1, h2, h3, h4, h5, h6,
+strong,
+.text-slate-100 {
+  color: #FFFFFF !important;
+}
+
+.text-\[\#94A3B8\],
+.text-slate-400,
+.text-slate-500,
+.text-slate-300,
+p {
+  color: #94A3B8 !important;
+}
+
+/* Force high visibility for gray-banded table headers or tables inside standard lists */
+thead tr, 
+.bg-slate-100, 
+.bg-slate-50 {
+  background-color: #122147 !important;
+  color: #FFFFFF !important;
+}
+
+.text-slate-700,
+.text-slate-600 {
+  color: #CBD5E1 !important;
+}
+
+/* Sidebar navigation in clean royal blue & cyan highlight theme */
+aside.bg-\[\#121A2F\] {
+  background-color: #030816 !important;
+  color: #FFFFFF !important;
+  border-right: 1px solid rgba(37, 99, 235, 0.3) !important;
+}
+
+aside.bg-\[\#121A2F\] .text-\[\#94A3B8\],
+aside.bg-\[\#121A2F\] .text-slate-400 {
+  color: #38BDF8 !important;
+}
+
+aside.bg-\[\#121A2F\] .bg-\[\#1A2542\] {
+  background-color: #0F1E40 !important;
+  border-color: #38BDF8 !important;
+  color: #FFFFFF !important;
+}
+
+/* Inputs & select options visibility */
+input, select, textarea {
+  background-color: #070F24 !important;
+  color: #FFFFFF !important;
+  border-color: rgba(37, 99, 235, 0.3) !important;
+  outline: none !important;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: #38BDF8 !important;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2) !important;
+}
+
+/* Recharts Tooltip matching high-performance dark theme */
+.recharts-default-tooltip {
+  background-color: #0A132C !important;
+  border-color: #38BDF8 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6) !important;
+  border-radius: 8px !important;
+}
+
+/* Table border rules */
+table, tr, td, th {
+  border-color: rgba(37, 99, 235, 0.15) !important;
+}
+
+/* Better visible scrollbars */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0B1020;
+  background: #050B1B;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1A2542;
+  background: #122147;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #3B82F6;
+  background: #38BDF8;
 }
