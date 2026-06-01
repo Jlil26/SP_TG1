@@ -107,7 +107,7 @@ export default function ForensicsTab({ forensicsData, threats, campaigns, agents
   const [selectedTraceKey, setSelectedTraceKey] = useState<string>("");
 
   // Forensics sub-tabs and suspect details tracking "one-by-one"
-  const [forensicsTab, setForensicsTab] = useState<"correlations" | "signals" | "profiling" | "antiflood">("correlations");
+  const [forensicsTab, setForensicsTab] = useState<"correlations" | "profiling" | "antiflood">("correlations");
   const [suspectTypeFilter, setSuspectTypeFilter] = useState<"all" | "phone" | "domain">("all");
   const [suspectIndex, setSuspectIndex] = useState(0);
 
@@ -279,28 +279,21 @@ export default function ForensicsTab({ forensicsData, threats, campaigns, agents
           className={`flex-1 py-3.5 font-mono text-[10px] font-bold flex items-center justify-center gap-2 border-b-2 transition-all duration-200 cursor-pointer ${forensicsTab === "correlations" ? "border-[#3B82F6] text-white bg-[#3B82F6]/5 font-extrabold" : "border-transparent text-[#94A3B8] hover:text-[#E5E7EB]"}`}
         >
           <Scale className="w-4 h-4 text-[#3B82F6]" />
-          1. RECOUPEMENTS JUDICIAIRES
-        </button>
-        <button 
-          onClick={() => setForensicsTab("signals")}
-          className={`flex-1 py-3.5 font-mono text-[10px] font-bold flex items-center justify-center gap-2 border-b-2 transition-all duration-200 cursor-pointer ${forensicsTab === "signals" ? "border-[#3B82F6] text-white bg-[#3B82F6]/5 font-extrabold" : "border-transparent text-[#94A3B8] hover:text-[#E5E7EB]"}`}
-        >
-          <ShieldAlert className="w-4 h-4 text-[#10B981]" />
-          2. AUDIT TERRAIN &amp; CAMPAGNES
+          1. RECOUPEMENTS DE SIGNATURES
         </button>
         <button 
           onClick={() => setForensicsTab("profiling")}
           className={`flex-1 py-3.5 font-mono text-[10px] font-bold flex items-center justify-center gap-2 border-b-2 transition-all duration-200 cursor-pointer ${forensicsTab === "profiling" ? "border-[#3B82F6] text-white bg-[#3B82F6]/5 font-extrabold" : "border-transparent text-[#94A3B8] hover:text-[#E5E7EB]"}`}
         >
           <Users className="w-4 h-4 text-[#06B6D4]" />
-          3. PROFILING UNIT (SUSPECTS SÉPARÉS)
+          2. AUDIT UNIT (PROFILAGE SUSPECTS)
         </button>
         <button 
           onClick={() => setForensicsTab("antiflood")}
           className={`flex-1 py-3.5 font-mono text-[10px] font-bold flex items-center justify-center gap-2 border-b-2 transition-all duration-200 cursor-pointer ${forensicsTab === "antiflood" ? "border-[#3B82F6] text-white bg-[#3B82F6]/5 font-extrabold" : "border-transparent text-[#94A3B8] hover:text-[#E5E7EB]"}`}
         >
           <Activity className="w-4 h-4 text-[#EF4444] animate-pulse" />
-          4. STATION ANTI-FLOOD DDOS
+          3. STATION ANTI-FLOOD DDOS
         </button>
       </div>
 
@@ -495,196 +488,6 @@ export default function ForensicsTab({ forensicsData, threats, campaigns, agents
         </div>
       )}
 
-      {/* SUB-TAB 2: SIGNALS & CAMPAIGNS (AUDIT TERRAIN & CAMPAGNES) */}
-      {forensicsTab === "signals" && (
-        <div className="space-y-6 animate-fade-in text-xs">
-          
-          {/* Quick Guide */}
-          <div className="bg-[#121A2F]/70 border border-white/5 p-5 rounded-xl space-y-1.5 shadow-sm">
-            <span className="text-[10px] font-mono text-[#10B981] uppercase font-extrabold tracking-widest block">GUIDE AUDIT &amp; CAMPAGNES ACTIVES</span>
-            <p className="text-[#94A3B8] leading-relaxed font-sans text-xs">
-              Les rapports d&apos;attaques saisis en direct par l&apos;Agent Mobile arrivent dans cette section pour examen. Vous pouvez auditer les alertes, les approuver pour l&apos;inscription immédiate dans les registres du SOC, ou étudier les campagnes de phishing globalisées ciblant des marques de notre territoire.
-            </p>
-          </div>
-
-          {/* Table Centralisation Alertes */}
-          <div className="bg-[#121A2F] border border-white/5 rounded-xl p-6 space-y-4 shadow-md">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <h4 className="text-xs font-bold text-white tracking-widest uppercase flex items-center gap-2 font-mono">
-                  <ShieldAlert className="w-4 h-4 text-[#10B981]" />
-                  REGISTRE CENTRAL DES RAPPORTS MOBILE SUR LE TERRAIN
-                </h4>
-                <p className="text-xs text-[#94A3B8] mt-1 font-mono">
-                  Les opérateurs du SOC de Lomé examinent et approuvent chaque indicateur suspect.
-                </p>
-              </div>
-              
-              <div className="flex flex-wrap items-center gap-3">
-                <button
-                  onClick={() => setOnlyShowCoordinated(prev => !prev)}
-                  className={`px-3 py-1.5 rounded-lg border text-[10px] font-mono transition duration-200 cursor-pointer ${onlyShowCoordinated ? "bg-[#06B6D4]/10 border-[#06B6D4]/30 text-[#06B6D4] font-bold" : "bg-[#0B1020] border-white/5 text-[#94A3B8]"}`}
-                >
-                  {onlyShowCoordinated ? "🛡️ COORDONNÉS MULTI-AGENTS SEULS" : "📂 TOUS LES SIGNALS TERRAIN"}
-                </button>
-                <div className="text-right text-[10px] font-mono text-[#94A3B8] bg-[#0B1020]/45 px-3 py-1.5 rounded-lg border border-white/5">
-                  Affiche : <strong className="text-[#10B981] font-bold">{filteredMobileSignals.length}</strong> • Total : <strong className="text-indigo-400 font-bold">{mobileSignals.length}</strong>
-                </div>
-              </div>
-            </div>
-
-            <div className="overflow-x-auto border border-white/5 rounded-lg bg-[#0B1020]/25">
-              <table className="w-full text-left font-mono text-xs border-collapse">
-                <thead>
-                  <tr className="bg-[#0B1020]/45 border-b border-[#1A2542] text-[10px] text-slate-500 uppercase">
-                    <th className="py-3 px-3">Terminal / Ville</th>
-                    <th className="py-3 px-3">Numéro Suspect</th>
-                    <th className="py-3 px-3">Message Sémantique Intercepté</th>
-                    <th className="py-3 px-3">Date du Signal</th>
-                    <th className="py-3 px-3">Statut</th>
-                    <th className="py-3 px-3 text-right">Actions de Renseignement</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5 text-slate-300">
-                  {filteredMobileSignals.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="py-8 text-center text-[#94A3B8] font-mono italic">
-                        Aucun signal mobile reçu correspondant aux critères de corrélation de l&apos;enquête.
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredMobileSignals.map((sig, idx) => {
-                      // Check if the senderPhone is repeated in other mobiles
-                      const otherMobilesSharing = sig.senderPhone 
-                        ? mobileSignals.filter(s => s.senderPhone === sig.senderPhone && s.deviceId !== sig.deviceId) 
-                        : [];
-                      const isRepeated = otherMobilesSharing.length > 0;
-                      
-                      return (
-                        <tr key={sig.id || idx} className="hover:bg-[#1A2542]/45 transition">
-                          <td className="py-3 px-3">
-                            <span className="text-slate-200 font-bold block">{sig.deviceId}</span>
-                            <span className="text-[10px] text-[#3B82F6] block">{sig.location}</span>
-                          </td>
-                          <td className="py-3 px-3">
-                            {sig.senderPhone ? (
-                              <div className="flex flex-col gap-1">
-                                <strong className="text-white font-bold">{sig.senderPhone}</strong>
-                                {isRepeated && (
-                                  <span className="inline-flex max-w-fit items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#EF4444]/10 text-[#EF4444] border border-[#EF4444]/25 animate-pulse font-mono">
-                                    🚨 RÉPÉTÉ ({otherMobilesSharing.length + 1} MOBILES)
-                                  </span>
-                                )}
-                              </div>
-                            ) : (
-                              <span className="text-slate-500 italic">Vecteur textuel pur</span>
-                            )}
-                          </td>
-                          <td className="py-3 px-3 max-w-sm">
-                            <p className="text-[10px] leading-relaxed font-sans italic p-2.5 bg-[#0B1020]/50 border border-white/5 rounded text-slate-300">
-                              &ldquo;{sig.evidenceText}&rdquo;
-                            </p>
-                          </td>
-                          <td className="py-3 px-3 text-[10px] text-slate-500">
-                            {new Date(sig.timestamp).toLocaleString("fr-FR")}
-                          </td>
-                          <td className="py-3 px-3 text-[10px]">
-                            {sig.status === "approved" ? (
-                              <span className="px-2 py-0.5 rounded bg-[#10B981]/10 text-[#10B981] font-bold uppercase tracking-wider border border-[#10B981]/20 font-mono text-[9px]">
-                                APPROUVÉ (IOC)
-                              </span>
-                            ) : (
-                              <span className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 font-bold uppercase tracking-wider border border-amber-500/20 animate-pulse font-mono text-[9px]">
-                                À AUDITER
-                              </span>
-                            )}
-                          </td>
-                          <td className="py-3 px-3 text-right">
-                            <div className="flex flex-wrap items-center justify-end gap-1.5">
-                              
-                              {/* 1. Correlation Report button if repeated */}
-                              {isRepeated && (
-                                <button
-                                  onClick={() => setCorrelationReportSignal(sig)}
-                                  className="px-2.5 py-1 bg-[#3B82F6]/10 hover:bg-[#3B82F6]/20 border border-[#3B82F6]/30 text-[#3B82F6] text-[9px] rounded uppercase flex items-center gap-1 transition cursor-pointer font-bold"
-                                  title="Générer un rapport de corrélation multi-agent"
-                                >
-                                  <FileText className="w-3.5 h-3.5 text-[#3B82F6]" /> CORRÉLER
-                                </button>
-                              )}
-
-                              {/* 2. Approve signal */}
-                              {sig.status === "pending" && (
-                                <button
-                                  onClick={() => handleApproveSignal(sig.id)}
-                                  disabled={actionLoading === sig.id}
-                                  className="px-2.5 py-1 bg-[#3B82F6] hover:bg-[#3B82F6]/80 text-white text-[9px] rounded uppercase flex items-center gap-1 transition font-bold cursor-pointer"
-                                  title="Approuver l'IoC et l'insérer dans la base centrale"
-                                >
-                                  <Check className="w-3.5 h-3.5" /> APPROUVER
-                                </button>
-                              )}
-
-                              {/* 3. Reject signal */}
-                              <button
-                                onClick={() => handleRejectSignal(sig.id)}
-                                disabled={actionLoading === sig.id}
-                                className="p-1 px-1.5 bg-[#1A2542] hover:bg-[#EF4444]/10 hover:text-[#EF4444] border border-white/5 text-slate-500 rounded uppercase transition text-[9px] cursor-pointer"
-                                title="Rejeter et supprimer définitivement ce signal de fraude"
-                              >
-                                <Trash2 className="w-3.5 h-3.5 text-rose-500" />
-                              </button>
-
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Campaigns statistics table */}
-          <div className="bg-[#121A2F] border border-white/5 rounded-xl p-6 shadow-md">
-            <h4 className="text-xs font-bold text-white tracking-widest uppercase mb-4 flex items-center gap-2 font-mono">
-              <TrendingUp className="w-4 h-4 text-[#3B82F6]" />
-              REGROUPEMENT FORENSIQUE PAR CAMPAGNE ÉLABORÉE
-            </h4>
-            
-            <div className="overflow-x-auto border border-white/5 rounded-lg bg-[#0B1020]/25">
-              <table className="w-full text-left text-xs text-slate-400 font-sans border-collapse">
-                <thead>
-                  <tr className="bg-[#0B1020]/45 border-b border-[#1A2542] text-[10px] text-slate-500 font-mono">
-                    <th className="py-3 px-3">Nom de la Campagne</th>
-                    <th className="py-3 px-3">Cible Spécifiée</th>
-                    <th className="py-3 px-3">Statut Régional</th>
-                    <th className="py-3 px-3 text-right">Signatures Associées</th>
-                    <th className="py-3 px-3 text-right">Menaces critiques gérées</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {coreStats.campaignStats.map((cs, idx) => (
-                    <tr key={idx} className="hover:bg-[#1A2542]/45 transition">
-                      <td className="py-3 px-3 font-semibold text-slate-200">{cs.name}</td>
-                      <td className="py-3 px-3 text-slate-400">{campaigns.find(c => c.name === cs.name)?.target || "Divers"}</td>
-                      <td className="py-3 px-3">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-[#3B82F6]/10 text-[#3B82F6] border border-[#3B82F6]/25">
-                          {campaigns.find(c => c.name === cs.name)?.status || "Active"}
-                        </span>
-                      </td>
-                      <td className="py-3 px-3 text-right font-mono font-bold text-[#E5E7EB]">{cs.count} IoC</td>
-                      <td className="py-3 px-3 text-right font-mono text-[#EF4444] font-bold">{cs.criticalCount} critiques</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-        </div>
-      )}
 
       {/* SUB-TAB 3: PROFILING SUSPECTS (SENSITIVE DATA) */}
       {forensicsTab === "profiling" && (

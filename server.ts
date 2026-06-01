@@ -1,9 +1,9 @@
 import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
-import { dbManager } from "./server/db";
-import { analyzeAlertText, analyzeURLWithAI } from "./server/ai";
-import { scrapeGovernmentFeeds, processArticleThreatWithAI } from "./server/scraping";
+import { dbManager } from "./serveur_dashboard_react/gestionnaire_base_donnees";
+import { analyzeAlertText, analyzeURLWithAI } from "./serveur_dashboard_react/analyseur_ia_gemini";
+import { scrapeGovernmentFeeds, processArticleThreatWithAI } from "./serveur_dashboard_react/collecteur_flux_veille_cert";
 
 async function startServer() {
   const app = express();
@@ -446,6 +446,9 @@ async function startServer() {
     }
   });
 
+  // Tracks administrative login attempts to prevent brute force (limit to 5 attempts)
+  const loginAttemptsTracker = new Map<string, { count: number; lastAttempt: number }>();
+
   // --- ADMINISTRATOR ENDPOINTS ---
   app.post("/api/auth/login", (req, res) => {
     try {
@@ -454,8 +457,29 @@ async function startServer() {
         res.status(400).json({ success: false, error: "Nom d'utilisateur et mot de passe requis." });
         return;
       }
+
+      const u = username.trim().toUpperCase();
+      const now = Date.now();
+      const attempt = loginAttemptsTracker.get(u) || { count: 0, lastAttempt: 0 };
+
+      // Configurable settings
+      const MAX_ATTEMPTS = 5;
+      const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 mins block
+
+      // Check brute-force lockout status
+      if (attempt.count >= MAX_ATTEMPTS && now - attempt.lastAttempt < LOCKOUT_DURATION) {
+        const remainingMin = Math.ceil((LOCKOUT_DURATION - (now - attempt.lastAttempt)) / 60000);
+        res.status(429).json({
+          success: false, 
+          error: `Sécurité SOC : Compte temporairement verrouillé suite à 5 tentatives erronées. Réessayez dans ${remainingMin} minute(s) ou contactez l'officier de sécurité.`
+        });
+        return;
+      }
+
       const admin = dbManager.verifyAdmin(username, password);
       if (admin) {
+        // Clear attempts on success
+        loginAttemptsTracker.delete(u);
         res.json({
           success: true,
           admin: {
@@ -465,7 +489,20 @@ async function startServer() {
           }
         });
       } else {
-        res.status(401).json({ success: false, error: "Identifiants d'administration incorrects." });
+        // Increment attempts on failure
+        attempt.count += 1;
+        attempt.lastAttempt = now;
+        loginAttemptsTracker.set(u, attempt);
+
+        const remaining = Math.max(0, MAX_ATTEMPTS - attempt.count);
+        let errorMsg = "Identifiants d'administration incorrects.";
+        if (remaining > 0) {
+          errorMsg += ` Attention, il vous reste ${remaining} tentative(s) avant verrouillage temporaire de sécurité.`;
+        } else {
+          errorMsg += " Compte verrouillé temporairement pour des raisons de sécurité (durée de 15 min).";
+        }
+
+        res.status(401).json({ success: false, error: errorMsg });
       }
     } catch (e: any) {
       res.status(500).json({ success: false, error: e.message });
@@ -736,7 +773,7 @@ async function startServer() {
   }
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`[KEFYL-SOC-SERVER] Running and serving on port http://localhost:${PORT}`);
+    console.log(`[SOC-PHISHING-TG-SERVER] Running and serving on port http://localhost:${PORT}`);
   });
 }
 

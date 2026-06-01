@@ -24,7 +24,6 @@ import {
 import DashboardTab from "./components/DashboardTab";
 import ThreatIntelTab from "./components/ThreatIntelTab";
 import DeploymentTab from "./components/DeploymentTab";
-import SandboxTab from "./components/SandboxTab";
 import ForensicsTab from "./components/ForensicsTab";
 import AdminsTab from "./components/AdminsTab";
 import SignaturesTab from "./components/SignaturesTab";
@@ -32,7 +31,7 @@ import AgentSupervisionTab from "./components/AgentSupervisionTab";
 import { Threat, Campaign, MobileAgent, SyncConfig, ScrapedArticle, ForensicsData, MobileSignal } from "./types";
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<"dashboard" | "intel" | "deployment" | "sandbox" | "forensics" | "admins" | "signatures" | "agent_supervision">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "intel" | "deployment" | "forensics" | "admins" | "signatures" | "agent_supervision">("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Authenticated administration session states
@@ -533,14 +532,6 @@ export default function App() {
                 </button>
 
                 <button
-                  onClick={() => { setActiveTab("sandbox"); setSidebarOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2 rounded-xl transition font-semibold border ${activeTab === "sandbox" ? "bg-[#1A2542] border-white/5 text-white shadow-sm" : "border-transparent text-[#94A3B8] hover:bg-[#1A2542] hover:text-white"}`}
-                >
-                  <Search className="w-4 h-4 text-[#3B82F6] shrink-0" />
-                  <span>SANDBOX DE VALIDATION</span>
-                </button>
-
-                <button
                   onClick={() => { setActiveTab("signatures"); setSidebarOpen(false); }}
                   className={`w-full flex items-center gap-3 px-3.5 py-2 rounded-xl transition font-semibold border ${activeTab === "signatures" ? "bg-[#1A2542] border-white/5 text-white shadow-sm" : "border-transparent text-[#94A3B8] hover:bg-[#1A2542] hover:text-white"}`}
                 >
@@ -722,13 +713,6 @@ export default function App() {
                   onUpdateSyncDays={handleUpdateSyncDays} 
                   onTriggerFlashUpdate={handleTriggerFlashUpdate}
                   onRefreshData={() => fetchAllData(true)}
-                />
-              )}
-
-              {activeTab === "sandbox" && (
-                <SandboxTab 
-                  threats={threats} 
-                  onAddSandboxThreat={handleSandboxThreatAdd} 
                 />
               )}
 
