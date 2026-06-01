@@ -1,6 +1,0 @@
-{
-  "name": "SOC PHISHING TG",
-  "description": "SOC PHISHING TOGO (SP) - Plateforme nationale de cyberdéfense et de lutte anti-phishing au Togo, conçue par RADJI, ANANIVI, EHE et KPETO.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
