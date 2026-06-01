@@ -1,88 +1,101 @@
-# SOC PHISHING TG & SP_TG (Mon Garde du Corps)
-> **Plateforme Nationale Intégrée de Cyberdéfense et Lutte Anti-Phishing (Togo)**  
-> *Développé avec passion pour sécuriser nos concitoyens et PME locales.*
+# SP Sentinel - Plateforme de Protection Contre les Arnaques SMS au Togo
 
-Ce dépôt contient le projet unifié **SOC PHISHING TG**, une solution souveraine et hybride conçue pour faire face au fléau des arnaques et de l'ingénierie sociale (SMS frauduleux, faux gains Moov Flooz ou Togocom Tmoney, usurpations d'identité administrative) au Togo. 
+SP Sentinel est un systeme de securite cree pour proteger les habitants du Togo contre les arnaques recues par SMS ou messageries (comme les faux gains Moov Flooz, Togocom TMoney, ou les fausses factures d'electricite CEET). 
 
-Le système s'articule autour de deux composants complémentaires :
-1. **L'application mobile client (SP_TG)** : Un pare-feu léger en tâche de fond sur Android qui s'exécute localement et sans connexion obligatoire (hors-ligne par défaut) pour intercepter les notifications suspectes et guider l'utilisateur.
-2. **Le Poste Central de Supervision (SOC PHISHING TG)** : Une console web pour les analystes de sécurité de l'ANCY ou du CERT.TG permettant de pousser des indicateurs de compromission (IoC) mis à jour, et de centraliser anonymement la télémétrie judiciaire pour détecter les campagnes d'attaques en temps réel.
+Le projet a ete concu par : ANANIVI, RADJI, KPETO et EHEY.
+
+Notre application fonctionne sur les telephones Android, car ce systeme permet de lire et de bloquer les messages dangereuses pour proteger l'utilisateur.
 
 ---
 
-## 🏗️ 1. Architecture et Cartographie des Repertoires
+## Comment est organise le projet ?
 
-Pour faciliter l'analyse et l'évaluation du jury, la racine du projet est découpée en répertoires hautement sémantiques et spécialisés :
-
-| Répertoire / Fichier | Rôle dans l'Architecture | Pile Technologique | Usage et Intérêt |
-| :--- | :--- | :--- | :--- |
-| **`/agent_mobile_android`** | Client Mobile local d'interception | Java (Android Natif) | S'installe sur le smartphone de l'utilisateur. Il écoute les notifications SMS/WhatsApp à l'aide d'un `NotificationListenerService` et utilise une base SQLite Room pour les signatures et une IA heuristique locale d'ingénierie sociale (offline). |
-| **`/serveur_central_python`** | API centrale alternative de production | Python 3 / FastAPI | Expose les points de terminaison REST de synchronisation des IoC et de remontée d'alertes. Scrape de manière autonome les flux de veille cyber (CERT.TG et ANCY) et unifie l'analyse de corrélation criminelle. |
-| **`/serveur_dashboard_react`** | Serveur de synchronisation & Back-office | Node.js / Express / TypeScript | Orchestre l'API de simulation en direct pour le Dashboard web d'administration de Lomé et distribue l'interface. |
-| **`/src`** | Dashboard de Commandement (Frontend) | React / Vite / Tailwind CSS | Offre une interface utilisateur moderne et interactive pour visualiser les menaces, les alertes par région, gérer l'Intel Threat feed, et interagir avec l'appareil simulé. |
-| **`server.ts`** | Serveur d'intégration et simulateur | Express / TypeScript | Point d'entrée principal réunissant l'API REST de télémétrie, la mise en cache de la base démonstrative (IoC) et l'interpréteur IA pour les analystes. |
+Le projet contient trois dossiers principaux :
+1. agent_mobile_android : L'application pour le telephone Android. Elle analyse les messages recus en arriere-plan.
+2. serveur_central_python : Le serveur qui peut aller chercher des alertes officielles et faire des analyses complexes.
+3. serveur_dashboard_react : Le site internet destine aux administrateurs pour surveiller la situation et ajouter des alertes.
 
 ---
 
-## 🔒 2. Algorithmes de Détection et Modèle de Souveraineté
+## Les 3 fonctionnalités de l'application mobile (sur le telephone)
 
-Pour protéger efficacement les cibles (grand public contre les arnaques de numéros inconnus, et employés de PME en réseau local fermé), nous appliquons plusieurs couches distinctes :
+L'application sur le telephone surveille les messages reçus et a 3 facons de proteger l'utilisateur :
 
-### A. L'Analyse Heuristique Locale (Offline-first)
-Sur l'agent mobile, le module `/engine/PhishingAnalyzer.java` examine les messages reçus de numéros inconnus ou d'un groupe en inspectant la sémantique locale :
-- **Urgence ou Peur** : Mots-clés créant un stress sémantique (*"Immédiat"*, *"Sous 24h"*, *"Compte bloqué"*).
-- **Usurpation institutionnelle** : Clones ou usurpations de services (*"Togocom"*, *"Moov"*, *"Flooz"*, *"Tmoney"*, *"Gendarmerie"*).
-- **Appât du gain** : Promesse de lots fictifs (*"Gagnant"*, *"Crédit offert"*, *"Transfert en attente"*).
+1. L'analyse par base de donnees locale
+Le telephone possede un fichier contenant une liste de numeros de fraudeurs et de liens de phishing deja connus. Quand un message arrive, le telephone verifie s'il est lie a cette liste. Si oui, le telephone bloque le message et affiche une alerte rouge tres severe. Tout cela se fait sans besoin d'avoir internet sur le telephone.
 
-### B. La Liste Verte Anti-Faux Positifs (Groupe de confiance)
-Si l'utilisateur fait 100% confiance à des conversations de groupe spécifiques (ex: cercle familial ou professionnel partagé), il peut déclarer ce groupe en **"Liste Verte"**. 
-- Les alertes de détection sémantique y sont automatiquement neutralisées pour éviter de déranger l'utilisateur avec de faux négatifs ou de fausses alertes agressives.
-- Cependant, si une **signature criminelle absolue** (provenant du serveur central officiel en ligne) est diffusée sur ce groupe, le garde-corps outrepasse la liste verte locale et alerte impérativement l'utilisateur d'un réel danger.
+2. L'analyse intelligente sans internet (Heuristique comportementale)
+Si le message vient d'un inconnu et n'est pas encore dans la base de donnees, l'application analyse les mots pour comprendre le comportement du message. Elle recherche des techniques de manipulation courantes au Togo :
+- L'appat du gain (par exemple : Vous avez coche un bonus de 200.000F).
+- L'alarme ou l'urgence (par exemple : Votre facture CEET est impayee, coupure dans 12h).
+- La fausse identite (par exemple : Se faire passer pour la gendarmerie ou l'operateur Moov/Togocom).
+Si l'application detecte un comportement suspect, elle bloque le message avec une alerte moyenne et l'envoie au serveur central pour que les autres utilisateurs soient proteges plus tard. Cette analyse se fait directement sur le telephone sans utiliser internet et sans user la batterie.
 
----
-
-## 🚀 3. Guide de Démarrage Rapide (En Local)
-
-Pour exécuter et présenter la démonstration interactive complète de bout en bout :
-
-### Étape 1 : Lancement du Dashboard du SOC
-1. Ouvrez un terminal à la racine du projet décompressé.
-2. Installez les paquets requis pour le backoffice :
-   ```bash
-   npm install
-   ```
-3. Démarrez le serveur interne Express et le proxy Vite :
-   ```bash
-   npm run dev
-   ```
-4. Accédez à l'application dans votre navigateur : **`http://localhost:3000`**
-
-### Étape 2 : Lancement de l'API alternative en Django / FastAPI (Python)
-Si vous souhaitez manipuler ou évaluer les scripts de scraping Python indépendamment de la maquette d'administration :
-1. Déplacez-vous dans le répertoire du sous-serveur :
-   ```bash
-   cd serveur_central_python
-   ```
-2. Créez un environnement virtuel et installez les dépendances :
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate  # Ou venv\Scripts\activate sur Windows
-   pip install -r requirements.txt
-   ```
-3. Exécutez l'API FastAPI locale :
-   ```bash
-   uvicorn main:app --reload --port 8000
-   ```
-4. Explorez la documentation des endpoints : [http://localhost:8000/docs](http://localhost:8000/docs)
+3. La liste de confiance pour eviter les fausses alertes (Liste Verte)
+Parfois, des membres de la famille ou des groupes de discussion peuvent envoyer des messages qui ressemblent a des arnaques mais qui ne le sont pas.
+- L'utilisateur peut mettre un groupe ou un ami en Liste Verte pour desactiver cette analyse psychologique.
+- Cependant, pour garantir la securite, si quelqu'un de ce groupe envoie un lien de phishing deja identifie et enregistre comme tres dangereux, le telephone deploiera quand meme le blocage.
 
 ---
 
-## 🧪 4. Protocole de Certification & Test du Système
+## Les 4 fonctionnalités de la console d'administration (le serveur)
 
-Le Dashboard embarque un simulateur interactif de smartphone à droite de l'écran. Vous pouvez l'utiliser directement pour simuler tout le trajet d'alerte :
-1. **Écran d'Accueil du SOC** : Observez le globe d'analyse en temps réel centré sur le Togo.
-2. **Simulateur Mobile** : Saisissez un numéro inconnu et envoyez un SMS frauduleux (par exemple : *"Félicitations, vous avez gagné 500.000 F Moov Flooz, appelez-nous vite"*).
-3. **Réaction temps réel** : 
-   - Une notification contextuelle s'affiche immédiatement sur le smartphone virtuel.
-   - Cliquez dessus pour entrer dans la quarantaine et lire les **consignes impératives de sécurité** rédigées en langage clair et humanisé (*Données protégées, ne jamais rappeler, ne jamais ouvrir le lien suspect*).
-   - Le journal de l'agent mobile remonte instantanément la télémétrie judiciaire de cyberdéfense, qui est captée par le SOC et se reporte sur la carte de Lomé et les graphiques de veille sectoriels du dashboard principal.
+La console permet aux operateurs du SOC de gerer la securite de tout le monde :
+
+1. La surveillance et le telephone virtuel
+L'ecran d'accueil affiche une carte du Togo (Lome, Sokode, Kara, Atakpame, Kpalime, Cinkasse, Aneho) avec le nombre d'attaques interceptees.
+- Pour tester le systeme sans installer l'application sur un vrai appareil, un Telephone Virtuel interactif est integre a l'ecran.
+- Il se trouve sur la partie droite de la page d'accueil (onglet de supervision "DASHBOARD"), positionne sur le volet droit de l'ecran, juste en dessous de la carte nationale et des graphiques. On peut y taper des messages d'arnaques fictifs pour observer l'interception en direct.
+
+2. La collecte automatique d'informations officielles (Threat Intelligence)
+La console se connecte d'elle-meme aux sites de cybersecurite nationaux comme le CERT.TG ou l'ANCY (ancy.gouv.tg) pour copier leurs communiques d'alertes officiels. Une intelligence artificielle (Gemini) lit ces articles, extrait les numeros d'arnaqueurs ou les URL de phishing, et propose de les integrer directement dans l'application mobile en un clic sans besoin de tout recopier a la main.
+
+3. La base d'ajustement des signatures de securite
+Les experts peuvent ajouter de nouvelles signatures dans la base de donnees grace a un simple formulaire. Ils peuvent aussi fournir un texte suspect, laisser l'IA l'analyser pour extraire automatiquement les elements dangereux, puis appuyer sur un bouton pour mettre a jour l'ensemble des telephones. L'administrateur peut exporter la base de donnees active sous format JSON ou importer un autre lot de signatures pour effectuer une fusion securisee avec controle d'integrite.
+
+4. Les enquetes criminelles et la securite administrative
+Le serveur regroupe les rapports de telemetrie envoyes par tous les telephones pour decouvrir si une meme personne est train d'attaquer une grande partie de la population ou une region specifique.
+- Pour proteger le poste de commandement contre les personnes malveillantes, les mots de passe des administrateurs (ANANIVI, RADJI, KPETO, EHEY) ne sont jamais ecrits en texte simple. Ils sont modifies de maniere irreversible sous forme d'empreinte securisee (hachage SHA-256).
+- De plus, si un intrus essaie de deviner un mot de passe et commet 5 erreurs de suite, son compte est bloque pendant 15 minutes.
+
+---
+
+## Comment installer et tester le projet ?
+
+Voici les trois solutions de test simples pour vos collaborateurs :
+
+### Solution A : Tester directement sur la page internet principale (Le plus rapide)
+1. Demarrez le site web en ouvrant le terminal et en saisissant les  commandes :"npm install"  "npm run dev" 
+2. Allez sur votre navigateur web a l'adresse : http://localhost:3000
+3. Regardez la partie de droite de l'onglet principal : vous y trouverez un Telephone Virtuel.
+4. Tapez par exemple : "Moov offre un credit gratuit composez le numero secret et votre code PIN" et validez.
+5. Vous verrez le telephone virtuel bloquer le message, l'alerte apparaitre et la telemetrie etre envoyee immediatement aux experts sur l'ecran de contrôle.
+
+### Solution B : Compiler et developper sur votre ordinateur
+1. Telechargez et installez l'application Android Studio sur votre ordinateur.
+2. Ouvrez Android Studio et selectionnez le dossier "/agent_mobile_android".
+3. Laissez Android Studio telecharger les dossiers de developpement necessaires.
+4. Ouvrez le fichier de configuration de l'application sur Android Studio pour y inserer l'adresse reseau locale de votre ordinateur (par exemple : http://192.168.1.50:3000/).
+5. Connectez un telephone de test Android a votre ordinateur avec un cable de telechargement ou utilisez le telephone virtuel inclus dans Android Studio.
+6. Cliquez sur le bouton "Run" d'Android Studio pour installer l'application sur le telephone.
+7. Activez l'option d'interception des messages et de lecture des notifications pressee par le systeme Android.
+
+### Solution C : Tester en situation reelle avec un vrai telephone (Le plus de valeur)
+Pour permettre a vos collaborateurs d'essayer directement sur un vrai smartphone, notre plateforme serveur centrale est installee en ligne a cette adresse permanente : https://sp-sentinel-hq.onrender.com/
+
+1. Configuration de l'adresse reseau Internet :
+Dans le code source Java de l'application sur Android Studio, modifiez l'adresse web de Retrofit pour pointer de maniere permanente vers le serveur en ligne : https://sp-sentinel-hq.onrender.com/
+
+2. Creation du fichier d'installation (.APK) :
+- Dans le menu superieur d'Android Studio, cliquez sur : Build > Build Bundle(s) / APK(s) > Build APK(s)
+- L'ordinateur va assembler l'application et vous donner un fichier binaire nomme "app-debug.apk" disponible dans le dossier de build de l'application.
+
+3. Installation sur le telephone Android :
+- Envoyez ce fichier d'installation (.apk) sur votre telephone portable Android.
+- Ouvrez le fichier. Si le telephone indique que l'application ne vient pas du magasin officiel, autorisez l'installation manuelle en cliquant sur "Autoriser pour cette source".
+- Lancez l'application nommee SP_TG et allez dans les parametres de votre telephone pour lui donner l'autorisation indispensable : "Acces aux notifications".
+
+4. Faire les tests en direct :
+- A l'aide d'un second telephone, envoyez un faux message d'arnaque vers le telephone de test (par exemple par SMS ou sur WhatsApp).
+- Le telephone de test va bloquer le message, masquer l'alerte originale et vous afficher un ecran de protection d'urgence.
+- En meme temps, connectez-vous avec vos collaborateurs sur le site internet : https://sp-sentinel-hq.onrender.com/. Vous pourrez constater que l'attaque s'affiche instantanement sur la carte de cyberprotection de Lome.

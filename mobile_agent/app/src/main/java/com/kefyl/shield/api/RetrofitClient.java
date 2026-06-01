@@ -12,7 +12,7 @@ public class RetrofitClient {
 
     private static final String PREFS_NAME = "kefyl_prefs";
     private static final String KEY_SERVER_IP = "server_ip_address";
-    public static final String DEFAULT_BASE_URL = "https://sp-tg-1.onrender.com/"; // Deployed Render Server Default
+    public static final String DEFAULT_BASE_URL = "https://sp-sentinel-hq.onrender.com/"; // Deployed Render Server Default
 
     private static Retrofit retrofit = null;
     private static String currentBaseUrl = "";
