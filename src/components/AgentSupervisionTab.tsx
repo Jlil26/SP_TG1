@@ -36,9 +36,10 @@ import {
   Tooltip, 
   CartesianGrid, 
 } from "recharts";
-import { MobileAgent, MobileSignal } from "../types";
+import { MobileAgent, MobileSignal, Threat } from "../types";
 
 interface Props {
+  threats: Threat[];
   agents: MobileAgent[];
   mobileSignals: MobileSignal[];
   onTriggerFlashUpdate: () => Promise<any>;
@@ -46,6 +47,7 @@ interface Props {
 }
 
 export default function AgentSupervisionTab({ 
+  threats,
   agents, 
   mobileSignals, 
   onTriggerFlashUpdate,
@@ -79,11 +81,23 @@ export default function AgentSupervisionTab({
   const [showNotification, setShowNotification] = useState(false);
 
   // --- EXTRA SHIELD OPTIONS AGAINST FALSE POSITIVES ---
-  const [isGroupSource, setIsGroupSource] = useState(false);
+  const [messageSourceType, setMessageSourceType] = useState<"unknown" | "contact" | "group">("unknown");
+  const [contactIndex, setContactIndex] = useState(0);
   const [groupName, setGroupName] = useState("Famille & Voisins Lomé 💬");
-  const [threatSeverity, setThreatSeverity] = useState<"heuristic_mild" | "central_critical">("heuristic_mild");
   const [trustedGroups, setTrustedGroups] = useState<string[]>([]);
   const [whitelistedCheckNotification, setWhitelistedCheckNotification] = useState(false);
+
+  // Derive helper boolean for backward compatibility with existing component code
+  const isGroupSource = messageSourceType === "group";
+  const isRegisteredContact = messageSourceType === "contact";
+
+  // Repertoires / contacts enregistres par l'utilisateur (Trusted Address Book)
+  const registeredContacts = [
+    { name: "Maman 🧑‍🍼", phone: "+228 90 12 34 56" },
+    { name: "Koffi Ami 🤝", phone: "+228 91 88 44 22" },
+    { name: "Directeur OTR 🏢", phone: "+228 92 11 00 11" },
+    { name: "Oncle Kossi 👴", phone: "+228 93 45 67 89" }
+  ];
 
   const addLog = (text: string, type: "info" | "success" | "warn" = "info") => {
     const time = new Date().toLocaleTimeString("fr-FR");
@@ -93,42 +107,57 @@ export default function AgentSupervisionTab({
   // Predefined Togolese Phishing SMS/WhatsApp cases
   const simTemplates = [
     {
-      title: "📞 Arnaque Gains Moov Flooz",
+      title: "📞 Gains Offre Moov/Flooz",
       sender: "+228 99 12 04 85",
       text: "[Flooz] Félicitations! Votre numéro a été tiré au sort pour la promotion de la fête nationale. Vous gagnez la somme de 300.000 FCFA. Appelez vite le 99120485 pour débloquer votre versement.",
-      category: "Tentative de vol d'argent (Flooz)",
-      heuristics: "On vous promet beaucoup d'argent gratuit (300 000F) sans aucune raison pour vous pousser à appeler d'urgence un numéro inconnu. C'est un mensonge !"
+      category: "Tentative de vol d'argent (Faux gains)",
+      isSignature: true,
+      heuristics: "Répertorié dans la base de données de sécurité nationale de Lomé. Bloqué d'office comme arnaque confirmée, même si reçu d'un ami."
     },
     {
-      title: "⚡ Fausse Facture électricité CEET",
+      title: "⚡ Fausse Facture Courant CEET",
       sender: "+228 90 41 82 12",
       text: "CEET ALERTE: Facture non réglée. Votre électricité sera coupée sous 24 heures. Réglez d'urgence votre impayé sur: https://ceet-facturation-tmoney.com/",
-      category: "Faux chantage à la coupure",
-      heuristics: "On vous fait peur en vous menaçant de couper votre courant en 24h, et on vous donne un faux lien internet imitant la CEET pour voler votre compte T-Money."
+      category: "Fausse menace de coupure CEET",
+      isSignature: true,
+      heuristics: "Le faux site 'ceet-facturation-tmoney.com' est enregistré dans la base de signatures suspectes. Bloqué immédiatement pour usurpation."
     },
     {
-      title: "🏫 Fausse Aide de l'État (Usurpation ANCY)",
+      title: "🏫 Fausse Subvention ANCY",
       sender: "+228 92 11 34 56",
       text: "Recrutement urgent ANCY: Subvention d'État disponible pour les citoyens étudiants et entrepreneurs du Togo (50.000F/mois). Inscrivez-vous vite: http://ancy.gouv.tg-subvention.net",
-      category: "Piège au faux recrutement",
-      heuristics: "Les menteurs utilisent le nom rassurant de l'État (l'ANCY) pour vous proposer une aide financière, mais l'adresse du site internet finit bizarrement par '.net' au lieu de '.gouv.tg'."
+      category: "Fausse aide de l'État pour vol d'infos",
+      isSignature: true,
+      heuristics: "Le site 'ancy.gouv.tg-subvention.net' usurpe l'État et figure dans la base nationale de signalements."
     },
     {
-      title: "💬 Vol de Compte WhatsApp",
+      title: "💸 Exemple : dépôt pressé (Non présent dans la base)",
+      sender: "+228 99 12 04 85",
+      text: "consulte ton solde je viens de t'envoyer un dépôt fait vite je suis presser",
+      category: "Technique de manipulation (Urgence factice)",
+      isSignature: false,
+      heuristics: "Non connu dans la base de données. Analyse en direct : l'alerte ne se déclenchera que si ce message est envoyé par un numéro inconnu. Aucun signalement si envoyé par vos contacts."
+    },
+    {
+      title: "💬 Vol de compte WhatsApp (Non présent dans la base)",
       sender: "+228 97 88 55 22",
       text: "Salut, j'ai envoyé accidentellement un code d'activation SMS à 6 chiffres sur ton numéro par mégarde, s'il te plaît renvoie-le moi d'urgence pour me dépanner !",
-      category: "Piratage de compte (Code secret)",
-      heuristics: "Un pirate invente une fausse histoire d'erreur humaine pour vous inciter à lui donner votre code secret. Si vous lui donnez, il prendra le contrôle total de votre compte WhatsApp !"
+      category: "Vol de compte par code secret",
+      isSignature: false,
+      heuristics: "Non connu dans la base. Analyse en direct : l'alerte détectera la demande suspecte de code secret sous prétexte d'urgence si l'expéditeur est inconnu."
     }
   ];
 
   // Sync state if template selection changes
   useEffect(() => {
     if (selectedTemplate !== -1 && simTemplates[selectedTemplate]) {
-      setCustomSender(simTemplates[selectedTemplate].sender);
+      // If we are simulating a registered contact, keep the contact phone, otherwise default template phone
+      if (messageSourceType !== "contact") {
+        setCustomSender(simTemplates[selectedTemplate].sender);
+      }
       setCustomText(simTemplates[selectedTemplate].text);
     }
-  }, [selectedTemplate]);
+  }, [selectedTemplate, messageSourceType]);
 
   // Handle local counter store
   const incrementSimCounter = () => {
@@ -141,44 +170,104 @@ export default function AgentSupervisionTab({
     });
   };
 
+  // NLP psychological levers detection helper for local heuristic checking
+  const hasHeuristicManipulations = useMemo(() => {
+    const norm = customText.toLowerCase();
+    const keywords = [
+      "solde", "dépôt", "gagnez", "virement", "fête nationale", "fête", 
+      "gratuit", "argent", "facture", "coupure", "code", "réclamez", 
+      "somme", "reçoivent", "offre", "activation", "code d'activation", 
+      "urgen", "presser", "cliquez", "moov", "flooz", "tmoney", "débloquer"
+    ];
+    return keywords.some(kw => norm.includes(kw));
+  }, [customText]);
+
+  // Perform a comparison match inside the loaded threats database (signatures check)
+  const containsKnownSignature = useMemo(() => {
+    const normalizedText = customText.toLowerCase();
+    const normalizedSender = (customSender || "").toLowerCase().replace(/\s+/g, "");
+
+    // 1. Match local/central database signatures
+    const matchesDb = threats.some(t => {
+      if (!t.value) return false;
+      const val = t.value.toLowerCase().replace(/\s+/g, "").trim();
+      if (val.length < 3) return false;
+      return normalizedText.includes(val) || normalizedSender.includes(val);
+    });
+
+    if (matchesDb) return true;
+
+    // 2. Hardcoded mock signature check for typical simulated templates to ensure accurate demonstration
+    const mockSignatureFauxDoC = [
+      "ancy.gouv.tg-subvention.net",
+      "ceet-facturation-tmoney.com",
+      "99120485",
+      "300.000 fcfa",
+      "300 000 fcfa"
+    ];
+
+    return mockSignatureFauxDoC.some(domain => normalizedText.includes(domain));
+  }, [threats, customText, customSender]);
+
   // Simulate receiving the SMS on SP_TG mobile
   const handleSimulateSMS = async () => {
     if (!customText.trim()) return;
     
     // Set message active on the virtual device
-    setActiveSender(customSender || "+228 90 00 00 00");
+    let finalSender = customSender || "+228 90 00 00 00";
+    if (messageSourceType === "contact") {
+      finalSender = registeredContacts[contactIndex].phone;
+    }
+    setActiveSender(finalSender);
     setActiveMessageText(customText);
     
     // Reset notification views
     setShowNotification(false);
     setWhitelistedCheckNotification(false);
-    setPhoneState("dashboard");
-
+    
     const isWhitelisted = trustedGroups.includes(groupName);
 
-    if (isGroupSource) {
+    if (messageSourceType === "group") {
       if (isWhitelisted) {
-        if (threatSeverity === "central_critical") {
+        if (containsKnownSignature) {
           // Central signature bypasses the whitelist!
           setShowNotification(true);
-          addLog(`DANGER DE MORT : Bien que le groupe "${groupName}" soit sur Liste Verte, le serveur national a sonné l'alarme : ce message précis contient un piège d'argent formellement identifié !`, "warn");
+          addLog(`🚨 ALERTE CRITIQUE : Le message reçu dans le groupe "${groupName}" contient une menace répertoriée dans la base de données de Lomé. Alerte immédiate !`, "warn");
         } else {
-          // Regular mild heuristic is completely ignored!
-          setWhitelistedCheckNotification(true);
-          addLog(`Garde-corps : Message suspect détecté dans le groupe de confiance "${groupName}". L'alerte a été AUTOMATIQUEMENT ÉVITÉE grâce à votre Liste Verte locale. Aucun dérangement !`, "success");
+          // Regular mild heuristic is completely ignored! Quiet delivery.
+          addLog(`🛡️ Garde-corps : Groupe répertorié dans votre Liste Verte ("${groupName}"). L'analyse de manipulation en direct a été évitée. Message délivré silencieusement.`, "success");
         }
       } else {
-        // Group not whitelisted: alert to offer whitelist or report
+        // Group not whitelisted: check if heuristic detects anything
+        if (containsKnownSignature || hasHeuristicManipulations) {
+          setShowNotification(true);
+          addLog(`⚠️ DÉTECTION GROUPE : Technique de manipulation suspectée dans le groupe "${groupName}".`, "info");
+        } else {
+          // Deliver quietly if it's a completely normal message
+          addLog(`🛡️ Garde-corps : Message ordinaire reçu dans "${groupName}". Aucune tentative suspecte.`, "success");
+        }
+      }
+    } else if (messageSourceType === "contact") {
+      // REGISTERED CONTACT: ONLY SIGNATURE COMPARISON COMPLETED. NO HEURISTIC.
+      if (containsKnownSignature) {
         setShowNotification(true);
-        addLog(`Alerte Groupe : Un de vos contacts dans le groupe "${groupName}" a partagé un message bizarre. Cliquez sur l'alerte pour choisir.`, "info");
+        addLog(`🚨 TRANSMISSION DU CONTACT : Votre proche "${registeredContacts[contactIndex].name}" (${finalSender}) vous a envoyé un message contenant un indicateur d'arnaque recensé par le SOC de Lomé. Il est probablement victime d'un piratage ou a retransféré ce piège involontairement. Ne l'accusez pas mais effacez le message !`, "warn");
+      } else {
+        // Safe! Deliver quietly without false heuristic signals!
+        addLog(`🛡️ Garde-corps : Message reçu de "${registeredContacts[contactIndex].name}". L'analyse de manipulation en direct est désactivée par sécurité pour vos contacts afin d'éviter tout faux signal. Message délivré sagement.`, "success");
+        setPhoneState("dashboard");
       }
     } else {
-      // Direct message (Unknown number)
-      setShowNotification(true);
-      if (threatSeverity === "central_critical") {
-        addLog(`URGENCE : Un numéro inconnu (${customSender}) vous envoie une arnaque confirmée et blacklistée par Lomé central. C'est un piège absolu !`, "warn");
+      // Direct message from Unknown Number: Apply Heuristics AND DB Checks!
+      if (containsKnownSignature || hasHeuristicManipulations) {
+        setShowNotification(true);
+        if (containsKnownSignature) {
+          addLog(`🚨 MENACE BLOCKLISTÉE DE L'INCONNU : Message critique d'un numéro inconnu (${finalSender}) reconnu par la base de signatures de cybermenaces du SOC de Lomé ! Bloquez-le sans attendre.`, "warn");
+        } else {
+          addLog(`⚠️ TENTATIVE DE MANIPULATION : SMS d'un numéro inconnu (${finalSender}) avec filtres sémantiques actifs. Blocage de l'ingénierie sociale en direct.`, "info");
+        }
       } else {
-        addLog(`Garde-corps : Un inconnu (${customSender}) vous a envoyé un message ressemblant à un piège d'argent.`, "info");
+        addLog(`🛡️ Garde-corps : Message d'un inconnu (${finalSender}) reçu. Aucune technique de manipulation n'a été détectée. Message délivré sagement sans alerte.`, "success");
       }
     }
     
@@ -199,7 +288,7 @@ export default function AgentSupervisionTab({
       setPhoneState("quarantine");
 
       // Only automatically submit and increment if not a mild group threat that needs choice!
-      const isMildGroup = isGroupSource && threatSeverity === "heuristic_mild";
+      const isMildGroup = messageSourceType === "group" && !containsKnownSignature;
       
       if (!isMildGroup) {
         incrementSimCounter();
@@ -215,12 +304,17 @@ export default function AgentSupervisionTab({
             },
             body: JSON.stringify({
               device_id: "SP-TG-SIMUL-PHONE",
-              sender_phone: isGroupSource ? `[Groupe: ${groupName}] ${activeSender}` : activeSender,
+              sender_phone: messageSourceType === "group" 
+                ? `[Groupe: ${groupName}] ${activeSender}` 
+                : messageSourceType === "contact"
+                  ? `[Contact: ${registeredContacts[contactIndex].name}] ${activeSender}`
+                  : activeSender,
               evidence_text: activeMessageText,
               location: "Lomé",
               meta_data: {
-                detection_reason: threatSeverity === "central_critical" ? "CENTRAL_BLOCKLIST_MATCH" : "HEURISTIC_NLP_MATCH",
+                detection_reason: containsKnownSignature ? "CENTRAL_BLOCKLIST_MATCH" : "HEURISTIC_NLP_MATCH",
                 simulated: true,
+                sender_type: messageSourceType,
                 timestamp_epoch: Date.now()
               }
             })
@@ -228,7 +322,7 @@ export default function AgentSupervisionTab({
           const resJson = await response.json();
           
           if (resJson.success) {
-            addLog(`Alerte envoyée : Le message suspect a été bloqué et signalé directement au poste central !`, "success");
+            addLog(`Alerte envoyée : Interception sécurisée ! Le rapport de renseignements a été acheminé au centre administratif national.`, "success");
             if (onRefreshData) {
               onRefreshData(); // Trigger React refresh so the tables/graphs of the SOC update immediately!
             }
@@ -472,8 +566,8 @@ export default function AgentSupervisionTab({
       {/* 3. MAIN WORKPLACE LAYOUT with integrated Live Mobile Simulator on the Right */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
         
-        {/* Left Side: Realtime charts, terminal and directory list (Columns: 7/12) */}
-        <div className="xl:col-span-7 space-y-6">
+        {/* Left Side: Realtime charts, terminal and directory list (Columns: 5/12) */}
+        <div className="xl:col-span-5 space-y-6">
           
           {/* Curve Visualization & Terminal Log Pair */}
           <div className="bg-[#121A2F] border border-white/5 rounded-xl p-5 shadow-sm space-y-5">
@@ -614,8 +708,8 @@ export default function AgentSupervisionTab({
 
         </div>
 
-        {/* Right Side: HIGH CONTEXT HIGH FIDELITY SMARTPHONE PREVIEW (Columns: 5/12) */}
-        <div className="xl:col-span-5 space-y-6">
+        {/* Right Side: HIGH CONTEXT HIGH FIDELITY SMARTPHONE PREVIEW (Columns: 7/12) */}
+        <div className="xl:col-span-7 space-y-6">
           
           {/* SIMULATION EXPLANATORY CARD */}
           <div className="bg-[#121A2F] border border-[#3B82F6]/25 rounded-xl p-5 shadow-md relative overflow-hidden">
@@ -628,16 +722,16 @@ export default function AgentSupervisionTab({
                 </h3>
                 <p className="text-[11px] text-[#94A3B8] mt-1 font-sans">
                   Voici le simulateur officiel de l&apos;application mobile citoyenne <strong className="text-white font-mono uppercase">SP_TG mobile</strong>. 
-                  Sélectionnez un cas de cyber-arnaque togolaise classique ci-dessous, puis cliquez sur envoyer pour voir comment le moteur NLP intercepte et signale la menace au SOC en direct !
+                  Sélectionnez un cas de cyber-arnaque togolaise classique ci-dessous, puis cliquez sur envoyer pour tester le comportement du téléphone et voir comment il vous protège en direct !
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col sm:flex-row sm:items-start items-center justify-center gap-6 mt-4">
             
             {/* PHYSICAL SMARTPHONE CHASSIS */}
-            <div className="w-[290px] h-[550px] bg-[#040814] rounded-[42px] border-4 border-slate-700 shadow-2xl relative overflow-hidden flex flex-col justify-between p-2.5 ring-8 ring-slate-900/40">
+            <div className="w-[290px] h-[550px] bg-[#040814] rounded-[42px] border-4 border-slate-700 shadow-2xl relative overflow-hidden flex flex-col justify-between p-2.5 ring-8 ring-slate-900/40 shrink-0">
               
               {/* Speaker & notch cutout */}
               <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-28 h-5 bg-black rounded-full z-30 flex items-center justify-center">
@@ -658,18 +752,18 @@ export default function AgentSupervisionTab({
               {showNotification && (
                 <div 
                   className={`absolute top-7 left-2 right-2 p-3 bg-slate-950/95 border rounded-xl text-[11px] text-white shadow-xl z-50 animate-bounce cursor-pointer ${
-                    threatSeverity === "central_critical" 
+                    containsKnownSignature 
                       ? "border-red-500/40 shadow-red-500/5 hover:border-red-400/50" 
                       : "border-amber-500/25 hover:border-amber-400/40"
                   }`}
                   onClick={handleOpenAlertAndBlock}
                 >
                   <div className={`flex items-center gap-2 mb-1.5 font-mono text-[9px] tracking-wider font-bold ${
-                    threatSeverity === "central_critical" ? "text-red-400" : "text-amber-400"
+                    containsKnownSignature ? "text-red-400" : "text-amber-400"
                   }`}>
                     <Bell className="w-3 h-3 animate-pulse" />
                     <span>
-                      {threatSeverity === "central_critical" 
+                      {containsKnownSignature 
                         ? "🚨 ARNAQUE CONFIRMÉE PAR LE CENTRE • SP_TG" 
                         : isGroupSource 
                           ? "⚠️ MESSAGE SUSPECT EN GROUPE • SP_TG" 
@@ -678,16 +772,26 @@ export default function AgentSupervisionTab({
                   </div>
                   <div className="flex items-start gap-2">
                     <div className={`p-1 rounded shrink-0 ${
-                      threatSeverity === "central_critical" ? "bg-red-500/10 text-red-400" : "bg-amber-500/10 text-amber-400"
+                      containsKnownSignature ? "bg-red-500/10 text-red-400" : "bg-amber-500/10 text-amber-400"
                     }`}>
                       <Mail className="w-3.5 h-3.5" />
                     </div>
                     <div>
                       <strong className="text-white text-[10px] block mb-0.5">
-                        {isGroupSource ? `💬 ${groupName}` : activeSender}
+                        {isGroupSource 
+                          ? `💬 ${groupName}` 
+                          : isRegisteredContact 
+                            ? `👤 ${registeredContacts[contactIndex]?.name || activeSender}` 
+                            : activeSender
+                        }
                       </strong>
                       <span className="text-slate-400 text-[8.5px] block font-mono mb-0.5">
-                        {isGroupSource ? `Participant: ${activeSender}` : "Message Direct"}
+                        {isGroupSource 
+                          ? `Participant: ${activeSender}` 
+                          : isRegisteredContact 
+                            ? `Contact Enregistré: ${activeSender}` 
+                            : "Numéro Inconnu (Direct)"
+                        }
                       </span>
                       <p className="text-slate-300 font-sans line-clamp-2 text-[10px] leading-snug">{activeMessageText}</p>
                     </div>
@@ -833,7 +937,7 @@ export default function AgentSupervisionTab({
                   <div className="flex-1 flex flex-col justify-between z-10 pt-4 animate-fade-in text-slate-200">
                     
                     {/* Specialized view for Mild Group Warning to keep it soft and less scary */}
-                    {isGroupSource && threatSeverity === "heuristic_mild" ? (
+                    {isGroupSource && !containsKnownSignature ? (
                       <div className="flex flex-col justify-between flex-1">
                         
                         {/* Soft Yellow warning Header */}
@@ -896,67 +1000,93 @@ export default function AgentSupervisionTab({
                       // STANDARD OR CRITICAL SCAM BLOCK SCREEN
                       <div className="flex flex-col justify-between flex-1">
                         
-                        {/* Critical Red warning Header */}
-                        <div className={`p-2 rounded-xl flex items-center gap-2 ${
-                          threatSeverity === "central_critical"
-                            ? "bg-red-500/15 border border-red-500/35"
-                            : "bg-[#EF4444]/10 border border-[#EF4444]/25"
-                        }`}>
-                          <ShieldAlert className="w-5 h-5 text-red-500 shrink-0 animate-bounce" />
-                          <div className="leading-tight text-[10px]">
-                            <h4 className="font-bold text-red-500 font-mono uppercase text-[9px] tracking-wide">
-                              {threatSeverity === "central_critical" 
-                                ? "🚨 ARNAQUE TRÈS CRITIQUE ET CONFIRMÉE" 
-                                : "⚠️ TENTATIVE D&apos;ARNAQUE COMPLÈTE"}
-                            </h4>
-                            <span className="text-[7.5px] text-slate-400 block font-mono">
-                              {threatSeverity === "central_critical" 
-                                ? "Identifié par le Poste Central" 
-                                : "Neutralisé par le garde-corps local"}
-                            </span>
+                        {/* Nuanced Header based on whether sender is registered or unknown */}
+                        {isRegisteredContact ? (
+                          /* COMPASSIONATE WARNING FOR CONFIRMED FRAUD SENT BY A KNOWN CONTACT */
+                          <div className="p-2 rounded-xl flex items-center gap-2 bg-amber-500/15 border border-amber-500/35">
+                            <ShieldAlert className="w-5 h-5 text-amber-500 shrink-0" />
+                            <div className="leading-tight text-[10px]">
+                              <h4 className="font-bold text-amber-500 font-mono text-[9px] tracking-wide uppercase">
+                                ⚠️ MESSAGE SUSPECT • PROCHE ABUSÉ ?
+                              </h4>
+                              <span className="text-[7.5px] text-slate-400 block font-mono">
+                                Menace relayée par un de vos contacts
+                              </span>
+                            </div>
                           </div>
-                        </div>
+                        ) : (
+                          /* SEVERE ALARM FOR CONFIRMED FRAUD SENT BY AN UNKNOWN SENDER */
+                          <div className="p-2 rounded-xl flex items-center gap-2 bg-red-500/25 border border-red-500/40">
+                            <ShieldAlert className="w-5 h-5 text-red-500 shrink-0 animate-bounce" />
+                            <div className="leading-tight text-[10px]">
+                              <h4 className="font-bold text-red-400 font-mono text-[9px] tracking-wide uppercase">
+                                🚨 DANGER ARRÊTÉ • ALERTE ABSOLUE
+                              </h4>
+                              <span className="text-[7.5px] text-slate-450 block font-mono">
+                                Numéro inconnu répertorié par Lomé Sûre
+                              </span>
+                            </div>
+                          </div>
+                        )}
 
                         {/* SUSPECT MESSAGE INFO CONTAINER */}
-                        <div className="bg-slate-950 border border-red-500/10 p-2.5 rounded-xl mt-2.5 space-y-2 flex-1 flex flex-col justify-between">
+                        <div className="bg-slate-950 border border-white/5 p-2.5 rounded-xl mt-2.5 space-y-2 flex-1 flex flex-col justify-between">
                           <div>
                             <div className="flex items-center justify-between text-[7.8px] font-mono border-b border-white/5 pb-1">
                               <span className="text-slate-400">
-                                {isGroupSource ? `Groupe: ${groupName}` : `De: ${activeSender}`}
+                                {isGroupSource 
+                                  ? `Groupe : ${groupName}` 
+                                  : isRegisteredContact
+                                    ? `Contact enregistré : ${registeredContacts[contactIndex]?.name || activeSender}`
+                                    : `De (Inconnu) : ${activeSender}`
+                                }
                               </span>
-                              <span className="text-red-400 uppercase font-bold tracking-wider text-[7.5px]">PIÈGE NEUTRALISÉ</span>
+                              <span className="text-red-400 uppercase font-bold tracking-wider text-[7.5px]">Piège Intercepté</span>
                             </div>
-                            <p className="mt-1.5 text-[8.2px] font-sans text-amber-100 leading-snug italic bg-amber-500/5 p-2 rounded border border-amber-500/10 max-h-[100px] overflow-y-auto">
+                            <p className="mt-1.5 text-[8.2px] font-sans text-amber-100 leading-snug italic bg-amber-500/5 p-2 rounded border border-amber-500/10 max-h-[85px] overflow-y-auto">
                               &quot;{activeMessageText}&quot;
                             </p>
                           </div>
 
-                          {/* SIMPLE IMPERATIVE USER INSTRUCTIONS (Clear to all targets) */}
-                          <div className="bg-red-950/20 p-2 border border-red-500/15 rounded-lg space-y-1">
-                            <span className="text-[8.5px] font-mono font-bold text-red-400 uppercase tracking-wider block">
-                              🚨 CONSIGNES DE SÉCURITÉ :
-                            </span>
-                            <ul className="text-[7.8px] text-slate-300 font-sans space-y-1 leading-tight list-none pl-0">
-                              <li className="flex items-start gap-1">
-                                <span className="text-red-500 shrink-0 font-bold">X</span>
-                                <span><strong>Ne communiquez en aucun cas vos données</strong> (code Flooz, T-Money ou WhatsApp).</span>
-                              </li>
-                              <li className="flex items-start gap-1">
-                                <span className="text-red-500 shrink-0 font-bold">X</span>
-                                <span><strong>N&apos;ouvrez jamais le lien</strong> internet reçu !</span>
-                              </li>
-                              <li className="flex items-start gap-1">
-                                <span className="text-red-500 shrink-0 font-bold">X</span>
-                                <span><strong>Ne répondez pas</strong> sans avoir cliqué ici pour en savoir plus.</span>
-                              </li>
-                            </ul>
-                          </div>
+                          {/* DYNAMIC RULES & SOCIAL ADVISORY ACCORDING TO SENDER RELIABILITY */}
+                          {isRegisteredContact ? (
+                            <div className="bg-amber-950/20 p-2 border border-amber-500/15 rounded-lg space-y-1">
+                              <span className="text-[8.5px] font-mono font-bold text-amber-400 uppercase tracking-wider block">
+                                ℹ️ CONSEIL IMPORTANT ET BIENVEILLANT :
+                              </span>
+                              <div className="text-[7.8px] text-slate-300 font-sans space-y-1 leading-normal">
+                                <p>
+                                  Le numéro de votre proche <strong>{registeredContacts[contactIndex]?.name || activeSender}</strong> partage avec vous un message qui a été détecté comme utilisé par de nombreux attaquants et déclaré comme fraude auprès du poste central (SOC).
+                                </p>
+                                <p className="text-amber-300">
+                                  <strong>Ne blâmez pas l&apos;auteur !</strong> Votre proche n&apos;est probablement pas l&apos;attaquant : il a pu être lui-même piraté ou a simplement transféré ce piège de bonne foi. Ne lui en voulez pas.
+                                </p>
+                                <p className="font-bold">
+                                  👉 Veuillez simplement supprimer ce message, ne pas cliquer, et lui passer un appel téléphonique direct pour l&apos;avertir gentiment.
+                                </p>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="bg-red-950/25 p-2 border border-red-500/20 rounded-lg space-y-1">
+                              <span className="text-[8.5px] font-mono font-bold text-red-100/90 uppercase tracking-wider block">
+                                🛑 EXPÉDITEUR MALVEILLANT - ACTION DIRECTE :
+                              </span>
+                              <div className="text-[7.8px] text-slate-300 font-sans space-y-1 leading-normal">
+                                <p>
+                                  ⚠️ <strong>Bloquez ce numéro ({activeSender}) :</strong> C&apos;est une tentative claire d&apos;arnaque envoyée par un inconnu de façon malveillante.
+                                </p>
+                                <p>
+                                  ❌ <strong>Supprimez le message :</strong> Ne l&apos;envoyez à personne, ne cliquez sur aucun lien, et n&apos;indiquez aucun mot de passe ni versement d&apos;argent.
+                                </p>
+                              </div>
+                            </div>
+                          )}
 
                           {/* Heuristics reasoning */}
                           <div className="border-t border-white/5 pt-1">
-                            <span className="text-[7px] font-mono font-bold text-slate-500 uppercase tracking-wider block">Pourquoi c&apos;est bizarre ?</span>
+                            <span className="text-[7px] font-mono font-bold text-slate-500 uppercase tracking-wider block">Dossier de signalement au SOC :</span>
                             <p className="text-[7.5px] text-slate-400 leading-normal font-mono mt-0.5">
-                              {simTemplates[selectedTemplate] ? simTemplates[selectedTemplate].heuristics : "Détecté grâce aux mots trompeurs typiques des opportunités trop belles pour être vraies."}
+                              {simTemplates[selectedTemplate] ? simTemplates[selectedTemplate].heuristics : "Base de signatures de cybermenace de Lomé."}
                             </p>
                           </div>
                         </div>
@@ -968,10 +1098,10 @@ export default function AgentSupervisionTab({
                             SIGNALÉ AU CENTRE
                           </span>
                           {isSimulatingApiCall ? (
-                            <span className="text-amber-400 animate-pulse font-bold">ENVOI DU RAPPORT...</span>
+                            <span className="text-amber-400 animate-pulse font-bold">TRANSMISSION...</span>
                           ) : (
                             <span className="text-emerald-450 font-bold flex items-center gap-0.5">
-                              <CheckCircle className="w-2.5 h-2.5" /> SIGNALÉ ET BLOQUÉ !
+                              <CheckCircle className="w-2.5 h-2.5" /> BLOQUÉ DE SÉCURITÉ !
                             </span>
                           )}
                         </div>
@@ -1001,45 +1131,117 @@ export default function AgentSupervisionTab({
             </div>
 
             {/* CONTROL PANEL FOR JURY AND DEVELOPER DEMONSTRATION */}
-            <div className="w-[290px] mt-4 bg-[#121A2F]/80 border border-white/5 rounded-2xl p-4 space-y-3 shadow-md font-mono text-xs">
+            <div className="w-[290px] bg-[#121A2F]/80 border border-white/5 rounded-2xl p-4 space-y-3 shadow-md font-mono text-xs shrink-0">
               <span className="text-[10px] font-bold text-white uppercase tracking-wider block text-center border-b border-white/5 pb-1.5">
-                🎛️ Panneau de Contrôle de simulation
+                🎛️ Simulateur d&apos;envoi de messages
               </span>
+
+              {/* Provenance du message / Source selection */}
+              <div className="space-y-1">
+                <label className="text-[9px] text-[#38BDF8] block uppercase font-bold tracking-wider">Qui envoie le message ?</label>
+                <select
+                  value={messageSourceType}
+                  onChange={(e) => {
+                    const val = e.target.value as "unknown" | "contact" | "group";
+                    setMessageSourceType(val);
+                    if (val === "contact") {
+                      // Automatically update customSender with contact's phone
+                      setCustomSender(registeredContacts[contactIndex].phone);
+                    } else if (val === "unknown") {
+                      setCustomSender("+228 99 12 04 85");
+                    }
+                  }}
+                  className="w-full bg-[#0B1020] border border-[#38BDF8]/20 text-[10px] p-1.5 rounded focus:outline-none text-sky-300 font-bold cursor-pointer"
+                >
+                  <option value="unknown">👤 Un numéro inconnu (Non enregistré)</option>
+                  <option value="contact">👥 Un de mes contacts (Enregistré)</option>
+                  <option value="group">💬 Un message reçu dans un groupe WhatsApp</option>
+                </select>
+              </div>
+
+              {/* Conditional Contact selection */}
+              {messageSourceType === "contact" && (
+                <div className="space-y-1 bg-sky-950/20 p-2 border border-sky-500/10 rounded animate-fade-in">
+                  <label className="text-[8.5px] text-sky-400 block uppercase font-bold">Choisir le contact :</label>
+                  <select
+                    value={contactIndex}
+                    onChange={(e) => {
+                      const idx = parseInt(e.target.value, 10);
+                      setContactIndex(idx);
+                      setCustomSender(registeredContacts[idx].phone);
+                    }}
+                    className="w-full bg-[#0B1020] border border-sky-500/15 text-[10px] p-1 rounded text-white cursor-pointer"
+                  >
+                    {registeredContacts.map((c, i) => (
+                      <option key={i} value={i}>{c.name} ({c.phone})</option>
+                    ))}
+                  </select>
+                  <span className="text-[7.5px] text-slate-450 leading-normal block pt-1">
+                    ℹ️ Vos contacts enregistrés sont réputés sûrs par défaut. L&apos;analyse d&apos;ingénierie sociale (NLP) y est désactivée pour zéro faux-positif. Seul un piratage avéré (détecté par la base de signatures de Lomé) lancera l&apos;alerte.
+                  </span>
+                </div>
+              )}
+
+              {/* Conditional Group Name input */}
+              {messageSourceType === "group" && (
+                <div className="space-y-1 bg-emerald-950/10 p-2 border border-emerald-500/10 rounded animate-fade-in">
+                  <label className="text-[8.5px] text-emerald-400 block uppercase font-bold">Nom du groupe :</label>
+                  <input
+                    type="text"
+                    value={groupName}
+                    onChange={(e) => setGroupName(e.target.value)}
+                    className="w-full bg-[#0B1020] border border-emerald-500/15 text-[10px] p-1.5 rounded text-white font-mono"
+                  />
+                  {trustedGroups.includes(groupName) ? (
+                    <span className="text-[7.8px] text-emerald-400 font-bold block pt-1">
+                      ✅ Ce groupe est dans votre LISTE VERTE. Les alertes de détection de manipulation en direct y sont désactivées.
+                    </span>
+                  ) : (
+                    <span className="text-[7.5px] text-amber-500 block pt-1">
+                      ⚠️ Groupe absent de votre Liste Verte. Vos défenses analyseront d&apos;éventuelles techniques de manipulation en direct pour vous alerter.
+                    </span>
+                  )}
+                </div>
+              )}
 
               {/* Template dropdown list */}
               <div className="space-y-1">
-                <label className="text-[9px] text-slate-555 block uppercase">Modèles d&apos;arnaque :</label>
+                <label className="text-[9px] text-slate-400 block uppercase">Choisir un SMS / Message type :</label>
                 <select
                   value={selectedTemplate}
                   onChange={(e) => setSelectedTemplate(parseInt(e.target.value, 10))}
-                  className="w-full bg-[#0B1020] border border-white/10 text-[10px] p-1.5 rounded focus:outline-none"
+                  className="w-full bg-[#0B1020] border border-white/10 text-[10px] p-1.5 rounded focus:outline-none text-slate-300 cursor-pointer text-[9.5px]"
                 >
-                  <option value={-1}>Saisie libre (Personnalisé)</option>
+                  <option value={-1}>Saisie personnalisée (Écrire vous-même)</option>
                   {simTemplates.map((tpl, i) => (
-                    <option key={i} value={i}>{tpl.title}</option>
+                    <option key={i} value={i}>
+                      {tpl.title} {tpl.isSignature ? "• [🔴 Présent dans la base de données]" : "• [🟡 Non répertorié dans la base]"}
+                    </option>
                   ))}
                 </select>
               </div>
 
               {/* Custom sender number */}
               <div className="grid grid-cols-1 gap-1.5">
-                <div>
-                  <label className="text-[9px] text-slate-555 block uppercase">Expéditeur suspect :</label>
-                  <input
-                    type="text"
-                    value={customSender}
-                    onChange={(e) => {
-                      setCustomSender(e.target.value);
-                      setSelectedTemplate(-1);
-                    }}
-                    placeholder="+228..."
-                    className="w-full bg-[#0B1020] border border-white/10 text-[10px] p-1 rounded font-mono"
-                  />
-                </div>
+                {messageSourceType !== "contact" && (
+                  <div>
+                    <label className="text-[9px] text-slate-450 block uppercase">Numéro de l&apos;expéditeur :</label>
+                    <input
+                      type="text"
+                      value={customSender}
+                      onChange={(e) => {
+                        setCustomSender(e.target.value);
+                        setSelectedTemplate(-1);
+                      }}
+                      placeholder="+228..."
+                      className="w-full bg-[#0B1020] border border-white/10 text-[10px] p-1 rounded font-mono text-white text-[9.5px]"
+                    />
+                  </div>
+                )}
                 
                 {/* Custom text body */}
                 <div>
-                  <label className="text-[9px] text-slate-555 block uppercase">Contenu du message :</label>
+                  <label className="text-[9px] text-slate-450 block uppercase">Texte du message à tester :</label>
                   <textarea
                     value={customText}
                     onChange={(e) => {
@@ -1048,8 +1250,14 @@ export default function AgentSupervisionTab({
                     }}
                     rows={3}
                     placeholder="Contenu du SMS à intercepter..."
-                    className="w-full bg-[#0B1020] border border-white/10 text-[10px] p-1.5 rounded resize-none"
+                    className="w-full bg-[#0B1020] border border-white/10 text-[10px] p-1.5 rounded resize-none text-slate-200"
                   />
+                  {containsKnownSignature && (
+                    <div className="text-[8px] text-red-500 font-bold font-mono mt-1 flex items-center gap-1 animate-pulse">
+                      <span className="w-1.5 h-1.5 bg-red-400 rounded-full shrink-0"></span>
+                      DÉTECTÉ : Contient une signature de la base locale de Lomé !
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1057,14 +1265,14 @@ export default function AgentSupervisionTab({
               <button
                 onClick={handleSimulateSMS}
                 disabled={!customText.trim()}
-                className="w-full py-2 bg-[#EF4444] hover:bg-rose-600 disabled:bg-slate-800 disabled:text-slate-655 font-mono text-[9px] font-bold text-white rounded-xl uppercase transition tracking-wider flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-full py-2.5 bg-[#EF4444] hover:bg-rose-600 disabled:bg-slate-800 disabled:text-slate-500 font-mono text-[9px] font-bold text-white rounded-xl uppercase transition tracking-wider flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-red-550/10 active:scale-[98%]"
               >
                 <Send className="w-3.5 h-3.5" />
-                DÉPLOYER LE SMS PHYSIQUE
+                📱 ENVOYER LE MESSAGE SUR LE TÉLÉPHONE
               </button>
 
               <div className="bg-blue-950/20 border border-blue-500/10 p-2 rounded text-[8.5px] text-slate-400 text-center leading-normal">
-                💡 <strong>Effet de Démonstration :</strong> En simulant l&apos;envoi du SMS, une alerte apparaît en temps réel sur l&apos;écran virtuel. Cliquez dessus pour voir comment votre garde du corps désarme le piège et transmet instantanément l&apos;alerte de sécurité !
+                💡 <strong>Astuce de test :</strong> Choisissez l&apos;expéditeur (Inconnu, Ami, Groupe), sélectionnez un message type, puis cliquez sur le bouton rouge. Regardez la réaction du téléphone virtuel ! S&apos;il y a une alerte, une notification apparaîtra en haut, cliquez dessus pour interagir.
               </div>
 
             </div>

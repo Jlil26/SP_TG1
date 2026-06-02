@@ -71,7 +71,7 @@ public class RetrofitClient {
      */
     public static String getServerBaseUrl(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        String savedIp = prefs.getString(KEY_SERVER_IP, "https://sp-tg-1.onrender.com");
+        String savedIp = prefs.getString(KEY_SERVER_IP, "https://sp-sentinel-hq.onrender.com");
         
         // Formatte correctement l'URL
         if (!savedIp.startsWith("http://") && !savedIp.startsWith("https://")) {

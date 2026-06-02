@@ -686,6 +686,7 @@ export default function App() {
 
               {activeTab === "agent_supervision" && (
                 <AgentSupervisionTab 
+                  threats={threats}
                   agents={agents}
                   mobileSignals={mobileSignals}
                   onTriggerFlashUpdate={handleTriggerFlashUpdate}

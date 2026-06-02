@@ -6,7 +6,7 @@
     "defaultSyncIntervalDays": 14,
     "lastFlashUpdateAt": null,
     "flashUpdateStatus": "Idle",
-    "gatewayAddress": "http://102.64.21.30:3000"
+    "gatewayAddress": "https://sp-sentinel-hq.onrender.com"
   },
   "snapshots": [],
   "admins": [

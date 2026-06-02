@@ -221,7 +221,7 @@ const demoDatabase: DatabaseSchema = {
     defaultSyncIntervalDays: 14,
     lastFlashUpdateAt: "2026-05-20T11:00:00Z",
     flashUpdateStatus: "Idle",
-    gatewayAddress: "http://102.64.21.30:3000"
+    gatewayAddress: "https://sp-sentinel-hq.onrender.com"
   },
   snapshots: [],
   admins: [
@@ -282,7 +282,7 @@ const initialDatabase: DatabaseSchema = {
     defaultSyncIntervalDays: 14,
     lastFlashUpdateAt: null,
     flashUpdateStatus: "Idle",
-    gatewayAddress: "http://102.64.21.30:3000"
+    gatewayAddress: "https://sp-sentinel-hq.onrender.com"
   },
   snapshots: [],
   admins: [
@@ -305,7 +305,7 @@ class DBManager {
       this.db.config = { ...initialDatabase.config };
     }
     if (this.db.config.gatewayAddress === undefined) {
-      this.db.config.gatewayAddress = "http://102.64.21.30:3000";
+      this.db.config.gatewayAddress = "https://sp-sentinel-hq.onrender.com";
     }
     if (this.db.config.customApiKey === undefined) {
       this.db.config.customApiKey = null;
@@ -452,7 +452,7 @@ class DBManager {
     this.db.mobileSignals = [...(demoDatabase.mobileSignals || [])];
     this.db.config.lastFlashUpdateAt = demoDatabase.config.lastFlashUpdateAt;
     this.db.config.flashUpdateStatus = demoDatabase.config.flashUpdateStatus;
-    this.db.config.gatewayAddress = demoDatabase.config.gatewayAddress || "http://102.64.21.30:3000";
+    this.db.config.gatewayAddress = demoDatabase.config.gatewayAddress || "https://sp-sentinel-hq.onrender.com";
     this.save();
   }
 

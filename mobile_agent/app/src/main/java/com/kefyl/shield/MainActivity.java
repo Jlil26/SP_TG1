@@ -1008,7 +1008,7 @@ public class MainActivity extends AppCompatActivity {
         // Server Input
         final android.widget.EditText etIp = new android.widget.EditText(this);
         String currentIp = getSharedPreferences("kefyl_prefs", MODE_PRIVATE)
-                .getString("server_ip_address", "https://sp-tg-1.onrender.com");
+                .getString("server_ip_address", "https://sp-sentinel-hq.onrender.com");
         etIp.setText(currentIp);
         etIp.setTextColor(android.graphics.Color.WHITE);
         etIp.setTextSize(13);
@@ -1021,9 +1021,50 @@ public class MainActivity extends AppCompatActivity {
         
         android.widget.LinearLayout.LayoutParams lp = new android.widget.LinearLayout.LayoutParams(
                 android.widget.LinearLayout.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
-        lp.setMargins(0, 0, 0, dpToPx(20));
+        lp.setMargins(0, 0, 0, dpToPx(12));
         etIp.setLayoutParams(lp);
         root.addView(etIp);
+
+        // Presets Layout for Easy Jury Testing (Local vs Prod toggles)
+        android.widget.LinearLayout presetsLayout = new android.widget.LinearLayout(this);
+        presetsLayout.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+        android.widget.LinearLayout.LayoutParams presetsLp = new android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+        presetsLp.setMargins(0, 0, 0, dpToPx(18));
+        presetsLayout.setLayoutParams(presetsLp);
+
+        // Prod button
+        android.widget.Button prodBtn = new android.widget.Button(this);
+        prodBtn.setText("🌐 PROD LIGNE");
+        prodBtn.setTextSize(10);
+        prodBtn.setTextColor(android.graphics.Color.WHITE);
+        android.graphics.drawable.GradientDrawable prodBg = new android.graphics.drawable.GradientDrawable();
+        prodBg.setColor(android.graphics.Color.parseColor("#10B981")); // Emerald
+        prodBg.setCornerRadius((float) dpToPx(4));
+        prodBtn.setBackground(prodBg);
+        android.widget.LinearLayout.LayoutParams prodLp = new android.widget.LinearLayout.LayoutParams(
+                0, android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f);
+        prodLp.setMargins(0, 0, dpToPx(8), 0);
+        prodBtn.setLayoutParams(prodLp);
+        prodBtn.setOnClickListener(v -> etIp.setText("https://sp-sentinel-hq.onrender.com"));
+
+        // Local button
+        android.widget.Button localBtn = new android.widget.Button(this);
+        localBtn.setText("💻 TEST LOCAL");
+        localBtn.setTextSize(10);
+        localBtn.setTextColor(android.graphics.Color.WHITE);
+        android.graphics.drawable.GradientDrawable localBg = new android.graphics.drawable.GradientDrawable();
+        localBg.setColor(android.graphics.Color.parseColor("#475569")); // Slate
+        localBg.setCornerRadius((float) dpToPx(4));
+        localBtn.setBackground(localBg);
+        android.widget.LinearLayout.LayoutParams localLp = new android.widget.LinearLayout.LayoutParams(
+                0, android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f);
+        localBtn.setLayoutParams(localLp);
+        localBtn.setOnClickListener(v -> etIp.setText("http://10.0.2.2:3000")); // Android emulator loopback IP for computer localhost:3000
+
+        presetsLayout.addView(prodBtn);
+        presetsLayout.addView(localBtn);
+        root.addView(presetsLayout);
 
         // Save Button
         android.widget.Button saveBtn = new android.widget.Button(this);

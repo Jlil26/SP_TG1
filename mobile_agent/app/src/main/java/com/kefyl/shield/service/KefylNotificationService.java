@@ -96,6 +96,18 @@ public class KefylNotificationService extends NotificationListenerService {
         executorService.execute(() -> {
             Log.d(TAG, "Interception de notification de " + title + " : " + text);
             
+            // Détection si c'est un message de groupe (WhatsApp / SMS groupé)
+            boolean isGroup = false;
+            String groupName = "";
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                isGroup = extras.getBoolean(Notification.EXTRA_IS_GROUP_CONVERSATION, false);
+            }
+            CharSequence convTitle = extras.getCharSequence(Notification.EXTRA_CONVERSATION_TITLE);
+            if (convTitle != null && !convTitle.toString().isEmpty()) {
+                isGroup = true;
+                groupName = convTitle.toString().trim();
+            }
+
             // 1. Étape d'identification du contact (Annuaire vs Inconnu)
             boolean isKnown = isContactInPhonebook(this, title);
             
@@ -111,13 +123,30 @@ public class KefylNotificationService extends NotificationListenerService {
             // --- FILTRAGE SOURCE DE CONFIANCE (TRUSTED SOURCES / GROUPS) ---
             SharedPreferences prefs = getSharedPreferences("kefyl_prefs", MODE_PRIVATE);
             java.util.Set<String> trustedSources = prefs.getStringSet("trusted_sources", new java.util.HashSet<>());
+            
+            // Si c'est un groupe répertorié sur Liste Verte (trusted_sources)
+            if (isGroup && !groupName.isEmpty() && trustedSources.contains(groupName)) {
+                // Sur groupe de confiance, seule une signature d'IoC de Lomé central peut shunter le bypass
+                Signature matchedSignature = phishingAnalyzer.analyzeMessage(text);
+                if (matchedSignature != null) {
+                    Log.w(TAG, "⚠️ Signature critique détectée dans un groupe de confiance de la Liste Verte ! Shuntage actif.");
+                    triggerHighPriorityAlertNotification(title, text, matchedSignature);
+                    incrementBlockedThreatsCount();
+                    submitForensicReport(title, text, matchedSignature, "CRITICAL_SIGNATURE_MATCH");
+                } else {
+                    Log.i(TAG, "🛡️ Groupe sur Liste Verte détecté (" + groupName + "). L'analyse heuristique NLP locale a été évitée.");
+                }
+                return;
+            }
+
+            // Si c'est un contact individuel explicitement en source de confiance
             if (trustedSources.contains(title) || trustedSources.contains(contactPhone)) {
                 Log.i(TAG, "🛡️ Source de confiance détectée (" + title + " / " + contactPhone + "). On ignore l'analyse de sécurité.");
                 return;
             }
 
-            // Si c'est un expéditeur inconnu (ou pas dans le carnet), on initialise son suivi dans Room
-            if (!isKnown) {
+            // Si c'est un expéditeur inconnu (et hors contexte groupe), on initialise son suivi de vigilance SQLite
+            if (!isKnown && !isGroup) {
                 ContactState existingState = contactStateDao.getContactState(contactPhone);
                 if (existingState == null) {
                     ContactState newState = new ContactState(contactPhone, "LISTENING", System.currentTimeMillis());
@@ -131,7 +160,8 @@ public class KefylNotificationService extends NotificationListenerService {
                 }
             }
 
-            // 2. Étape du Verdict - Niveau Critique (Rouge) : Signature directe en BDD de signatures
+            // 2. Étape du Verdict - Niveau Critique (Rouge) : Signature directe en BDD de signatures (Signatures SOC)
+            // S'applique à tout le monde (Zéro-trust au niveau signature pour parer l'usurpation / le piratage d'un contact)
             Signature matchedSignature = phishingAnalyzer.analyzeMessage(text);
             
             if (matchedSignature != null) {
@@ -142,35 +172,57 @@ public class KefylNotificationService extends NotificationListenerService {
                 return;
             }
 
-            // 3. Étape du Verdict - Niveau Suspect (Jaune/Orange) : Heuristique Psychologique sur Contacts Inconnus
+            // 3. Étape du Verdict - Niveau Suspect (Jaune/Orange) : Heuristique Psychologique fine sur Contacts Inconnus
+            // STRICTEMENT DÉSACTIVÉE pour les contacts enregistrés légitimes pour éradiquer les faux positifs.
             if (!isKnown) {
-                ContactState state = contactStateDao.getContactState(contactPhone);
-                if (state != null && "LISTENING".equals(state.getStatus())) {
-                    
-                    // Exécuter le NLP heuristique de l'analyse psychologique nationale
+                if (isGroup) {
+                    // Pour un groupe non-liste-verte, on exécute l'heuristique
                     List<String> detectedLevers = phishingAnalyzer.detectSocialEngineeringLevers(text);
-                    
                     if (!detectedLevers.isEmpty()) {
-                        Log.w(TAG, "⚠️ ALERTE DE VIGILANCE (JAUNE/ORANGE) : Contact inconnu utilisant des techniques de manipulation.");
+                        Log.w(TAG, "⚠️ ALERTE DE VIGILANCE GROUPE (JAUNE/ORANGE) : Message d'ingénierie sociale suspecté.");
+                        triggerVigilanceAlertNotification(title + " @" + groupName, text, detectedLevers);
                         
-                        // Promotion de l'interlocuteur à "SUSPECTED" en local
-                        state.setStatus("SUSPECTED");
-                        contactStateDao.updateContactState(state);
-
-                        // Déclencher une alerte système Heuristique de Niveau Orange/Jaune
-                        triggerVigilanceAlertNotification(title, text, detectedLevers);
-                        
-                        // Alimenter le SOC forensique Central de cette tentative ingénieuse
                         Signature mockHeuristicSig = new Signature(
                                 contactPhone, 
                                 "PHONE", 
-                                "Suspicion Heuristique", 
+                                "Suspicion Heuristique Groupe: " + groupName, 
                                 "Lomé", 
                                 "Manipulation détectée: " + String.join(", ", detectedLevers)
                         );
                         submitForensicReport(title, text, mockHeuristicSig, "HEURISTIC_SOCIAL_ENG");
                     }
+                } else {
+                    // Pour un numéro inconnu direct
+                    ContactState state = contactStateDao.getContactState(contactPhone);
+                    if (state != null && "LISTENING".equals(state.getStatus())) {
+                        
+                        // Exécuter le NLP heuristique de l'analyse linguistique locale
+                        List<String> detectedLevers = phishingAnalyzer.detectSocialEngineeringLevers(text);
+                        
+                        if (!detectedLevers.isEmpty()) {
+                            Log.w(TAG, "⚠️ ALERTE DE VIGILANCE (JAUNE/ORANGE) : Contact inconnu utilisant des techniques de manipulation.");
+                            
+                            // Promotion de l'interlocuteur à "SUSPECTED" en local
+                            state.setStatus("SUSPECTED");
+                            contactStateDao.updateContactState(state);
+
+                            // Déclencher une alerte système Heuristique de Niveau Orange/Jaune
+                            triggerVigilanceAlertNotification(title, text, detectedLevers);
+                            
+                            // Alimenter le SOC forensique Central de cette tentative ingénieuse
+                            Signature mockHeuristicSig = new Signature(
+                                    contactPhone, 
+                                    "PHONE", 
+                                    "Suspicion Heuristique", 
+                                    "Lomé", 
+                                    "Manipulation détectée: " + String.join(", ", detectedLevers)
+                            );
+                            submitForensicReport(title, text, mockHeuristicSig, "HEURISTIC_SOCIAL_ENG");
+                        }
+                    }
                 }
+            } else {
+                Log.d(TAG, "ℹ️ Garde-corps : Heuristique NLP ignorée pour le contact enregistré \"" + title + "\" afin d'éviter tout faux positif.");
             }
         });
     }
@@ -178,7 +230,35 @@ public class KefylNotificationService extends NotificationListenerService {
     private boolean isContactInPhonebook(Context context, String titleOrPhone) {
         if (titleOrPhone == null || titleOrPhone.trim().isEmpty()) return false;
         
-        // Si le titre contient des chiffres (ex: "+22899010203"), filtre de numéro de téléphone
+        // 1. Détection intelligente du Format de Titre
+        // Si le titre ne comporte aucun chiffre, ou s'il commence par des lettres et n'a pas la forme d'un numéro brut,
+        // c'est vraisemblablement un contact enregistré qu'Android a déjà résolu en texte amiable (ex: "Maman", "Koffi Ami", etc.).
+        // Un expéditeur inconnu s'affiche sous forme de numéro brut (ex: "+228 99 12 04 85" ou "99120485").
+        String cleanText = titleOrPhone.trim();
+        boolean isSmsGateway = cleanText.matches("^[A-Z0-9_\\-]{3,12}$") 
+                || cleanText.equalsIgnoreCase("MOOV") 
+                || cleanText.equalsIgnoreCase("TOGOCOM") 
+                || cleanText.equalsIgnoreCase("CEET") 
+                || cleanText.equalsIgnoreCase("Flooz") 
+                || cleanText.equalsIgnoreCase("Tmoney");
+        
+        if (!isSmsGateway) {
+            boolean hasBigDigits = cleanText.replaceAll("[^0-9]", "").length() >= 6;
+            if (!hasBigDigits && cleanText.matches(".*[a-zA-Z-à-ÿ]{2,}.*")) {
+                Log.d(TAG, "👍 Détection intelligente : \"" + titleOrPhone + "\" détecté comme un contact enregistré (déjà résolu par l'OS). Bypass heuristique.");
+                return true;
+            }
+        }
+
+        // 2. Vérification auprès des contacts locaux répertoriés dans SharedPreferences (Carnet local de confiance)
+        SharedPreferences prefs = context.getSharedPreferences("kefyl_prefs", Context.MODE_PRIVATE);
+        java.util.Set<String> localContacts = prefs.getStringSet("registered_contacts", new java.util.HashSet<>());
+        if (localContacts.contains(titleOrPhone) || localContacts.contains(getCleanedPhoneNumber(titleOrPhone))) {
+            Log.d(TAG, "👍 Contact enregistré trouvé dans le carnet local Kéfyl.");
+            return true;
+        }
+        
+        // 3. Fallback sur les contacts d'Android (nécessite la permission READ_CONTACTS)
         String numericOnly = titleOrPhone.replaceAll("[^0-9]", "");
         boolean hasDigits = numericOnly.length() >= 6;
 
@@ -199,11 +279,9 @@ public class KefylNotificationService extends NotificationListenerService {
                 if (cursor != null) {
                     boolean exists = cursor.getCount() > 0;
                     cursor.close();
-                    return exists;
+                    if (exists) return true;
                 }
             } else {
-                // Alphanumérique pur (ex: "Koffi", "TotalEnergies", "Moov")
-                // On interroge l'annuaire des contacts par DISPLAY_NAME pour s'assurer que c'est un contact réel
                 android.net.Uri uri = ContactsContract.Contacts.CONTENT_URI;
                 String selection = ContactsContract.Contacts.DISPLAY_NAME + " = ?";
                 String[] selectionArgs = { titleOrPhone };
@@ -217,15 +295,13 @@ public class KefylNotificationService extends NotificationListenerService {
                 if (cursor != null) {
                     boolean exists = cursor.getCount() > 0;
                     cursor.close();
-                    return exists;
+                    if (exists) return true;
                 }
             }
         } catch (SecurityException e) {
-            Log.w(TAG, "Permission READ_CONTACTS manquante. Analyse de sécurité active par défaut.");
+            Log.w(TAG, "Permission READ_CONTACTS manquante. Analyse par signature de Lomé central active par défaut.");
         }
         
-        // Par défaut, si l'expéditeur n'est pas explicitement trouvé dans l'annuaire (ou permission manquante),
-        // nous le traitons comme inconnu pour appliquer l'analyse de vulnérabilité heuristique fine (NLP/Social Eng).
         return false;
     }
 
