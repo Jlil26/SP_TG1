@@ -25,7 +25,8 @@ import {
   Battery,
   AlertCircle,
   Info,
-  Mail
+  Mail,
+  Lock
 } from "lucide-react";
 import { 
   ResponsiveContainer, 
@@ -75,10 +76,18 @@ export default function AgentSupervisionTab({
   const [activeMessageText, setActiveMessageText] = useState("");
   const [activeSender, setActiveSender] = useState("");
   const [isSimulatingApiCall, setIsSimulatingApiCall] = useState(false);
+
+  // New real-time intercept overlay variables
+  const [showInAppOverlayAlert, setShowInAppOverlayAlert] = useState(false);
+  const [overlayAlertTitle, setOverlayAlertTitle] = useState("");
+  const [overlayAlertMessage, setOverlayAlertMessage] = useState("");
+  const [overlayAlertAction, setOverlayAlertAction] = useState("");
+  const [overlayAlertType, setOverlayAlertType] = useState<"rule1" | "rule2" | "rule3" | "rule4">("rule1");
   
   // Local toggles
   const [isShieldActive, setIsShieldActive] = useState(true);
   const [showNotification, setShowNotification] = useState(false);
+  const [phoneLocked, setPhoneLocked] = useState(false);
 
   // --- EXTRA SHIELD OPTIONS AGAINST FALSE POSITIVES ---
   const [messageSourceType, setMessageSourceType] = useState<"unknown" | "contact" | "group">("unknown");
@@ -209,6 +218,15 @@ export default function AgentSupervisionTab({
     return mockSignatureFauxDoC.some(domain => normalizedText.includes(domain));
   }, [threats, customText, customSender]);
 
+  const handleUnlockPhone = () => {
+    setPhoneLocked(false);
+    if (showNotification) {
+      setShowNotification(false);
+      setShowInAppOverlayAlert(true);
+      addLog("🔓 Téléphone déverrouillé : L'alerte d'interception forcée s'ouvre automatiquement niveau plein écran.", "success");
+    }
+  };
+
   // Simulate receiving the SMS on SP_TG mobile
   const handleSimulateSMS = async () => {
     if (!customText.trim()) return;
@@ -221,60 +239,151 @@ export default function AgentSupervisionTab({
     setActiveSender(finalSender);
     setActiveMessageText(customText);
     
-    // Reset notification views
+    // Reset notification and alert views
     setShowNotification(false);
     setWhitelistedCheckNotification(false);
+    setShowInAppOverlayAlert(false);
     
     const isWhitelisted = trustedGroups.includes(groupName);
 
-    if (messageSourceType === "group") {
-      if (isWhitelisted) {
-        if (containsKnownSignature) {
-          // Central signature bypasses the whitelist!
-          setShowNotification(true);
-          addLog(`🚨 ALERTE CRITIQUE : Le message reçu dans le groupe "${groupName}" contient une menace répertoriée dans la base de données de Lomé. Alerte immédiate !`, "warn");
-        } else {
-          // Regular mild heuristic is completely ignored! Quiet delivery.
-          addLog(`🛡️ Garde-corps : Groupe répertorié dans votre Liste Verte ("${groupName}"). L'analyse de manipulation en direct a été évitée. Message délivré silencieusement.`, "success");
-        }
+    // Skip all actions if group is whitelisted and not a direct central signature match!
+    if (messageSourceType === "group" && isWhitelisted && !containsKnownSignature) {
+      addLog(`🛡️ Garde-corps : Groupe répertorié dans votre Liste Verte ("${groupName}"). L'analyse de manipulation en direct a été évitée. Message délivré silencieusement.`, "success");
+      setWhitelistedCheckNotification(true);
+      return;
+    }
+
+    // Determine if it's a threat
+    const isThreat = containsKnownSignature || hasHeuristicManipulations;
+
+    if (!isThreat) {
+      addLog(`🛡️ Garde-corps : Message reçu sain de "${finalSender}". Aucune menace détectée.`, "success");
+      setPhoneState("dashboard");
+      return;
+    }
+
+    // Identify if the sender's phone is blocklisted in the central SOC signatures DB
+    const cleanSenderNum = finalSender.replace(/[\s\-\+\(\)]/g, "");
+    const isSenderPhoneBlocklisted = threats.some(t => {
+      if (t.type !== "phone") return false;
+      const cleanDbVal = t.value.replace(/[\s\-\+\(\)]/g, "");
+      return cleanDbVal.length >= 6 && (cleanSenderNum.includes(cleanDbVal) || cleanDbVal.includes(cleanSenderNum));
+    }) || cleanSenderNum.includes("99120485");
+
+    let titleText = "";
+    let messageText = "";
+    let actionText = "";
+    let ruleMatched: "rule1" | "rule2" | "rule3" | "rule4" = "rule1";
+
+    if (isSenderPhoneBlocklisted) {
+      ruleMatched = "rule4";
+      titleText = "🚨 EXPÉDITEUR TRAQUÉ D'OFFICE";
+      messageText = `Le numéro : "${finalSender}" est signalé comme un numéro traqué par les forces de l'ordre pour tentative de fraude, cybercriminalité, redistribution de messages d'escroquerie.`;
+      actionText = "Action : Bloquez définitivement cet expéditeur et effacez ce message.";
+    } else if (messageSourceType === "contact" && containsKnownSignature) {
+      ruleMatched = "rule3";
+      titleText = "⚠️ COMPROMISSION COMPLÉMENTAIRE";
+      const senderName = registeredContacts[contactIndex]?.name || "Mon Contact";
+      
+      const containsUrl = customText.toLowerCase().includes("http") || 
+                          customText.toLowerCase().includes("ceet-facturation") ||
+                          customText.toLowerCase().includes("ancy.gouv") ||
+                          customText.toLowerCase().includes(".com") ||
+                          customText.toLowerCase().includes(".net");
+                          
+      const containsInnerPhone = customText.replace(/[^0-9]/g, "").length >= 6 && 
+                                 !customText.includes(cleanSenderNum);
+
+      if (containsUrl) {
+        messageText = `Propriétaire : "${senderName}" vient de vous envoyer un lien qui a été signalé comme une fraude par les forces de l'ordre.`;
+      } else if (containsInnerPhone) {
+        messageText = `Propriétaire : "${senderName}" vient de vous envoyer un texte contenant un numéro signalé comme une fraude par les forces de l'ordre.`;
       } else {
-        // Group not whitelisted: check if heuristic detects anything
-        if (containsKnownSignature || hasHeuristicManipulations) {
-          setShowNotification(true);
-          addLog(`⚠️ DÉTECTION GROUPE : Technique de manipulation suspectée dans le groupe "${groupName}".`, "info");
-        } else {
-          // Deliver quietly if it's a completely normal message
-          addLog(`🛡️ Garde-corps : Message ordinaire reçu dans "${groupName}". Aucune tentative suspecte.`, "success");
-        }
+        messageText = `Propriétaire : "${senderName}" vient de vous envoyer un message qui a été signalé comme une fraude par les forces de l'ordre.`;
       }
-    } else if (messageSourceType === "contact") {
-      // REGISTERED CONTACT: ONLY SIGNATURE COMPARISON COMPLETED. NO HEURISTIC.
-      if (containsKnownSignature) {
+      actionText = "Action : Votre proche n'est pas coupable. Il a pu être piraté ou a partagé ce message sans le savoir. Appelez-le directement pour l'avertir.";
+    } else if (containsKnownSignature) {
+      ruleMatched = "rule2";
+      titleText = "🚨 ARNAQUE CONFIRMÉE - SOC";
+      messageText = `Numéro : "${finalSender}" (Non connu de votre répertoire) vous a envoyé un message qui a été détecté comme une tentative très populaire d'escroquerie, d'arnaque qui a été détectée par les forces de l'ordre.`;
+      actionText = "Action : Message hautement dangereux. Supprimez-le immédiatement.";
+    } else {
+      ruleMatched = "rule1";
+      titleText = "⚠️ ALERTE VIGILANCE SÉMANTIQUE";
+      messageText = `Numéro : "${finalSender}" (Non connu de votre répertoire) vous a envoyé un message qui ressemble à une tentative de fraude.`;
+      actionText = "Action : Prudence recommandée. Ne répondez pas et ne cliquez sur aucun lien.";
+    }
+
+    // Set states to display the instant overlay
+    if (isShieldActive) {
+      setOverlayAlertTitle(titleText);
+      setOverlayAlertMessage(messageText);
+      setOverlayAlertAction(actionText);
+      setOverlayAlertType(ruleMatched);
+      
+      if (phoneLocked) {
+        setShowInAppOverlayAlert(false);
         setShowNotification(true);
-        addLog(`🚨 TRANSMISSION DU CONTACT : Votre proche "${registeredContacts[contactIndex].name}" (${finalSender}) vous a envoyé un message contenant un indicateur d'arnaque recensé par le SOC de Lomé. Il est probablement victime d'un piratage ou a retransféré ce piège involontairement. Ne l'accusez pas mais effacez le message !`, "warn");
+        addLog(`📬 ÉCRAN SUSPENDU : ${titleText}. L'appareil est éteint/verrouillé : L'alerte est mise en attente. Une notification de sécurité s'affiche sur l'écran de verrouillage, et surgira dès le déverrouillage pour protéger l'utilisateur.`, "warn");
       } else {
-        // Safe! Deliver quietly without false heuristic signals!
-        addLog(`🛡️ Garde-corps : Message reçu de "${registeredContacts[contactIndex].name}". L'analyse de manipulation en direct est désactivée par sécurité pour vos contacts afin d'éviter tout faux signal. Message délivré sagement.`, "success");
-        setPhoneState("dashboard");
+        setShowInAppOverlayAlert(true);
+        setShowNotification(false);
+        addLog(`🚨 INTERCEPTION DIRECTE : ${titleText}. Le smartphone étant actif, la fenêtre d'alerte de cybermenace s'est ouverte instantanément en plein écran pour barrer la route à l'escroquerie.`, "warn");
+      }
+      
+      // Increment blocked count & make background server submission
+      incrementSimCounter();
+      
+      addLog(`🚨 INTERCEPTION TEMPS RÉEL : ${titleText}. Une fenêtre d'interruption s'est affichée à l'écran.`, "warn");
+      
+      // Auto-submit telemetry back to the SOC Express API
+      setIsSimulatingApiCall(true);
+      try {
+        await fetch("/api/v1/report", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-agent-code": "kfl-shield-simulation-device-token"
+          },
+          body: JSON.stringify({
+            device_id: "SP-TG-SIMUL-PHONE",
+            sender_phone: messageSourceType === "group" 
+              ? `[Groupe: ${groupName}] ${finalSender}` 
+              : messageSourceType === "contact"
+                ? `[Contact: ${registeredContacts[contactIndex].name}] ${finalSender}`
+                : finalSender,
+            evidence_text: customText,
+            location: "Lomé",
+            meta_data: {
+              detection_reason: ruleMatched === "rule1" ? "HEURISTIC_NLP_MATCH" : "CENTRAL_BLOCKLIST_MATCH",
+              rule_matched: ruleMatched,
+              simulated: true,
+              sender_type: messageSourceType,
+              timestamp_epoch: Date.now()
+            }
+          })
+        });
+        if (onRefreshData) {
+          onRefreshData(); // Sync maps & graphs in realtime
+        }
+      } catch (e) {
+        console.error("Failed background telemetry report simulation", e);
+      } finally {
+        setIsSimulatingApiCall(false);
       }
     } else {
-      // Direct message from Unknown Number: Apply Heuristics AND DB Checks!
-      if (containsKnownSignature || hasHeuristicManipulations) {
-        setShowNotification(true);
-        if (containsKnownSignature) {
-          addLog(`🚨 MENACE BLOCKLISTÉE DE L'INCONNU : Message critique d'un numéro inconnu (${finalSender}) reconnu par la base de signatures de cybermenaces du SOC de Lomé ! Bloquez-le sans attendre.`, "warn");
-        } else {
-          addLog(`⚠️ TENTATIVE DE MANIPULATION : SMS d'un numéro inconnu (${finalSender}) avec filtres sémantiques actifs. Blocage de l'ingénierie sociale en direct.`, "info");
-        }
-      } else {
-        addLog(`🛡️ Garde-corps : Message d'un inconnu (${finalSender}) reçu. Aucune technique de manipulation n'a été détectée. Message délivré sagement sans alerte.`, "success");
-      }
+      addLog(`⚠️ Garde-corps désactivé : Le message suspect s'est propagé sur le téléphone.`, "warn");
     }
-    
-    // Play alert vibration effect via sound/CSS if possible
+
     try {
       if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
     } catch (e) {}
+  };
+
+  const handleAcknowledgeOverlayAlert = () => {
+    setShowInAppOverlayAlert(false);
+    setShowNotification(false);
+    setPhoneState("dashboard");
   };
 
   const handleOpenAlertAndBlock = async () => {
@@ -670,18 +779,19 @@ export default function AgentSupervisionTab({
                   <tr className="bg-[#0B1020]/50 border-b border-[#1A2542] text-[9px] text-slate-500 uppercase">
                     <th className="py-2 px-2">Terminal</th>
                     <th className="py-2 px-2">Localisation</th>
+                    <th className="py-2 px-2">Dernière Synchro</th>
                     <th className="py-2 px-2">Statut</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5 text-slate-300">
                   {filteredAgents.length === 0 ? (
                     <tr>
-                      <td colSpan={3} className="py-4 text-center text-slate-550 italic uppercase">
+                      <td colSpan={4} className="py-4 text-center text-slate-550 italic uppercase">
                         Aucun agent actif.
                       </td>
                     </tr>
                   ) : (
-                    filteredAgents.slice(0, 5).map(agent => (
+                    filteredAgents.map(agent => (
                       <tr key={agent.id} className="hover:bg-[#0B1020]/25 transition text-[11px]">
                         <td className="py-2 px-2">
                           <div>
@@ -691,6 +801,25 @@ export default function AgentSupervisionTab({
                         </td>
                         <td className="py-2 px-2 text-slate-400">
                           {agent.city}, TG
+                        </td>
+                        <td className="py-2 px-2 text-slate-400 text-[10px] font-mono select-all">
+                          {agent.lastSync ? (
+                            (() => {
+                              try {
+                                const d = new Date(agent.lastSync);
+                                const day = String(d.getDate()).padStart(2, '0');
+                                const month = String(d.getMonth() + 1).padStart(2, '0');
+                                const h = String(d.getHours()).padStart(2, '0');
+                                const m = String(d.getMinutes()).padStart(2, '0');
+                                const s = String(d.getSeconds()).padStart(2, '0');
+                                return `${day}/${month} à ${h}:${m}:${s}`;
+                              } catch(e) {
+                                return agent.lastSync;
+                              }
+                            })()
+                          ) : (
+                            "En attente"
+                          )}
                         </td>
                         <td className="py-2 px-2">
                           <span className="inline-flex items-center gap-1 text-[9px] font-bold text-[#10B981]">
@@ -836,82 +965,194 @@ export default function AgentSupervisionTab({
                 {/* Visual backdrop watermark style */}
                 <div className="absolute inset-0 bg-radial-[circle_at_top] from-blue-500/5 to-transparent pointer-events-none z-0"></div>
 
-                {/* Simulated Screen Body according to active Phone State */}
-                {phoneState === "dashboard" && (
-                  <div className="flex-1 flex flex-col justify-between z-10 pt-4 animate-fade-in">
-                    
-                    {/* Header bar within the app */}
-                    <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
-                      <div className="flex items-center gap-1.5">
-                        <div className="p-1.5 rounded-lg bg-[#3B82F6]/15 border border-[#3B82F6]/30">
-                          <Shield className="w-3.5 h-3.5 text-[#38BDF8]" />
-                        </div>
-                        <div>
-                          <span className="font-bold text-[10px] text-white tracking-widest block font-mono">SP_TG MOBILE</span>
-                          <span className="text-[7.5px] text-slate-500 uppercase font-bold tracking-widest font-mono">Mon Garde du Corps</span>
-                        </div>
-                      </div>
-                      
-                      {/* Live version */}
-                      <span className="text-[8px] bg-slate-900 border border-white/5 text-slate-400 py-0.5 px-1.5 rounded font-mono">
-                        v1.5.0
-                      </span>
+                {/* REAL-TIME INTERCEPT OVERLAY MODAL */}
+                {showInAppOverlayAlert && (
+                  <div className="absolute inset-x-2 top-8 bottom-8 bg-slate-950/98 border border-red-500/50 rounded-2xl z-50 flex flex-col justify-between p-4 shadow-2xl animate-fade-in text-slate-100">
+                    <div className="flex items-center gap-1.5 border-b border-white/5 pb-2">
+                       <ShieldAlert className="w-5 h-5 text-red-500 shrink-0" />
+                       <div className="leading-none">
+                         <span className="font-mono font-bold text-[9px] text-red-400 block tracking-widest">{overlayAlertTitle}</span>
+                         <span className="text-[7px] text-slate-400 font-mono uppercase font-black block mt-0.5">INTERCEPTÉ PAR SP_TG</span>
+                       </div>
                     </div>
 
-                    {/* STATUS GAUGE */}
-                    <div className="my-auto py-3 flex flex-col items-center justify-center text-center">
-                      <div className="relative w-28 h-28 flex items-center justify-center mb-2.5">
+                    <div className="flex-1 flex flex-col justify-center my-2 space-y-2.5">
+                       <div className="bg-white/5 border border-white/5 p-2 rounded-lg text-left">
+                          <p className="text-[10px] text-slate-300 font-sans leading-relaxed">{overlayAlertMessage}</p>
+                       </div>
+
+                       <div className="bg-red-500/10 border border-red-500/20 p-2 rounded-lg text-left">
+                          <p className="text-[9px] text-red-300 font-mono font-bold leading-normal">{overlayAlertAction}</p>
+                       </div>
+
+                       <div className="border-t border-white/5 pt-2">
+                          <span className="text-[7.5px] font-mono text-slate-500 block uppercase font-bold">Texte Intercepté :</span>
+                          <p className="text-[8px] text-slate-400 italic line-clamp-2 mt-0.5 leading-tight">"{activeMessageText}"</p>
+                       </div>
+                    </div>
+
+                    <div className="text-[7.5px] font-mono text-center text-emerald-400 bg-emerald-500/10 rounded py-1 mb-2 font-bold flex items-center justify-center gap-1">
+                      <CheckCircle className="w-2.5 h-2.5 text-emerald-400" /> TRANSMIS AU SOC DE LOMÉ EN DIRECT
+                    </div>
+
+                    <button
+                      onClick={handleAcknowledgeOverlayAlert}
+                      className="w-full py-2 bg-red-600 hover:bg-red-700 transition-colors text-white font-mono text-[9px] font-bold uppercase tracking-wider rounded-xl cursor-pointer shadow-lg active:scale-95"
+                    >
+                      ✓ VALIDER ET FERMER L&apos;ALERTE
+                    </button>
+                  </div>
+                )}
+
+                {/* Simulated Screen Body according to active Phone State */}
+                {phoneLocked ? (
+                  /* BEAUTIFUL LOCKSCREEN FOR THE SMARTPHONE */
+                  <div className="flex-1 flex flex-col justify-between z-10 pt-8 animate-fade-in text-slate-200">
+                    <div className="flex flex-col items-center select-none">
+                      {/* Locking status indicator */}
+                      <div className="w-8 h-8 rounded-full bg-slate-900 border border-slate-700/60 flex items-center justify-center mb-1 shadow-md animate-pulse">
+                        <Lock className="w-3.5 h-3.5 text-slate-400" />
+                      </div>
+                      
+                      {/* High fidelity Lockscreen Date Time in French Togolese vibe */}
+                      <span className="text-[7.5px] uppercase tracking-widest font-bold text-slate-500 font-mono">Lomé, Togo</span>
+                      <h3 className="text-3xl font-mono font-bold tracking-tight text-white leading-none mt-1">12:45</h3>
+                      <span className="text-[7.5px] text-slate-400 font-sans tracking-wide block mt-1 font-medium">Vendredi 5 Juin</span>
+                    </div>
+
+                    {/* Central Notifications space inside the Lockscreen */}
+                    <div className="my-auto px-1.5 py-4 w-full flex flex-col gap-2.5">
+                      {showNotification ? (
+                        <div 
+                          onClick={handleUnlockPhone}
+                          className="bg-slate-950/95 border border-red-500/40 p-2.5 rounded-xl text-left shadow-lg scale-[98%] hover:scale-[100%] transition-transform duration-205 cursor-pointer animate-pulse"
+                        >
+                          <div className="flex items-center justify-between border-b border-white/5 pb-1 mb-1.5 text-[7px] font-mono">
+                            <span className="text-red-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                              <ShieldAlert className="w-3 h-3 animate-bounce shrink-0" /> ALERTE CYBERGAD
+                            </span>
+                            <span className="text-slate-500 font-bold uppercase">À l&apos;instant</span>
+                          </div>
+                          <strong className="text-slate-100 text-[9.5px] font-bold block mt-1">Expéditeur suspect : {activeSender}</strong>
+                          <p className="text-[8.2px] text-slate-350 line-clamp-2 mt-1 leading-snug">
+                            &quot;{activeMessageText}&quot;
+                          </p>
+                          <div className="text-[7.2px] font-mono text-amber-500 font-black mt-2 text-right border-t border-white/5 pt-1 uppercase tracking-wide">
+                            👉 Cliquez pour déverrouiller et sécuriser
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center font-mono text-[7px] text-slate-500 uppercase tracking-widest flex items-center justify-center gap-1 py-4">
+                          <CheckCircle className="w-3 h-3 text-emerald-500/30" /> Aucun message suspect
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Quick Swipe/Click to unlock simulator button */}
+                    <button
+                      onClick={handleUnlockPhone}
+                      className="w-full py-2 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700 text-white font-mono text-[8px] font-bold uppercase tracking-widest rounded-xl transition cursor-pointer shadow-lg shadow-blue-500/10 active:scale-95 flex items-center justify-center gap-1"
+                    >
+                      <span>🔓 DÉVERROUILLER LE PROTOTYPE</span>
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    {phoneState === "dashboard" && (
+                      <div className="flex-1 flex flex-col justify-between z-10 pt-3 animate-fade-in text-left">
+                        
+                        {/* Header bar styled exactly like activity_main.xml */}
+                        <div className="flex items-start gap-2.5 pb-2 border-b border-white/5">
+                          {/* Outlined capsule representing the uniform brand logo */}
+                          <div className="w-12 h-7 rounded-full bg-[#06B6D4] p-[1.5px] shrink-0 self-center">
+                            <div className="w-full h-full rounded-full bg-[#050B1D] flex items-center justify-center gap-0.5">
+                              <span className="text-[#06B6D4] font-black text-[10px]">S</span>
+                              <span className="text-white font-black text-[10px]">P</span>
+                            </div>
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1">
+                              <span className="text-[#06B6D4] font-black text-[11px] tracking-wide">SP</span>
+                              <span className="text-white font-black text-[11px] tracking-wide">SENTINEL</span>
+                            </div>
+                            <p className="text-[7.5px] text-slate-400 font-sans leading-none mt-0.5 truncate">
+                              Votre gardien contre les arnaques Floov et Tmoney
+                            </p>
+                            <p className="text-[8px] font-bold text-emerald-400 tracking-wide mt-1">
+                              🟢 PROTECTEUR ACTIF ET SÛRE
+                            </p>
+                          </div>
+
+                          {/* Small action version or icon */}
+                          <div className="p-1 rounded bg-[#06B6D4]/10 text-[#06B6D4] self-center shrink-0">
+                            <Shield className="w-3.5 h-3.5" />
+                          </div>
+                        </div>
+
+                    {/* STATUS GAUGE SIMULATING ACTIVITY */}
+                    <div className="my-auto py-2 flex flex-col items-center justify-center text-center">
+                      <div className="relative w-24 h-24 flex items-center justify-center mb-1.5">
                         {/* Outer rotating pulse ring */}
-                        <div className={`absolute inset-0 rounded-full border border-dashed animate-spin duration-15000 ${isShieldActive ? "border-[#10B981]/20" : "border-slate-800"}`}></div>
+                        <div className={`absolute inset-0 rounded-full border border-dashed animate-spin duration-15000 ${isShieldActive ? "border-[#06B6D4]/30" : "border-slate-800"}`}></div>
                         
                         {/* Inner glowing circle */}
-                        <div className={`absolute w-24 h-24 rounded-full flex flex-col items-center justify-center shadow-lg transition-all duration-500 ${isShieldActive ? "bg-[#10B981]/5 border border-[#10B981]/35 shadow-[#10B981]/5" : "bg-slate-900 border border-slate-800"}`}>
-                          <Shield className={`w-8 h-8 transition-transform ${isShieldActive ? "text-[#10B981] scale-100" : "text-slate-600 scale-90"}`} />
-                          <span className="text-[8px] font-mono tracking-widest uppercase font-bold text-slate-400 mt-1">
-                            {isShieldActive ? "Garde-corps" : "Désactivé"}
+                        <div className={`absolute w-20 h-20 rounded-full flex flex-col items-center justify-center shadow-lg transition-all duration-500 bg-[#06B6D4]/5 border border-[#06B6D4]/30 shadow-[#06B6D4]/5`}>
+                          <Shield className="w-7 h-7 text-[#06B6D4]" />
+                          <span className="text-[7.5px] font-mono tracking-widest uppercase font-bold text-slate-400 mt-1">
+                            Protector
                           </span>
                         </div>
                       </div>
 
-                      <h4 className={`text-xs font-mono font-black uppercase text-center tracking-wider transition-colors ${isShieldActive ? "text-[#10B981]" : "text-slate-500"}`}>
-                        {isShieldActive ? "🟢 SÉCURISÉ & PROTÉGÉ" : "⚫ PROTECTION ARRÊTÉE"}
+                      <h4 className="text-[10px] font-mono font-black uppercase text-center tracking-wider text-[#06B6D4]">
+                        PROTÉGÉ EN TEMPS RÉEL
                       </h4>
-                      <p className="text-[8.5px] font-sans text-slate-400 max-w-[190px] mt-1 text-center">
-                        {isShieldActive 
-                          ? "L'application surveille vos SMS pour vous alerter immédiatement face aux menteurs et aux voleurs." 
-                          : "Activez votre garde du corps pour bloquer les voleurs d'argent."}
+                    </div>
+
+                    {/* METRICS ROW MATCHING activity_main.xml CARD SHAPES */}
+                    <div className="grid grid-cols-2 gap-2 pb-2">
+                      <div className="bg-[#121A2F]/90 border border-white/5 p-2 rounded-2xl text-center shadow-md">
+                        <span className="text-[7px] font-mono font-bold text-slate-400 block tracking-wider uppercase">PIÈGES ÉVITÉS</span>
+                        <strong className="text-base font-mono text-[#EF4444] block mt-0.5">{simLocalBlockedCount}</strong>
+                      </div>
+                      <div className="bg-[#121A2F]/90 border border-white/5 p-2 rounded-2xl text-center shadow-md">
+                        <span className="text-[7px] font-mono font-bold text-[#94A3B8] block tracking-wider uppercase">ARNAQUES CONNUES</span>
+                        <strong className="text-base font-mono text-[#06B6D4] block mt-0.5">148</strong>
+                      </div>
+                    </div>
+
+                    {/* BIG SIMPLIFIED SECURITY STATUS BUTTON MATCHING activity_main.xml */}
+                    <div className="space-y-1.5">
+                      <button 
+                        onClick={() => {
+                          setIsShieldActive(!isShieldActive);
+                          if (!isShieldActive) {
+                            setSimLocalBlockedCount(prev => prev + 1);
+                          }
+                        }}
+                        className={`w-full py-2 rounded-2xl font-mono text-[9px] font-black uppercase tracking-wider text-white shadow-lg active:scale-95 transition-all text-center flex flex-col justify-center items-center cursor-pointer ${isShieldActive ? "bg-[#10B981] hover:bg-[#059669]" : "bg-[#EF4444] hover:bg-[#DC2626]"}`}
+                      >
+                        {isShieldActive ? (
+                          <>
+                            <span>🟢 PROTECTION ACTIVÉE ET SÛRE</span>
+                            <span className="text-[6.5px] font-semibold opacity-80">(Appuyez pour vérifier à nouveau)</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>🔴 SÉCURITÉ INACTIVE</span>
+                            <span className="text-[6.5px] font-semibold opacity-80">(Touchez pour activer)</span>
+                          </>
+                        )}
+                      </button>
+
+                      <p className="text-[6.8px] text-slate-500 font-sans leading-none text-center">
+                        * Fonctionne en toute sécurité sans connexion internet.
                       </p>
-                    </div>
 
-                    {/* METRICS ROW */}
-                    <div className="grid grid-cols-2 gap-2 pb-3 pt-1">
-                      <div className="bg-[#0B1226]/85 border border-white/5 p-2 rounded-xl text-center">
-                        <span className="text-[7.5px] font-mono font-bold text-slate-500 uppercase block tracking-wider">Pièges Évités</span>
-                        <strong className="text-sm font-mono text-[#EF4444] block mt-0.5">{simLocalBlockedCount}</strong>
-                      </div>
-                      <div className="bg-[#0B1226]/85 border border-white/5 p-2 rounded-xl text-center">
-                        <span className="text-[7.5px] font-mono font-bold text-slate-500 uppercase block tracking-wider">Arnaques Connues</span>
-                        <strong className="text-sm font-mono text-[#38BDF8] block mt-0.5">148</strong>
-                      </div>
-                    </div>
-
-                    {/* QUICK APP CONTROL */}
-                    <div className="bg-slate-950/40 border border-white/5 rounded-xl p-2.5 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[8.5px] font-mono text-slate-400 font-bold uppercase">Activer le protecteur</span>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input 
-                            type="checkbox" 
-                            checked={isShieldActive} 
-                            onChange={(e) => setIsShieldActive(e.target.checked)} 
-                            className="sr-only peer" 
-                          />
-                          <div className="w-7 h-4 bg-slate-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-[#10B981]"></div>
-                        </label>
-                      </div>
-                      <div className="text-[8.2px] text-slate-500 font-sans leading-tight font-medium">
-                        * Fonctionne en toute sécurité sans consommer votre connexion internet.
-                      </div>
+                      <p className="text-[8px] text-slate-500 font-sans text-center mt-1 pt-1 border-t border-white/5">
+                        Dernier contrôle de sécurité effectué : Aujourd&apos;hui
+                      </p>
                     </div>
 
                   </div>
@@ -1120,6 +1361,9 @@ export default function AgentSupervisionTab({
                   </div>
                 )}
 
+              </>
+            )}
+
                 {/* Simulated physical Android Home / back button row */}
                 <div className="h-6 w-full flex items-center justify-center gap-6 mt-4 pt-1.5 border-t border-white/5 bg-black/40 text-slate-600">
                   <span className="w-2.5 h-2.5 border border-slate-700 rounded-sm cursor-pointer rotate-45 hover:border-[#38BDF8]"></span>
@@ -1135,6 +1379,37 @@ export default function AgentSupervisionTab({
               <span className="text-[10px] font-bold text-white uppercase tracking-wider block text-center border-b border-white/5 pb-1.5">
                 🎛️ Simulateur d&apos;envoi de messages
               </span>
+
+              {/* État du téléphone (Allumé/Éteint) selector */}
+              <div className="space-y-1 bg-[#050B1D]/50 p-2 border border-white/5 rounded-xl">
+                <label className="text-[8px] text-[#38BDF8] block uppercase font-bold tracking-wider mb-1.5">Statut initial du Téléphone :</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => {
+                      setPhoneLocked(false);
+                      setShowInAppOverlayAlert(false);
+                      setShowNotification(false);
+                      setPhoneState("dashboard");
+                      addLog("📱 Téléphone configuré : Allumé & Actif (En cours d'utilisation).", "info");
+                    }}
+                    className={`py-1.5 px-2 rounded-lg text-[8px] border font-bold font-mono transition duration-200 cursor-pointer text-center select-none ${!phoneLocked ? "bg-[#3B82F6]/20 text-[#38BDF8] border-[#38BDF8]/40" : "bg-transparent text-slate-500 border-white/5 hover:text-slate-350"}`}
+                  >
+                    📱 ALLUMÉ
+                  </button>
+                  <button
+                    onClick={() => {
+                      setPhoneLocked(true);
+                      setShowInAppOverlayAlert(false);
+                      setShowNotification(false);
+                      setPhoneState("dashboard");
+                      addLog("🔒 Téléphone configuré : Éteint / Verrouillé (Mode Veille).", "info");
+                    }}
+                    className={`py-1.5 px-2 rounded-lg text-[8px] border font-bold font-mono transition duration-200 cursor-pointer text-center select-none ${phoneLocked ? "bg-amber-500/15 text-amber-400 border-amber-500/35" : "bg-transparent text-slate-500 border-white/5 hover:text-slate-350"}`}
+                  >
+                    🔒 VERROUILLÉ
+                  </button>
+                </div>
+              </div>
 
               {/* Provenance du message / Source selection */}
               <div className="space-y-1">
@@ -1272,7 +1547,11 @@ export default function AgentSupervisionTab({
               </button>
 
               <div className="bg-blue-950/20 border border-blue-500/10 p-2 rounded text-[8.5px] text-slate-400 text-center leading-normal">
-                💡 <strong>Astuce de test :</strong> Choisissez l&apos;expéditeur (Inconnu, Ami, Groupe), sélectionnez un message type, puis cliquez sur le bouton rouge. Regardez la réaction du téléphone virtuel ! S&apos;il y a une alerte, une notification apparaîtra en haut, cliquez dessus pour interagir.
+                💡 <strong>Priorité de Blocage :</strong>
+                <ul className="text-left list-disc list-inside mt-1 space-y-1 text-slate-400">
+                  <li><strong>Téléphone actif (Allumé) :</strong> L&apos;alerte détaillée s&apos;ouvre <span className="text-red-400 font-bold">instantanément</span> en plein écran pour faire barrière, sans nécessiter aucun clic sur une notification.</li>
+                  <li><strong>Téléphone verrouillé :</strong> L&apos;alerte attend le déverrouillage de l&apos;appareil puis surgit automatiquement à l&apos;écran pour bloquer l&apos;utilisateur avant toute lecture.</li>
+                </ul>
               </div>
 
             </div>

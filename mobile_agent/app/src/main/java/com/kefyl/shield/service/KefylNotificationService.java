@@ -14,6 +14,10 @@ import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.util.Log;
 import androidx.core.app.NotificationCompat;
+import android.content.BroadcastReceiver;
+import android.content.IntentFilter;
+import android.app.KeyguardManager;
+import android.os.PowerManager;
 
 import com.kefyl.shield.MainActivity;
 import com.kefyl.shield.api.KefylApiService;
@@ -43,6 +47,16 @@ public class KefylNotificationService extends NotificationListenerService {
     private PhishingAnalyzer phishingAnalyzer;
     private ContactStateDao contactStateDao;
 
+    private final BroadcastReceiver userUnlockReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (Intent.ACTION_USER_PRESENT.equals(intent.getAction())) {
+                Log.d(TAG, "🔓 Écran déverrouillé ! Vérification automatique d'alerte en attente...");
+                checkAndLaunchPendingThreatAlert();
+            }
+        }
+    };
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -50,17 +64,25 @@ public class KefylNotificationService extends NotificationListenerService {
         phishingAnalyzer = new PhishingAnalyzer(this);
         contactStateDao = AppDatabase.getDatabase(this).contactStateDao();
         createNotificationChannel();
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_USER_PRESENT);
+        registerReceiver(userUnlockReceiver, filter);
     }
 
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
         String packageName = sbn.getPackageName();
         
-        // Cible spécifique : WhatsApp, SMS et packages de test/simulation
-        boolean isTargetApp = "com.whatsapp".equals(packageName) 
+        // Cible spécifique : WhatsApp (perso / Business), SMS et packages de test/simulation/communication
+        boolean isTargetApp = packageName.contains("whatsapp") 
                 || packageName.contains("sms") 
                 || packageName.contains("mms") 
                 || packageName.contains("messaging")
+                || packageName.contains("messenger")
+                || packageName.contains("telegram")
+                || packageName.contains("signal")
+                || packageName.contains("viber")
                 || packageName.contains("test")
                 || packageName.contains("mock")
                 || packageName.contains("agent")
@@ -127,7 +149,7 @@ public class KefylNotificationService extends NotificationListenerService {
             // Si c'est un groupe répertorié sur Liste Verte (trusted_sources)
             if (isGroup && !groupName.isEmpty() && trustedSources.contains(groupName)) {
                 // Sur groupe de confiance, seule une signature d'IoC de Lomé central peut shunter le bypass
-                Signature matchedSignature = phishingAnalyzer.analyzeMessage(text);
+                Signature matchedSignature = phishingAnalyzer.analyzeMessage(text, contactPhone);
                 if (matchedSignature != null) {
                     Log.w(TAG, "⚠️ Signature critique détectée dans un groupe de confiance de la Liste Verte ! Shuntage actif.");
                     triggerHighPriorityAlertNotification(title, text, matchedSignature);
@@ -162,7 +184,7 @@ public class KefylNotificationService extends NotificationListenerService {
 
             // 2. Étape du Verdict - Niveau Critique (Rouge) : Signature directe en BDD de signatures (Signatures SOC)
             // S'applique à tout le monde (Zéro-trust au niveau signature pour parer l'usurpation / le piratage d'un contact)
-            Signature matchedSignature = phishingAnalyzer.analyzeMessage(text);
+            Signature matchedSignature = phishingAnalyzer.analyzeMessage(text, contactPhone);
             
             if (matchedSignature != null) {
                 Log.w(TAG, "⚠️ PHISHING CRITIQUE (ROUGE) DÉTECTÉ via signatures d'IoC !");
@@ -172,39 +194,46 @@ public class KefylNotificationService extends NotificationListenerService {
                 return;
             }
 
-            // 3. Étape du Verdict - Niveau Suspect (Jaune/Orange) : Heuristique Psychologique fine sur Contacts Inconnus
-            // STRICTEMENT DÉSACTIVÉE pour les contacts enregistrés légitimes pour éradiquer les faux positifs.
-            if (!isKnown) {
-                if (isGroup) {
-                    // Pour un groupe non-liste-verte, on exécute l'heuristique
-                    List<String> detectedLevers = phishingAnalyzer.detectSocialEngineeringLevers(text);
-                    if (!detectedLevers.isEmpty()) {
-                        Log.w(TAG, "⚠️ ALERTE DE VIGILANCE GROUPE (JAUNE/ORANGE) : Message d'ingénierie sociale suspecté.");
-                        triggerVigilanceAlertNotification(title + " @" + groupName, text, detectedLevers);
-                        
-                        Signature mockHeuristicSig = new Signature(
-                                contactPhone, 
-                                "PHONE", 
-                                "Suspicion Heuristique Groupe: " + groupName, 
-                                "Lomé", 
-                                "Manipulation détectée: " + String.join(", ", detectedLevers)
-                        );
-                        submitForensicReport(title, text, mockHeuristicSig, "HEURISTIC_SOCIAL_ENG");
-                    }
-                } else {
-                    // Pour un numéro inconnu direct
+            // 3. Étape du Verdict - Niveau Suspect (Jaune/Orange) : Heuristique Psychologique fine
+            if (isGroup) {
+                // Pour un groupe non-liste-verte, on exécute l'heuristique toujours (Zéro-Trust sur les groupes ouverts)
+                List<String> detectedLevers = phishingAnalyzer.detectSocialEngineeringLevers(text);
+                if (!detectedLevers.isEmpty()) {
+                    Log.w(TAG, "⚠️ ALERTE DE VIGILANCE GROUPE (JAUNE/ORANGE) : Message d'ingénierie sociale suspecté.");
+                    triggerVigilanceAlertNotification(title + " @" + groupName, text, detectedLevers);
+                    
+                    Signature mockHeuristicSig = new Signature(
+                            contactPhone, 
+                            "PHONE", 
+                            "Suspicion Heuristique Groupe: " + groupName, 
+                            "Lomé", 
+                            "Manipulation détectée: " + String.join(", ", detectedLevers)
+                    );
+                    submitForensicReport(title, text, mockHeuristicSig, "HEURISTIC_SOCIAL_ENG");
+                }
+            } else {
+                // Pour un message privé, on applique le diagnostic s'il s'agit d'un expéditeur inconnu (Zéro-Trust pour inconnus)
+                if (!isKnown) {
                     ContactState state = contactStateDao.getContactState(contactPhone);
-                    if (state != null && "LISTENING".equals(state.getStatus())) {
-                        
-                        // Exécuter le NLP heuristique de l'analyse linguistique locale
+                    // Analyser si le contact est inconnu, qu'il existe ou non en base de données, 
+                    // et qu'il soit dans l'état LISTENING ou SUSPECTED
+                    boolean shouldAnalyze = (state == null) || "LISTENING".equals(state.getStatus()) || "SUSPECTED".equals(state.getStatus());
+                    
+                    if (shouldAnalyze) {
                         List<String> detectedLevers = phishingAnalyzer.detectSocialEngineeringLevers(text);
-                        
                         if (!detectedLevers.isEmpty()) {
                             Log.w(TAG, "⚠️ ALERTE DE VIGILANCE (JAUNE/ORANGE) : Contact inconnu utilisant des techniques de manipulation.");
                             
-                            // Promotion de l'interlocuteur à "SUSPECTED" en local
-                            state.setStatus("SUSPECTED");
-                            contactStateDao.updateContactState(state);
+                            if (state == null) {
+                                state = new ContactState(contactPhone, "SUSPECTED", System.currentTimeMillis());
+                                state.setMessageCount(1);
+                                contactStateDao.insertContactState(state);
+                            } else {
+                                state.setStatus("SUSPECTED");
+                                state.setLastSeenTimestamp(System.currentTimeMillis());
+                                state.setMessageCount(state.getMessageCount() + 1);
+                                contactStateDao.updateContactState(state);
+                            }
 
                             // Déclencher une alerte système Heuristique de Niveau Orange/Jaune
                             triggerVigilanceAlertNotification(title, text, detectedLevers);
@@ -220,9 +249,9 @@ public class KefylNotificationService extends NotificationListenerService {
                             submitForensicReport(title, text, mockHeuristicSig, "HEURISTIC_SOCIAL_ENG");
                         }
                     }
+                } else {
+                    Log.d(TAG, "ℹ️ Garde-corps : Heuristique NLP ignorée pour le contact enregistré \"" + title + "\" afin d'éviter tout faux positif.");
                 }
-            } else {
-                Log.d(TAG, "ℹ️ Garde-corps : Heuristique NLP ignorée pour le contact enregistré \"" + title + "\" afin d'éviter tout faux positif.");
             }
         });
     }
@@ -240,9 +269,27 @@ public class KefylNotificationService extends NotificationListenerService {
                 || cleanText.equalsIgnoreCase("TOGOCOM") 
                 || cleanText.equalsIgnoreCase("CEET") 
                 || cleanText.equalsIgnoreCase("Flooz") 
-                || cleanText.equalsIgnoreCase("Tmoney");
+                || cleanText.equalsIgnoreCase("Tmoney")
+                || cleanText.toLowerCase().contains("moov")
+                || cleanText.toLowerCase().contains("togocom");
         
-        if (!isSmsGateway) {
+        // Liste d'exceptions claires qui ne doivent JAMAIS être considérées comme des contacts enregistrés à la légère
+        String lowerTitle = cleanText.toLowerCase();
+        boolean isExplicitUnknown = lowerTitle.contains("inconnu") 
+                || lowerTitle.contains("unknown") 
+                || lowerTitle.contains("masqué") 
+                || lowerTitle.contains("prive") 
+                || lowerTitle.contains("restricted")
+                || lowerTitle.contains("whatsapp")
+                || lowerTitle.contains("telegram")
+                || lowerTitle.contains("signal")
+                || lowerTitle.contains("@") // Contient un séparateur de groupe ou email
+                || lowerTitle.matches("^[\\+0-9\\s\\-()]+$"); // que des chiffres et symboles de téléphone
+
+        if (!isSmsGateway && !isExplicitUnknown) {
+            // Détection intelligente du Format de Titre
+            // Si le titre ne comporte aucun chiffre, et n'est pas un nom de groupe ou d'expéditeur suspect,
+            // c'est vraisemblablement un contact enregistré de l'utilisateur (ex: "Maman", "Mon Ami Folly").
             boolean hasBigDigits = cleanText.replaceAll("[^0-9]", "").length() >= 6;
             if (!hasBigDigits && cleanText.matches(".*[a-zA-Z-à-ÿ]{2,}.*")) {
                 Log.d(TAG, "👍 Détection intelligente : \"" + titleOrPhone + "\" détecté comme un contact enregistré (déjà résolu par l'OS). Bypass heuristique.");
@@ -321,9 +368,21 @@ public class KefylNotificationService extends NotificationListenerService {
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         if (notificationManager == null) return;
 
+        String details = signature.getDetails() != null ? signature.getDetails() : "Signature identifiée";
+        String extraLevers = "Signature de blocage : " + signature.getPattern();
+
+        // 1. Toujours construire la notification système de haute priorité
         Intent intent = new Intent(this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.putExtra("show_threat_dialog", true);
+        intent.putExtra("sender", sender);
+        intent.putExtra("message_text", messageText);
+        intent.putExtra("threat_type", "CRITICAL");
+        intent.putExtra("details", details);
+        intent.putExtra("extra_levers", extraLevers);
+
         PendingIntent pendingIntent = PendingIntent.getActivity(
-                this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+                this, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
         String alertMessage = "⚠️ Ce message cherche à vous voler votre argent (Flooz ou Tmoney) ! Ne cliquez sur aucun lien !";
@@ -337,10 +396,29 @@ public class KefylNotificationService extends NotificationListenerService {
                 .setCategory(NotificationCompat.CATEGORY_ALARM)
                 .setColor(0xFFEF4444) // Couleur rouge
                 .setAutoCancel(true)
+                .setFullScreenIntent(pendingIntent, true) // Force immediate display on wake or unlock
                 .setContentIntent(pendingIntent);
 
-        notificationManager.notify((int) System.currentTimeMillis(), builder.build());
-        launchInAppAlert(sender, messageText, "CRITICAL", "Signature identifiée : " + signature.getPattern(), signature.getDetails());
+        // Envoyer la notification système dans tous les cas pour parer aux restrictions de lancement en arrière-plan d'Android
+        notificationManager.notify(1001, builder.build());
+
+        if (isDeviceLocked()) {
+            // Le téléphone est éteint de veille ou verrouillé : l'alerte est suspendue pour ne pas saturer l'appareil en veille.
+            SharedPreferences prefs = getSharedPreferences("kefyl_prefs", MODE_PRIVATE);
+            prefs.edit()
+                .putBoolean("has_pending_threat", true)
+                .putString("pending_threat_sender", sender)
+                .putString("pending_threat_text", messageText)
+                .putString("pending_threat_type", "CRITICAL")
+                .putString("pending_threat_details", details)
+                .putString("pending_threat_extra_levers", extraLevers)
+                .apply();
+
+            Log.i(TAG, "🔒 Appareil verrouillé/éteint. Alerte de cyber-fraude critique mise en cache pour pop-up instantané dès le déverrouillage pour protéger l'utilisateur.");
+        } else {
+            // Le smartphone étant actif : on tente d'ouvrir directement la fenêtre d'alerte en plein écran
+            launchInAppAlert(sender, messageText, "CRITICAL", details, extraLevers);
+        }
     }
 
     /**
@@ -350,9 +428,26 @@ public class KefylNotificationService extends NotificationListenerService {
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         if (notificationManager == null) return;
 
+        String details = "Analyse en direct : Tentative de manipulation sémantique suspectée.";
+        StringBuilder extraLeversString = new StringBuilder();
+        for (String lever : detectedLevers) {
+            if (extraLeversString.length() > 0) extraLeversString.append(", ");
+            extraLeversString.append(lever);
+        }
+        String extraLevers = extraLeversString.toString();
+
+        // 1. Toujours construire la notification de vigilance
         Intent intent = new Intent(this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.putExtra("show_threat_dialog", true);
+        intent.putExtra("sender", sender);
+        intent.putExtra("message_text", messageText);
+        intent.putExtra("threat_type", "VIGILANCE");
+        intent.putExtra("details", details);
+        intent.putExtra("extra_levers", extraLevers);
+
         PendingIntent pendingIntent = PendingIntent.getActivity(
-                this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+                this, 2, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
         StringBuilder explanation = new StringBuilder("Ce message suspect de ")
@@ -379,12 +474,31 @@ public class KefylNotificationService extends NotificationListenerService {
                 .setContentText("Ce message ressemble à une technique d'arnaque.")
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(explanation.toString()))
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setCategory(NotificationCompat.CATEGORY_ALARM)
                 .setColor(0xFFFBBF24) // Couleur jaune/orange ambrée
                 .setAutoCancel(true)
+                .setFullScreenIntent(pendingIntent, true) // Force immediate display on wake or unlock
                 .setContentIntent(pendingIntent);
 
-        notificationManager.notify((int) System.currentTimeMillis(), builder.build());
-        launchInAppAlert(sender, messageText, "VIGILANCE", "Manipulation psychologique suspectée", String.join(", ", detectedLevers));
+        // Envoyer la notification de vigilance dans tous les cas pour parer aux restrictions de lancement en arrière-plan d'Android
+        notificationManager.notify(1002, builder.build());
+
+        if (isDeviceLocked()) {
+            SharedPreferences prefs = getSharedPreferences("kefyl_prefs", MODE_PRIVATE);
+            prefs.edit()
+                .putBoolean("has_pending_threat", true)
+                .putString("pending_threat_sender", sender)
+                .putString("pending_threat_text", messageText)
+                .putString("pending_threat_type", "VIGILANCE")
+                .putString("pending_threat_details", details)
+                .putString("pending_threat_extra_levers", extraLevers)
+                .apply();
+
+            Log.i(TAG, "🔒 Appareil verrouillé/éteint. Alerte de vigilance sémantique mise en cache pour pop-up instantané dès le déverrouillage.");
+        } else {
+            // Le smartphone étant actif : on tente de lancer la fenêtre d'alerte en plein écran
+            launchInAppAlert(sender, messageText, "VIGILANCE", details, extraLevers);
+        }
     }
 
     private void incrementBlockedThreatsCount() {
@@ -481,8 +595,70 @@ public class KefylNotificationService extends NotificationListenerService {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        try {
+            unregisterReceiver(userUnlockReceiver);
+        } catch (Exception ignored) {}
         if (executorService != null) {
             executorService.shutdown();
+        }
+    }
+
+    private boolean isDeviceLocked() {
+        KeyguardManager km = (KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        boolean isScreenOn = false;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
+            isScreenOn = pm.isInteractive();
+        } else {
+            isScreenOn = pm.isScreenOn();
+        }
+        boolean isKeyguardLocked = (km != null && km.isKeyguardLocked());
+        return !isScreenOn || isKeyguardLocked;
+    }
+
+    private void checkAndLaunchPendingThreatAlert() {
+        SharedPreferences prefs = getSharedPreferences("kefyl_prefs", MODE_PRIVATE);
+        boolean hasPending = prefs.getBoolean("has_pending_threat", false);
+        if (hasPending) {
+            String sender = prefs.getString("pending_threat_sender", "");
+            String text = prefs.getString("pending_threat_text", "");
+            String type = prefs.getString("pending_threat_type", "");
+            String details = prefs.getString("pending_threat_details", "");
+            String extraLevers = prefs.getString("pending_threat_extra_levers", "");
+
+            Log.i(TAG, "🚀 Démarrage de l'alerte plein écran automatique au déverrouillage pour l'émetteur : " + sender);
+
+            // Consommer le cache
+            prefs.edit()
+                .putBoolean("has_pending_threat", false)
+                .remove("pending_threat_sender")
+                .remove("pending_threat_text")
+                .remove("pending_threat_type")
+                .remove("pending_threat_details")
+                .remove("pending_threat_extra_levers")
+                .apply();
+
+            // Supprimer les notifications d'escroqueries associées
+            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            if (notificationManager != null) {
+                notificationManager.cancel(1001);
+                notificationManager.cancel(1002);
+            }
+
+            // Ouvrir l'alerte instantanément pour interdire la lecture des messages
+            try {
+                Intent mainIntent = new Intent(this, MainActivity.class);
+                mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                mainIntent.putExtra("show_threat_dialog", true);
+                mainIntent.putExtra("sender", sender);
+                mainIntent.putExtra("message_text", text);
+                mainIntent.putExtra("threat_type", type);
+                mainIntent.putExtra("details", details);
+                mainIntent.putExtra("extra_levers", extraLevers);
+                startActivity(mainIntent);
+            } catch (Exception e) {
+                Log.e(TAG, "Erreur lors du déclenchement de l'alerte au déverrouillage", e);
+            }
         }
     }
 }

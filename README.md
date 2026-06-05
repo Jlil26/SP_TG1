@@ -2,7 +2,7 @@
 
 SP Sentinel est un système de sécurité innovant de type "Souverainiste et Local" créé pour protéger les citoyens togolais contre les cyber-fraudes recensées (faux gains Moov Flooz, Togocom TMoney, phishing, fausses convocations de gendarmerie ou factures CEET fictives).
 
-Ce système a été entièrement conçu et développé par l'équipe : **ANANIVI, RADJI, KPETO et EHEY**.
+Ce système a été entièrement conçu et développé par l'équipe : **ANANIVI, RADJI, KPETO et EHE**.
 
 ---
 

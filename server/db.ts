@@ -228,7 +228,7 @@ const demoDatabase: DatabaseSchema = {
     { username: "ANANIVI", password: "admin12345", role: "Administrateur", createdAt: "2026-05-27T12:00:00Z" },
     { username: "RADJI", password: "admin12345", role: "Administrateur", createdAt: "2026-05-27T12:00:00Z" },
     { username: "KPETO", password: "admin12345", role: "Administrateur", createdAt: "2026-05-27T12:00:00Z" },
-    { username: "EHEY", password: "admin12345", role: "Administrateur", createdAt: "2026-05-27T12:00:00Z" }
+    { username: "EHE", password: "admin12345", role: "Administrateur", createdAt: "2026-05-27T12:00:00Z" }
   ],
   mobileSignals: [
     {
@@ -289,7 +289,7 @@ const initialDatabase: DatabaseSchema = {
     { username: "ANANIVI", password: "admin12345", role: "Administrateur", createdAt: "2026-05-27T12:00:00Z" },
     { username: "RADJI", password: "admin12345", role: "Administrateur", createdAt: "2026-05-27T12:00:00Z" },
     { username: "KPETO", password: "admin12345", role: "Administrateur", createdAt: "2026-05-27T12:00:00Z" },
-    { username: "EHEY", password: "admin12345", role: "Administrateur", createdAt: "2026-05-27T12:00:00Z" }
+    { username: "EHE", password: "admin12345", role: "Administrateur", createdAt: "2026-05-27T12:00:00Z" }
   ],
   mobileSignals: []
 };
@@ -324,7 +324,7 @@ class DBManager {
         { username: "ANANIVI", password: "admin12345", role: "Administrateur", createdAt: "2026-05-27T12:00:00Z" },
         { username: "RADJI", password: "admin12345", role: "Administrateur", createdAt: "2026-05-27T12:00:00Z" },
         { username: "KPETO", password: "admin12345", role: "Administrateur", createdAt: "2026-05-27T12:00:00Z" },
-        { username: "EHEY", password: "admin12345", role: "Administrateur", createdAt: "2026-05-27T12:00:00Z" }
+        { username: "EHE", password: "admin12345", role: "Administrateur", createdAt: "2026-05-27T12:00:00Z" }
       ];
     }
     this.save();

@@ -357,30 +357,29 @@ export default function App() {
           <div className="text-center mb-8">
             {/* Custom high-tech logo similar to DriveNets custom emblem cuts representing safe streaming */}
             <div className="flex justify-center mb-4">
-              <div className="relative flex items-center justify-center">
-                <div className="absolute w-20 h-20 bg-blue-500/20 rounded-full blur-xl animate-pulse"></div>
-                <svg className="w-16 h-16 relative z-10" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  {/* Outer shield frame */}
-                  <path d="M50 15 L80 25 L73 68 L50 85 L27 68 L20 25 Z" fill="url(#loginShieldGlow)" stroke="#2563EB" strokeWidth="2.5" strokeLinejoin="round" />
-                  {/* Custom horizontal slash bars similar to DriveNets custom emblem cuts representing safe streaming */}
-                  <path d="M38 38 L62 38" stroke="#FFFFFF" strokeWidth="4.5" strokeLinecap="round" />
-                  <path d="M34 48 L66 48" stroke="#06B6D4" strokeWidth="4.5" strokeLinecap="round" />
-                  <path d="M40 58 L60 58" stroke="#2563EB" strokeWidth="4.5" strokeLinecap="round" />
-                  <defs>
-                    <linearGradient id="loginShieldGlow" x1="50" y1="15" x2="50" y2="85" gradientUnits="userSpaceOnUse">
-                      <stop stopColor="#0B1530" />
-                      <stop offset="1" stopColor="#122554" />
-                    </linearGradient>
-                  </defs>
+              <div className="relative flex flex-col items-center">
+                <div className="absolute w-24 h-24 bg-[#06B6D4]/20 rounded-full blur-2xl animate-pulse"></div>
+                <svg className="w-28 h-14 relative z-10" viewBox="0 0 100 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  {/* Left part of capsule: Cyan */}
+                  <path d="M48 10 H32 C20 10 20 40 32 40 H48" stroke="#06B6D4" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
+                  {/* Right part of capsule: White */}
+                  <path d="M52 10 H68 C80 10 80 40 68 40 H52" stroke="#FFFFFF" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
+                  
+                  {/* S in Cyan */}
+                  <text x="28" y="31" fill="#06B6D4" fontSize="16" fontWeight="900" fontFamily="sans-serif" letterSpacing="0">S</text>
+                  {/* P in White */}
+                  <text x="50" y="31" fill="#FFFFFF" fontSize="16" fontWeight="900" fontFamily="sans-serif" letterSpacing="0">P</text>
                 </svg>
               </div>
             </div>
-            <strong className="text-white text-xl font-bold tracking-widest block uppercase font-display">SOC PHISHING TOGO</strong>
-            <span className="text-[10px] text-[#94A3B8] font-mono tracking-widest uppercase block mt-1.5">PORTAIL NATIONAL DE SÉCURITÉ DES TRANSACTIONS</span>
+            <strong className="text-white text-xl font-bold tracking-widest block uppercase font-display">
+              <span className="text-[#06B6D4]">SP</span> SENTINEL
+            </strong>
+            <span className="text-[10px] text-[#94A3B8] font-mono tracking-widest uppercase block mt-1.5">PORTAIL NATIONAL DE SÉCURITÉ CONTRÔLE ET SUPERVISION</span>
           </div>
 
           {loginError && (
-            <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-300 rounded-xl text-xs font-mono mb-6 flex items-start gap-2.5 animate-fade-in">
+            <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-300 rounded-xl text-xs font-mono mb-6 flex items-start gap-2.5 animate-fade-in font-sans">
               <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
               <span>{loginError}</span>
             </div>
@@ -395,7 +394,7 @@ export default function App() {
                   value={loginUsername}
                   onChange={(e) => setLoginUsername(e.target.value)}
                   placeholder="NOM D'ACCÈS (EX: ANANIVI)"
-                  className="w-full bg-[#050D1C]/80 border border-white/10 rounded-xl py-3 px-4 pl-10 text-slate-100 placeholder-slate-600 font-bold focus:outline-none focus:border-[#2563EB] transition uppercase tracking-wider font-mono"
+                  className="w-full bg-[#050D1C]/80 border border-white/10 rounded-xl py-3 px-4 pl-10 text-slate-100 placeholder-slate-600 font-bold focus:outline-none focus:border-[#2563EB] transition uppercase tracking-wider font-mono text-xs"
                   required
                 />
                 <Users className="w-4 h-4 text-slate-500 absolute left-3.5 top-3.5" />
@@ -410,7 +409,7 @@ export default function App() {
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full bg-[#050D1C]/80 border border-white/10 rounded-xl py-3 px-4 pl-10 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#2563EB] transition tracking-widest font-mono"
+                  className="w-full bg-[#050D1C]/80 border border-white/10 rounded-xl py-3 px-4 pl-10 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#2563EB] transition tracking-widest font-mono text-xs"
                   required
                 />
                 <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-3.5" />
@@ -464,20 +463,27 @@ export default function App() {
       <aside className={`fixed inset-y-0 left-0 bg-[#121A2F] border-r border-white/5 w-64 z-40 transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 transition-transform duration-300 flex flex-col justify-between shadow-lg`}>
         
         <div>
-          {/* Brand/Logo Section (SOC PHISHING TOGO - SP) */}
-          <div className="px-6 py-5 border-b border-white/5 flex items-center justify-between bg-[#040B1D]">
+          {/* Brand/Logo Section (SP SENTINEL) */}
+          <div className="px-5 py-5 border-b border-white/5 flex items-center justify-between bg-[#040B1D]">
             <div className="flex items-center gap-2.5">
               <div className="shrink-0 relative">
-                <svg className="w-8 h-8 relative z-10" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M50 15 L80 25 L73 68 L50 85 L27 68 L20 25 Z" fill="#0C1938" stroke="#2563EB" strokeWidth="3" strokeLinejoin="round" />
-                  <path d="M38 38 L62 38" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" />
-                  <path d="M34 48 L66 48" stroke="#06B6D4" strokeWidth="5" strokeLinecap="round" />
-                  <path d="M40 58 L60 58" stroke="#2563EB" strokeWidth="5" strokeLinecap="round" />
+                <svg className="w-10 h-7 relative z-10" viewBox="0 0 100 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  {/* Left part of capsule: Cyan */}
+                  <path d="M48 10 H32 C20 10 20 40 32 40 H48" stroke="#06B6D4" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+                  {/* Right part of capsule: White */}
+                  <path d="M52 10 H68 C80 10 80 40 68 40 H52" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+                  
+                  {/* S in Cyan */}
+                  <text x="28" y="32" fill="#06B6D4" fontSize="16" fontWeight="900" fontFamily="sans-serif" letterSpacing="0">S</text>
+                  {/* P in White */}
+                  <text x="50" y="32" fill="#FFFFFF" fontSize="16" fontWeight="900" fontFamily="sans-serif" letterSpacing="0">P</text>
                 </svg>
               </div>
               <div>
-                <strong className="text-white font-bold tracking-widest text-xs block font-display">SOC PHISHING TG</strong>
-                <span className="text-[9px] text-[#06B6D4] font-mono tracking-wider uppercase block font-semibold">COGNITIVE STATION</span>
+                <strong className="text-white font-bold tracking-wider text-xs block font-display">
+                  <span className="text-[#06B6D4]">SP</span> SENTINEL
+                </strong>
+                <span className="text-[8px] text-[#0ea5e9] font-mono tracking-widest uppercase block font-semibold">SOC &amp; SUPERVISION</span>
               </div>
             </div>
 

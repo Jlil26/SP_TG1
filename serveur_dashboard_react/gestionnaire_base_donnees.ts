@@ -216,6 +216,39 @@ const demoDatabase: DatabaseSchema = {
       detectedAt: "2026-05-23T04:20:00Z",
       details: "Signature textuelle de chantage financier interceptée sur le réseau.",
       location: "Atakpamé"
+    },
+    {
+      id: "t-009",
+      type: "phone",
+      value: "71136441",
+      severity: "Critical",
+      status: "active",
+      campaignId: "c-002",
+      detectedAt: "2026-06-04T12:00:00Z",
+      details: "Numéro de test interceptateur pour démonstration - SOC Phishing TG (SP_TG)",
+      location: "Lomé"
+    },
+    {
+      id: "t-010",
+      type: "domain",
+      value: "okta-amazon.com",
+      severity: "Critical",
+      status: "active",
+      campaignId: "c-001",
+      detectedAt: "2026-06-04T12:05:00Z",
+      details: "Portail d'hameçonnage actif ciblant les identifiants d'administration des citoyens.",
+      location: "Lomé"
+    },
+    {
+      id: "t-011",
+      type: "ip",
+      value: "87.121.84.130",
+      severity: "Critical",
+      status: "active",
+      campaignId: "c-001",
+      detectedAt: "2026-06-04T12:10:00Z",
+      details: "IP malveillante répertoriée par les forces de l'ordre pour hébergement de phishing.",
+      location: "Sokodé"
     }
   ],
   agents: [
@@ -239,7 +272,7 @@ const demoDatabase: DatabaseSchema = {
     { username: "ANANIVI", password: "admin12345", role: "Administrateur", createdAt: "2026-05-27T12:00:00Z" },
     { username: "RADJI", password: "admin12345", role: "Administrateur", createdAt: "2026-05-27T12:00:00Z" },
     { username: "KPETO", password: "admin12345", role: "Administrateur", createdAt: "2026-05-27T12:00:00Z" },
-    { username: "EHEY", password: "admin12345", role: "Administrateur", createdAt: "2026-05-27T12:00:00Z" }
+    { username: "EHE", password: "admin12345", role: "Administrateur", createdAt: "2026-05-27T12:00:00Z" }
   ],
   mobileSignals: [
     {
@@ -300,7 +333,7 @@ const initialDatabase: DatabaseSchema = {
     { username: "ANANIVI", password: "admin12345", role: "Administrateur", createdAt: "2026-05-27T12:00:00Z" },
     { username: "RADJI", password: "admin12345", role: "Administrateur", createdAt: "2026-05-27T12:00:00Z" },
     { username: "KPETO", password: "admin12345", role: "Administrateur", createdAt: "2026-05-27T12:00:00Z" },
-    { username: "EHEY", password: "admin12345", role: "Administrateur", createdAt: "2026-05-27T12:00:00Z" }
+    { username: "EHE", password: "admin12345", role: "Administrateur", createdAt: "2026-05-27T12:00:00Z" }
   ],
   mobileSignals: []
 };
@@ -335,7 +368,7 @@ class DBManager {
         { username: "ANANIVI", password: hashPassword("admin12345"), role: "Administrateur", createdAt: "2026-05-27T12:00:00Z" },
         { username: "RADJI", password: hashPassword("admin12345"), role: "Administrateur", createdAt: "2026-05-27T12:00:00Z" },
         { username: "KPETO", password: hashPassword("admin12345"), role: "Administrateur", createdAt: "2026-05-27T12:00:00Z" },
-        { username: "EHEY", password: hashPassword("admin12345"), role: "Administrateur", createdAt: "2026-05-27T12:00:00Z" }
+        { username: "EHE", password: hashPassword("admin12345"), role: "Administrateur", createdAt: "2026-05-27T12:00:00Z" }
       ];
     } else {
       // Automatic backward-compatible password migration to SHA-256 hash formatting
