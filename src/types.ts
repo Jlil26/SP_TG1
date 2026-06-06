@@ -23,6 +23,7 @@ export interface MobileAgent {
   id: string;
   name: string;
   city: string;
+  phone?: string;
   status: "Online" | "Offline" | "Syncing";
   lastSync: string;
   version: string;

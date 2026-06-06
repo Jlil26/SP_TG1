@@ -1,4 +1,4 @@
-package com.kefyl.shield;
+package com.sentinel.shield;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -22,16 +22,16 @@ import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 
-import com.kefyl.shield.api.RetrofitClient;
-import com.kefyl.shield.data.AppDatabase;
-import com.kefyl.shield.worker.SyncWorker;
+import com.sentinel.shield.api.RetrofitClient;
+import com.sentinel.shield.data.AppDatabase;
+import com.sentinel.shield.worker.SyncWorker;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String CHANNEL_ID = "kefyl_phishing_alert";
+    private static final String CHANNEL_ID = "sentinel_phishing_alert";
 
     private TextView tvStatusHeader;
     private TextView tvBlockedCount;
@@ -131,8 +131,8 @@ public class MainActivity extends AppCompatActivity {
         // Écouteur de broadcast pour mettre à jour l'UI quand un événement survient (blocage, sync ou nouvelle menace)
         statsReceiver = new StatsReceiver();
         IntentFilter eventFilter = new IntentFilter();
-        eventFilter.addAction("com.kefyl.shield.UPDATE_STATS");
-        eventFilter.addAction("com.kefyl.shield.NEW_THREAT");
+        eventFilter.addAction("com.sentinel.shield.UPDATE_STATS");
+        eventFilter.addAction("com.sentinel.shield.NEW_THREAT");
         
         if (android.os.Build.VERSION.SDK_INT >= 33) {
             registerReceiver(statsReceiver, eventFilter, Context.RECEIVER_NOT_EXPORTED);
@@ -148,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
         checkIntentForThreat(getIntent());
 
         // Vérifier si l'agent est déjà enregistré
-        SharedPreferences sPrefs = getSharedPreferences("kefyl_prefs", MODE_PRIVATE);
+        SharedPreferences sPrefs = getSharedPreferences("sentinel_prefs", MODE_PRIVATE);
         String savedName = sPrefs.getString("agent_registered_name", "");
         if (savedName.isEmpty()) {
             showRegistrationFormDialog();
@@ -174,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
             intent.putExtra("show_threat_dialog", false);
             
             // Mettre en cache dans les préférences partagées pour affichage sûr et propre sous onResume
-            SharedPreferences prefs = getSharedPreferences("kefyl_prefs", MODE_PRIVATE);
+            SharedPreferences prefs = getSharedPreferences("sentinel_prefs", MODE_PRIVATE);
             prefs.edit()
                 .putBoolean("has_pending_threat", true)
                 .putString("pending_threat_sender", sender)
@@ -205,7 +205,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Vérifier si une alerte de cybermenace est en attente après déverrouillage ou retour au premier plan
-        SharedPreferences prefs = getSharedPreferences("kefyl_prefs", MODE_PRIVATE);
+        SharedPreferences prefs = getSharedPreferences("sentinel_prefs", MODE_PRIVATE);
         if (prefs.getBoolean("has_pending_threat", false)) {
             String sender = prefs.getString("pending_threat_sender", "");
             String text = prefs.getString("pending_threat_text", "");
@@ -241,7 +241,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void refreshUiStats() {
-        SharedPreferences prefs = getSharedPreferences("kefyl_prefs", MODE_PRIVATE);
+        SharedPreferences prefs = getSharedPreferences("sentinel_prefs", MODE_PRIVATE);
         
         // 1. Lire le nombre de menaces interceptées localement
         int blockedCount = prefs.getInt("blocked_threats_count", 0);
@@ -660,7 +660,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent != null) {
-                if ("com.kefyl.shield.NEW_THREAT".equals(intent.getAction())) {
+                if ("com.sentinel.shield.NEW_THREAT".equals(intent.getAction())) {
                     String sender = intent.getStringExtra("sender");
                     String text = intent.getStringExtra("message_text");
                     String type = intent.getStringExtra("threat_type");
@@ -671,7 +671,7 @@ public class MainActivity extends AppCompatActivity {
                         showThreatAlert(sender, text, type, details, extraLevers);
                     } else {
                         // Mettre en cache dans les préférences s'il est au second plan pour y accéder lors du retour
-                        SharedPreferences prefs = getSharedPreferences("kefyl_prefs", MODE_PRIVATE);
+                        SharedPreferences prefs = getSharedPreferences("sentinel_prefs", MODE_PRIVATE);
                         prefs.edit()
                             .putBoolean("has_pending_threat", true)
                             .putString("pending_threat_sender", sender)
@@ -681,7 +681,7 @@ public class MainActivity extends AppCompatActivity {
                             .putString("pending_threat_extra_levers", extraLevers)
                             .apply();
                     }
-                } else if ("com.kefyl.shield.UPDATE_STATS".equals(intent.getAction())) {
+                } else if ("com.sentinel.shield.UPDATE_STATS".equals(intent.getAction())) {
                     String enrollError = intent.getStringExtra("enrollment_error");
                     String enrollSuccess = intent.getStringExtra("enrollment_success");
                     if (isActivityInForeground) {
@@ -889,7 +889,7 @@ public class MainActivity extends AppCompatActivity {
         trustLp.setMargins(0, dpToPx(18), 0, 0);
         trustBtn.setLayoutParams(trustLp);
         trustBtn.setOnClickListener(v -> {
-            SharedPreferences prefs = getSharedPreferences("kefyl_prefs", MODE_PRIVATE);
+            SharedPreferences prefs = getSharedPreferences("sentinel_prefs", MODE_PRIVATE);
             java.util.Set<String> trusted = new java.util.HashSet<>(prefs.getStringSet("trusted_sources", new java.util.HashSet<>()));
             trusted.add(sender);
             prefs.edit().putStringSet("trusted_sources", trusted).apply();
@@ -1123,7 +1123,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             // Save in SharedPreferences
-            SharedPreferences.Editor editor = getSharedPreferences("kefyl_prefs", MODE_PRIVATE).edit();
+            SharedPreferences.Editor editor = getSharedPreferences("sentinel_prefs", MODE_PRIVATE).edit();
             editor.putString("agent_registered_name", nameVal);
             editor.putString("agent_registered_phone", phoneVal);
             editor.putString("agent_registered_city", cityVal);
@@ -1191,7 +1191,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Server Input
         final android.widget.EditText etIp = new android.widget.EditText(this);
-        String currentIp = getSharedPreferences("kefyl_prefs", MODE_PRIVATE)
+        String currentIp = getSharedPreferences("sentinel_prefs", MODE_PRIVATE)
                 .getString("server_ip_address", "https://sp-sentinel-hq.onrender.com");
         etIp.setText(currentIp);
         etIp.setTextColor(android.graphics.Color.WHITE);

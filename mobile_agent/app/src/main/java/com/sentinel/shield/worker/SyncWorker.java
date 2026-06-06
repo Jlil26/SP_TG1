@@ -1,4 +1,4 @@
-package com.kefyl.shield.worker;
+package com.sentinel.shield.worker;
 
 import android.content.Context;
 import android.content.Intent;
@@ -8,12 +8,12 @@ import androidx.annotation.NonNull;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
-import com.kefyl.shield.api.KefylApiService;
-import com.kefyl.shield.api.RetrofitClient;
-import com.kefyl.shield.api.SyncResponse;
-import com.kefyl.shield.data.AppDatabase;
-import com.kefyl.shield.data.Signature;
-import com.kefyl.shield.data.SignatureDao;
+import com.sentinel.shield.api.SentinelApiService;
+import com.sentinel.shield.api.RetrofitClient;
+import com.sentinel.shield.api.SyncResponse;
+import com.sentinel.shield.data.AppDatabase;
+import com.sentinel.shield.data.Signature;
+import com.sentinel.shield.data.SignatureDao;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -25,7 +25,7 @@ import retrofit2.Response;
 
 public class SyncWorker extends Worker {
 
-    private static final String TAG = "KefylSyncWorker";
+    private static final String TAG = "SentinelSyncWorker";
     private final SignatureDao signatureDao;
 
     public SyncWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
@@ -37,14 +37,14 @@ public class SyncWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-        Log.i(TAG, "Démarrage de la synchronisation en arrière-plan avec SP Kéfyl SOC.");
+        Log.i(TAG, "Démarrage de la synchronisation en arrière-plan avec SP Sentinel SOC.");
 
         Context context = getApplicationContext();
-        SharedPreferences prefs = context.getSharedPreferences("kefyl_prefs", Context.MODE_PRIVATE);
+        SharedPreferences prefs = context.getSharedPreferences("sentinel_prefs", Context.MODE_PRIVATE);
         String savedToken = prefs.getString("agent_secure_token", "");
         
         if (savedToken.isEmpty()) {
-            Log.i(TAG, "Aucun jeton d'agent trouvé. Tentative d'enrôlement dynamique auprès du SOC SP Kéfyl...");
+            Log.i(TAG, "Aucun jeton d'agent trouvé. Tentative d'enrôlement dynamique auprès du SOC SP Sentinel...");
             String deviceId = android.provider.Settings.Secure.getString(
                     context.getContentResolver(), 
                     android.provider.Settings.Secure.ANDROID_ID
@@ -67,8 +67,8 @@ public class SyncWorker extends Worker {
                 agentDisplayName = "TG-Secure-" + deviceId.substring(Math.max(0, Math.min(6, deviceId.length()))).toUpperCase();
             }
 
-            KefylApiService registerService = RetrofitClient.getApiService(context);
-            com.kefyl.shield.api.RegisterRequest req = new com.kefyl.shield.api.RegisterRequest(
+            SentinelApiService registerService = RetrofitClient.getApiService(context);
+            com.sentinel.shield.api.RegisterRequest req = new com.sentinel.shield.api.RegisterRequest(
                     deviceId,
                     agentDisplayName,
                     regCity,
@@ -76,12 +76,12 @@ public class SyncWorker extends Worker {
             );
             
             try {
-                Response<com.kefyl.shield.api.RegisterResponse> regResponse = registerService.registerAgent(req).execute();
-                Intent syncIntent = new Intent("com.kefyl.shield.UPDATE_STATS");
+                Response<com.sentinel.shield.api.RegisterResponse> regResponse = registerService.registerAgent(req).execute();
+                Intent syncIntent = new Intent("com.sentinel.shield.UPDATE_STATS");
                 if (regResponse.isSuccessful() && regResponse.body() != null && regResponse.body().isSuccess()) {
                     String newToken = regResponse.body().getToken();
                     prefs.edit().putString("agent_secure_token", newToken).apply();
-                    Log.i(TAG, "Enrôlement pour SP Kéfyl réussi ! Jeton reçu : " + newToken);
+                    Log.i(TAG, "Enrôlement pour SP Sentinel réussi ! Jeton reçu : " + newToken);
                     syncIntent.putExtra("enrollment_success", "Enrôlement réussi avec succès auprès du SOC national !");
                 } else {
                     String errorMsg = null;
@@ -112,13 +112,13 @@ public class SyncWorker extends Worker {
                 context.sendBroadcast(syncIntent);
             } catch (IOException e) {
                 Log.e(TAG, "Impossible de s'enrôler dynamiquement (Problème réseau) : " + e.getMessage());
-                Intent syncIntent = new Intent("com.kefyl.shield.UPDATE_STATS");
+                Intent syncIntent = new Intent("com.sentinel.shield.UPDATE_STATS");
                 syncIntent.putExtra("enrollment_error", "Erreur réseau : Impossible de contacter la console de sécurité nationale.");
                 context.sendBroadcast(syncIntent);
             }
         }
 
-        KefylApiService apiService = RetrofitClient.getApiService(context);
+        SentinelApiService apiService = RetrofitClient.getApiService(context);
         
         try {
             // Appel de synchronisation API
@@ -158,7 +158,7 @@ public class SyncWorker extends Worker {
                 saveLastSyncTime();
 
                 // Lancer une intention de mise à jour UI vers MainActivity
-                Intent updateUiIntent = new Intent("com.kefyl.shield.UPDATE_STATS");
+                Intent updateUiIntent = new Intent("com.sentinel.shield.UPDATE_STATS");
                 getApplicationContext().sendBroadcast(updateUiIntent);
 
                 return Result.success();
@@ -174,7 +174,7 @@ public class SyncWorker extends Worker {
     }
 
     private void saveLastSyncTime() {
-        SharedPreferences prefs = getApplicationContext().getSharedPreferences("kefyl_prefs", Context.MODE_PRIVATE);
+        SharedPreferences prefs = getApplicationContext().getSharedPreferences("sentinel_prefs", Context.MODE_PRIVATE);
         String currentDate = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault()).format(new Date());
         prefs.edit().putString("last_update_timestamp", currentDate).apply();
     }

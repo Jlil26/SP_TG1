@@ -1,4 +1,4 @@
-package com.kefyl.shield.api;
+package com.sentinel.shield.api;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -10,14 +10,14 @@ import java.util.concurrent.TimeUnit;
 
 public class RetrofitClient {
 
-    private static final String PREFS_NAME = "kefyl_prefs";
+    private static final String PREFS_NAME = "sentinel_prefs";
     private static final String KEY_SERVER_IP = "server_ip_address";
     public static final String DEFAULT_BASE_URL = "https://sp-sentinel-hq.onrender.com/"; // Deployed Render Server Default
 
     private static Retrofit retrofit = null;
     private static String currentBaseUrl = "";
 
-    public static synchronized KefylApiService getApiService(Context context) {
+    public static synchronized SentinelApiService getApiService(Context context) {
         String baseUrl = getServerBaseUrl(context);
         
         // Si l'URL a changé ou retrofit n'est pas initialisé, instancier un nouveau client
@@ -63,7 +63,7 @@ public class RetrofitClient {
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
         }
-        return retrofit.create(KefylApiService.class);
+        return retrofit.create(SentinelApiService.class);
     }
 
     /**

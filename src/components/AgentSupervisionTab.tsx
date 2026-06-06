@@ -796,7 +796,15 @@ export default function AgentSupervisionTab({
                         <td className="py-2 px-2">
                           <div>
                             <span className="text-white font-bold block leading-tight">{agent.name}</span>
-                            <span className="text-[9px] text-[#06B6D4] font-mono">v{agent.version}</span>
+                            <div className="flex items-center gap-1.5 mt-0.5 leading-none">
+                              <span className="text-[9px] text-[#06B6D4] font-mono">v{agent.version}</span>
+                              {agent.phone && (
+                                <>
+                                  <span className="text-slate-550 text-[8px]">•</span>
+                                  <span className="text-[9px] text-slate-400 font-mono select-all">📞 {agent.phone}</span>
+                                </>
+                              )}
+                            </div>
                           </div>
                         </td>
                         <td className="py-2 px-2 text-slate-400">
@@ -1064,16 +1072,16 @@ export default function AgentSupervisionTab({
                         {/* Header bar styled exactly like activity_main.xml */}
                         <div className="flex items-start gap-2.5 pb-2 border-b border-white/5">
                           {/* Outlined capsule representing the uniform brand logo */}
-                          <div className="w-12 h-7 rounded-full bg-[#06B6D4] p-[1.5px] shrink-0 self-center">
+                          <div className="w-12 h-7 rounded-full bg-[#00C896] p-[1.5px] shrink-0 self-center">
                             <div className="w-full h-full rounded-full bg-[#050B1D] flex items-center justify-center gap-0.5">
-                              <span className="text-[#06B6D4] font-black text-[10px]">S</span>
+                              <span className="text-[#00C896] font-black text-[10px]">S</span>
                               <span className="text-white font-black text-[10px]">P</span>
                             </div>
                           </div>
 
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1">
-                              <span className="text-[#06B6D4] font-black text-[11px] tracking-wide">SP</span>
+                              <span className="text-[#00C896] font-black text-[11px] tracking-wide">SP</span>
                               <span className="text-white font-black text-[11px] tracking-wide">SENTINEL</span>
                             </div>
                             <p className="text-[7.5px] text-slate-400 font-sans leading-none mt-0.5 truncate">
@@ -1085,7 +1093,7 @@ export default function AgentSupervisionTab({
                           </div>
 
                           {/* Small action version or icon */}
-                          <div className="p-1 rounded bg-[#06B6D4]/10 text-[#06B6D4] self-center shrink-0">
+                          <div className="p-1 rounded bg-[#00C896]/10 text-[#00C896] self-center shrink-0">
                             <Shield className="w-3.5 h-3.5" />
                           </div>
                         </div>
@@ -1094,18 +1102,18 @@ export default function AgentSupervisionTab({
                     <div className="my-auto py-2 flex flex-col items-center justify-center text-center">
                       <div className="relative w-24 h-24 flex items-center justify-center mb-1.5">
                         {/* Outer rotating pulse ring */}
-                        <div className={`absolute inset-0 rounded-full border border-dashed animate-spin duration-15000 ${isShieldActive ? "border-[#06B6D4]/30" : "border-slate-800"}`}></div>
+                        <div className={`absolute inset-0 rounded-full border border-dashed animate-spin duration-15000 ${isShieldActive ? "border-[#00C896]/30" : "border-slate-800"}`}></div>
                         
                         {/* Inner glowing circle */}
-                        <div className={`absolute w-20 h-20 rounded-full flex flex-col items-center justify-center shadow-lg transition-all duration-500 bg-[#06B6D4]/5 border border-[#06B6D4]/30 shadow-[#06B6D4]/5`}>
-                          <Shield className="w-7 h-7 text-[#06B6D4]" />
+                        <div className={`absolute w-20 h-20 rounded-full flex flex-col items-center justify-center shadow-lg transition-all duration-500 bg-[#00C896]/5 border border-[#00C896]/30 shadow-[#00C896]/5`}>
+                          <Shield className="w-7 h-7 text-[#00C896]" />
                           <span className="text-[7.5px] font-mono tracking-widest uppercase font-bold text-slate-400 mt-1">
                             Protector
                           </span>
                         </div>
                       </div>
 
-                      <h4 className="text-[10px] font-mono font-black uppercase text-center tracking-wider text-[#06B6D4]">
+                      <h4 className="text-[10px] font-mono font-black uppercase text-center tracking-wider text-[#00C896]">
                         PROTÉGÉ EN TEMPS RÉEL
                       </h4>
                     </div>
@@ -1118,7 +1126,7 @@ export default function AgentSupervisionTab({
                       </div>
                       <div className="bg-[#121A2F]/90 border border-white/5 p-2 rounded-2xl text-center shadow-md">
                         <span className="text-[7px] font-mono font-bold text-[#94A3B8] block tracking-wider uppercase">ARNAQUES CONNUES</span>
-                        <strong className="text-base font-mono text-[#06B6D4] block mt-0.5">148</strong>
+                        <strong className="text-base font-mono text-[#00C896] block mt-0.5">148</strong>
                       </div>
                     </div>
 

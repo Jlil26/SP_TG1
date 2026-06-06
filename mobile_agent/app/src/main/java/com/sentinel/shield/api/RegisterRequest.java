@@ -1,4 +1,4 @@
-package com.kefyl.shield.api;
+package com.sentinel.shield.api;
 
 import com.google.gson.annotations.SerializedName;
 

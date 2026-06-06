@@ -1,4 +1,4 @@
-package com.kefyl.shield.service;
+package com.sentinel.shield.service;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -19,15 +19,15 @@ import android.content.IntentFilter;
 import android.app.KeyguardManager;
 import android.os.PowerManager;
 
-import com.kefyl.shield.MainActivity;
-import com.kefyl.shield.api.KefylApiService;
-import com.kefyl.shield.api.ReportSubmission;
-import com.kefyl.shield.api.RetrofitClient;
-import com.kefyl.shield.data.AppDatabase;
-import com.kefyl.shield.data.ContactState;
-import com.kefyl.shield.data.ContactStateDao;
-import com.kefyl.shield.data.Signature;
-import com.kefyl.shield.engine.PhishingAnalyzer;
+import com.sentinel.shield.MainActivity;
+import com.sentinel.shield.api.SentinelApiService;
+import com.sentinel.shield.api.ReportSubmission;
+import com.sentinel.shield.api.RetrofitClient;
+import com.sentinel.shield.data.AppDatabase;
+import com.sentinel.shield.data.ContactState;
+import com.sentinel.shield.data.ContactStateDao;
+import com.sentinel.shield.data.Signature;
+import com.sentinel.shield.engine.PhishingAnalyzer;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -39,10 +39,10 @@ import java.util.concurrent.Executors;
 import okhttp3.ResponseBody;
 import retrofit2.Response;
 
-public class KefylNotificationService extends NotificationListenerService {
+public class SentinelNotificationService extends NotificationListenerService {
 
-    private static final String TAG = "KefylNotification";
-    private static final String CHANNEL_ID = "kefyl_phishing_alert";
+    private static final String TAG = "SentinelNotification";
+    private static final String CHANNEL_ID = "sentinel_phishing_alert";
     private ExecutorService executorService;
     private PhishingAnalyzer phishingAnalyzer;
     private ContactStateDao contactStateDao;
@@ -143,7 +143,7 @@ public class KefylNotificationService extends NotificationListenerService {
             }
 
             // --- FILTRAGE SOURCE DE CONFIANCE (TRUSTED SOURCES / GROUPS) ---
-            SharedPreferences prefs = getSharedPreferences("kefyl_prefs", MODE_PRIVATE);
+            SharedPreferences prefs = getSharedPreferences("sentinel_prefs", MODE_PRIVATE);
             java.util.Set<String> trustedSources = prefs.getStringSet("trusted_sources", new java.util.HashSet<>());
             
             // Si c'est un groupe répertorié sur Liste Verte (trusted_sources)
@@ -298,7 +298,7 @@ public class KefylNotificationService extends NotificationListenerService {
         }
 
         // 2. Vérification auprès des contacts locaux répertoriés dans SharedPreferences (Carnet local de confiance)
-        SharedPreferences prefs = context.getSharedPreferences("kefyl_prefs", Context.MODE_PRIVATE);
+        SharedPreferences prefs = context.getSharedPreferences("sentinel_prefs", Context.MODE_PRIVATE);
         java.util.Set<String> localContacts = prefs.getStringSet("registered_contacts", new java.util.HashSet<>());
         if (localContacts.contains(titleOrPhone) || localContacts.contains(getCleanedPhoneNumber(titleOrPhone))) {
             Log.d(TAG, "👍 Contact enregistré trouvé dans le carnet local Kéfyl.");
@@ -404,7 +404,7 @@ public class KefylNotificationService extends NotificationListenerService {
 
         if (isDeviceLocked()) {
             // Le téléphone est éteint de veille ou verrouillé : l'alerte est suspendue pour ne pas saturer l'appareil en veille.
-            SharedPreferences prefs = getSharedPreferences("kefyl_prefs", MODE_PRIVATE);
+            SharedPreferences prefs = getSharedPreferences("sentinel_prefs", MODE_PRIVATE);
             prefs.edit()
                 .putBoolean("has_pending_threat", true)
                 .putString("pending_threat_sender", sender)
@@ -484,7 +484,7 @@ public class KefylNotificationService extends NotificationListenerService {
         notificationManager.notify(1002, builder.build());
 
         if (isDeviceLocked()) {
-            SharedPreferences prefs = getSharedPreferences("kefyl_prefs", MODE_PRIVATE);
+            SharedPreferences prefs = getSharedPreferences("sentinel_prefs", MODE_PRIVATE);
             prefs.edit()
                 .putBoolean("has_pending_threat", true)
                 .putString("pending_threat_sender", sender)
@@ -502,11 +502,11 @@ public class KefylNotificationService extends NotificationListenerService {
     }
 
     private void incrementBlockedThreatsCount() {
-        SharedPreferences prefs = getSharedPreferences("kefyl_prefs", Context.MODE_PRIVATE);
+        SharedPreferences prefs = getSharedPreferences("sentinel_prefs", Context.MODE_PRIVATE);
         int currentCount = prefs.getInt("blocked_threats_count", 0);
         prefs.edit().putInt("blocked_threats_count", currentCount + 1).apply();
         
-        Intent updateUiIntent = new Intent("com.kefyl.shield.UPDATE_STATS");
+        Intent updateUiIntent = new Intent("com.sentinel.shield.UPDATE_STATS");
         sendBroadcast(updateUiIntent);
     }
 
@@ -528,11 +528,11 @@ public class KefylNotificationService extends NotificationListenerService {
                 metaData
         );
 
-        KefylApiService apiService = RetrofitClient.getApiService(this);
+        SentinelApiService apiService = RetrofitClient.getApiService(this);
         try {
             Response<ResponseBody> response = apiService.submitReport(report).execute();
             if (response.isSuccessful()) {
-                Log.i(TAG, "Rapport d'analyse forensique avancé [" + reasonType + "] transmis avec succès au SOC Kéfyl.");
+                Log.i(TAG, "Rapport d'analyse forensique avancé [" + reasonType + "] transmis avec succès au SOC Sentinel.");
             } else {
                 Log.e(TAG, "Échec de l'envoi du rapport forensique avancé : " + response.code());
             }
@@ -542,7 +542,7 @@ public class KefylNotificationService extends NotificationListenerService {
     }
 
     private String getAnonymousDeviceId() {
-        SharedPreferences prefs = getSharedPreferences("kefyl_prefs", Context.MODE_PRIVATE);
+        SharedPreferences prefs = getSharedPreferences("sentinel_prefs", Context.MODE_PRIVATE);
         String deviceId = prefs.getString("anonymous_device_id", "");
         if (deviceId.isEmpty()) {
             deviceId = "AGENT-TG-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
@@ -555,10 +555,10 @@ public class KefylNotificationService extends NotificationListenerService {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
-                    "Alertes de Phishing Kéfyl",
+                    "Alertes de Phishing Sentinel",
                     NotificationManager.IMPORTANCE_HIGH
             );
-            channel.setDescription("Notifications critiques émises par le pare-feu mobile Kéfyl.");
+            channel.setDescription("Notifications critiques émises par le pare-feu mobile Sentinel.");
             NotificationManager manager = getSystemService(NotificationManager.class);
             if (manager != null) {
                 manager.createNotificationChannel(channel);
@@ -568,7 +568,7 @@ public class KefylNotificationService extends NotificationListenerService {
 
     private void launchInAppAlert(String sender, String text, String type, String details, String extraLevers) {
         // 1. Envoyer un Broadcast avec tous les détails de la menace
-        Intent broadcastIntent = new Intent("com.kefyl.shield.NEW_THREAT");
+        Intent broadcastIntent = new Intent("com.sentinel.shield.NEW_THREAT");
         broadcastIntent.putExtra("sender", sender);
         broadcastIntent.putExtra("message_text", text);
         broadcastIntent.putExtra("threat_type", type);
@@ -617,7 +617,7 @@ public class KefylNotificationService extends NotificationListenerService {
     }
 
     private void checkAndLaunchPendingThreatAlert() {
-        SharedPreferences prefs = getSharedPreferences("kefyl_prefs", MODE_PRIVATE);
+        SharedPreferences prefs = getSharedPreferences("sentinel_prefs", MODE_PRIVATE);
         boolean hasPending = prefs.getBoolean("has_pending_threat", false);
         if (hasPending) {
             String sender = prefs.getString("pending_threat_sender", "");

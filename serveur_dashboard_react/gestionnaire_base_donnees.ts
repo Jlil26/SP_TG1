@@ -38,6 +38,7 @@ export interface MobileAgent {
   id: string;
   name: string;
   city: string; // Lomé, Kara, Sokodé, Atakpamé, Kpalimé, Cinkassé
+  phone?: string; // Contact phone number
   status: "Online" | "Offline" | "Syncing";
   lastSync: string;
   version: string;
@@ -512,6 +513,11 @@ class DBManager {
   }
 
   public addThreat(threat: Omit<Threat, "id" | "detectedAt">): Threat {
+    const cleanValue = threat.value.trim();
+    const exists = this.db.threats.some(t => t.value.trim().toLowerCase() === cleanValue.toLowerCase());
+    if (exists) {
+      throw new Error("La signature existe déjà dans la base de données.");
+    }
     const newThreat: Threat = {
       ...threat,
       id: `t-${Date.now()}`,

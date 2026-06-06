@@ -52,6 +52,8 @@ export default function SignaturesTab({ threats, onRefreshData }: Props) {
     message: string;
   } | null>(null);
 
+  const [lastAddedThreat, setLastAddedThreat] = useState<Threat | null>(null);
+
   const showFeedback = (type: "success" | "error" | "warning", message: string) => {
     setFeedback({ type, message });
     setTimeout(() => {
@@ -233,6 +235,7 @@ export default function SignaturesTab({ threats, onRefreshData }: Props) {
       const data = await response.json();
       if (data.success) {
         showFeedback("success", `Signature "${cleanValue}" ajoutée et synchronisée avec succès.`);
+        setLastAddedThreat(data.data);
         await onRefreshData();
       } else {
         showFeedback("error", "Erreur lors de l'ajout : " + data.error);
@@ -364,6 +367,7 @@ export default function SignaturesTab({ threats, onRefreshData }: Props) {
         setNewDetails("");
         setShowAddForm(false);
         showFeedback("success", `Nouvelle signature "${cleanValue}" ajoutée et synchronisée avec succès.`);
+        setLastAddedThreat(data.data);
         await onRefreshData();
       } else {
         showFeedback("error", "Erreur lors de l'ajout : " + data.error);
@@ -402,6 +406,59 @@ export default function SignaturesTab({ threats, onRefreshData }: Props) {
           <button onClick={() => setFeedback(null)} className="text-[#94A3B8] hover:text-white transition p-0.5 cursor-pointer">
             <X className="w-4 h-4" />
           </button>
+        </div>
+      )}
+
+      {/* Structured detailed Confirmation for Last Added Signature Base */}
+      {lastAddedThreat && (
+        <div className="p-5 rounded-xl border bg-emerald-950/20 border-emerald-500/25 text-emerald-400 font-mono text-xs flex flex-col gap-3 animate-fade-in relative shadow-md">
+          <button 
+            type="button"
+            onClick={() => setLastAddedThreat(null)} 
+            className="absolute top-3.5 right-3.5 text-emerald-500 hover:text-white transition p-1 cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+          
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5 text-[#10B981] animate-pulse" />
+            <span className="font-extrabold uppercase text-[11px] tracking-wider text-emerald-200">
+              Mise à jour Réussie : Nouvelle Signature d&apos;immunisation Active Déployée !
+            </span>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 bg-[#0B1020]/60 p-4 rounded-lg border border-white/5 mt-1">
+            <div>
+              <span className="text-[9px] text-[#94A3B8] uppercase block font-bold">Valeur Bloquée active :</span>
+              <p className="text-white font-extrabold break-all pt-1 text-sm">{lastAddedThreat.value}</p>
+            </div>
+            <div>
+              <span className="text-[9px] text-[#94A3B8] uppercase block font-bold">Type d&apos;IoC / Registre :</span>
+              <p className="text-emerald-300 font-extrabold pt-1 uppercase">
+                {lastAddedThreat.type === "domain" ? "🌐 URL / Domaine" : 
+                 lastAddedThreat.type === "phone" ? "📞 Téléphone" : 
+                 lastAddedThreat.type === "ip" ? "🖥️ Adresse IP" : 
+                 lastAddedThreat.type === "email" ? "✉️ E-Mail" : "📝 Motif"}
+              </p>
+            </div>
+            <div>
+              <span className="text-[9px] text-[#94A3B8] uppercase block font-bold">Sévérité / Priorité :</span>
+              <p className={`font-mono text-xs font-bold pt-1 ${
+                lastAddedThreat.severity === "Critical" ? "text-red-400" :
+                lastAddedThreat.severity === "Medium" ? "text-amber-400" : "text-slate-400"
+              }`}>{lastAddedThreat.severity}</p>
+            </div>
+            <div>
+              <span className="text-[9px] text-[#94A3B8] uppercase block font-bold">Taille Base de Données SOC :</span>
+              <p className="text-white font-extrabold pt-1 text-sm">{threats.length} Signatures Actives</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 text-[10px] text-[#94A3B8] leading-normal pt-1 pl-1 bg-[#10B981]/5 p-2 rounded-md">
+            <span className="inline-block w-2 h-2 rounded-full bg-[#10B981] animate-ping"></span>
+            <span>
+              <strong className="text-emerald-300">Diffusion d&apos;immunisation :</strong> Les agents terminaux Kéfyl Shield obtiendront cette signature de blocage passive à la reconnexion ou lors de sa prochaine mise à jour hertzienne de sécurité.
+            </span>
+          </div>
         </div>
       )}
       
