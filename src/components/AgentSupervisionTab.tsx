@@ -1122,11 +1122,11 @@ export default function AgentSupervisionTab({
                     <div className="grid grid-cols-2 gap-2 pb-2">
                       <div className="bg-[#121A2F]/90 border border-white/5 p-2 rounded-2xl text-center shadow-md">
                         <span className="text-[7px] font-mono font-bold text-slate-400 block tracking-wider uppercase">PIÈGES ÉVITÉS</span>
-                        <strong className="text-base font-mono text-[#EF4444] block mt-0.5">{simLocalBlockedCount}</strong>
+                        <strong className="text-base font-mono text-[#EF4444] block mt-0.5">{mobileSignals.length > 0 ? mobileSignals.length : simLocalBlockedCount}</strong>
                       </div>
                       <div className="bg-[#121A2F]/90 border border-white/5 p-2 rounded-2xl text-center shadow-md">
                         <span className="text-[7px] font-mono font-bold text-[#94A3B8] block tracking-wider uppercase">ARNAQUES CONNUES</span>
-                        <strong className="text-base font-mono text-[#00C896] block mt-0.5">148</strong>
+                        <strong className="text-base font-mono text-[#00C896] block mt-0.5">{threats.length > 0 ? threats.length : 148}</strong>
                       </div>
                     </div>
 

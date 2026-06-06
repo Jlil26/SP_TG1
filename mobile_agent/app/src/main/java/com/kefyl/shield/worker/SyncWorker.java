@@ -41,6 +41,16 @@ public class SyncWorker extends Worker {
 
         Context context = getApplicationContext();
         SharedPreferences prefs = context.getSharedPreferences("kefyl_prefs", Context.MODE_PRIVATE);
+        
+        boolean isFirstSyncDone = prefs.getBoolean("is_first_sync_done", false);
+        boolean isManualSync = getInputData().getBoolean("is_manual_sync", false);
+        
+        // Bloquer toute synchronisation automatique tant que l'utilisateur n'a pas activé la protection
+        if (!isFirstSyncDone && !isManualSync) {
+            Log.i(TAG, "Synchronisation automatique ignorée car l'application n'a pas encore activé sa première protection manuelle.");
+            return Result.success();
+        }
+
         String savedToken = prefs.getString("agent_secure_token", "");
         
         if (savedToken.isEmpty()) {
@@ -120,6 +130,9 @@ public class SyncWorker extends Worker {
 
         KefylApiService apiService = RetrofitClient.getApiService(context);
         
+        // Retransmettre les pièges évités hors-ligne en premier
+        RetrofitClient.syncOfflineReports(context);
+        
         try {
             // Appel de synchronisation API
             Response<SyncResponse> response = apiService.syncDatabase("all", "1.0.0").execute();
@@ -156,6 +169,9 @@ public class SyncWorker extends Worker {
 
                 // Enregistrement de la date de dernière mise à jour dans SharedPreferences
                 saveLastSyncTime();
+                
+                // Indiquer que la première synchronisation a été effectuée avec succès pour activer le bouclier
+                prefs.edit().putBoolean("is_first_sync_done", true).apply();
 
                 // Lancer une intention de mise à jour UI vers MainActivity
                 Intent updateUiIntent = new Intent("com.kefyl.shield.UPDATE_STATS");

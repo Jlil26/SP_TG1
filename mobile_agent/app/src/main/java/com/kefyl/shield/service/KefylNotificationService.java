@@ -209,6 +209,7 @@ public class KefylNotificationService extends NotificationListenerService {
                             "Lomé", 
                             "Manipulation détectée: " + String.join(", ", detectedLevers)
                     );
+                    incrementBlockedThreatsCount();
                     submitForensicReport(title, text, mockHeuristicSig, "HEURISTIC_SOCIAL_ENG");
                 }
             } else {
@@ -246,6 +247,7 @@ public class KefylNotificationService extends NotificationListenerService {
                                     "Lomé", 
                                     "Manipulation détectée: " + String.join(", ", detectedLevers)
                             );
+                            incrementBlockedThreatsCount();
                             submitForensicReport(title, text, mockHeuristicSig, "HEURISTIC_SOCIAL_ENG");
                         }
                     }
@@ -515,16 +517,20 @@ public class KefylNotificationService extends NotificationListenerService {
         
         Map<String, Object> metaData = new HashMap<>();
         metaData.put("intercepted_app", "Notification Interceptor - Memory & NLP Engine");
-        metaData.put("signature_matched_id", signature.getId());
-        metaData.put("signature_type", signature.getType());
+        if (signature != null) {
+            metaData.put("signature_matched_id", signature.getId());
+            metaData.put("signature_type", signature.getType());
+        }
         metaData.put("detection_reason", reasonType);
         metaData.put("gmt_time", System.currentTimeMillis());
+
+        String location = (signature != null && signature.getLocation() != null) ? signature.getLocation() : "Lomé";
 
         ReportSubmission report = new ReportSubmission(
                 deviceId,
                 senderPhone,
                 messageText,
-                signature.getLocation() != null ? signature.getLocation() : "Lomé",
+                location,
                 metaData
         );
 
@@ -534,10 +540,12 @@ public class KefylNotificationService extends NotificationListenerService {
             if (response.isSuccessful()) {
                 Log.i(TAG, "Rapport d'analyse forensique avancé [" + reasonType + "] transmis avec succès au SOC Kéfyl.");
             } else {
-                Log.e(TAG, "Échec de l'envoi du rapport forensique avancé : " + response.code());
+                Log.e(TAG, "Échec de l'envoi du rapport forensique avancé : " + response.code() + ". Sauvegarde locale.");
+                RetrofitClient.saveOfflineReport(this, report);
             }
         } catch (IOException e) {
-            Log.e(TAG, "Erreur réseau lors de la transmission du rapport forensique : " + e.getMessage());
+            Log.e(TAG, "Erreur réseau lors de la transmission du rapport forensique : " + e.getMessage() + ". Sauvegarde locale.");
+            RetrofitClient.saveOfflineReport(this, report);
         }
     }
 

@@ -64,6 +64,20 @@ public class MainActivity extends AppCompatActivity {
 
         db = AppDatabase.getDatabase(this);
 
+        // Si l'application vient d'être installée ou n'a pas encore fait sa première synchronisation manuelle
+        // réussie avec succès, on s'assure d'initialiser d'office les signatures locales et les compteurs à zéro.
+        SharedPreferences sPrefs = getSharedPreferences("kefyl_prefs", MODE_PRIVATE);
+        boolean isFirstSyncDone = sPrefs.getBoolean("is_first_sync_done", false);
+        if (!isFirstSyncDone) {
+            sPrefs.edit()
+                .putInt("blocked_threats_count", 0)
+                .putString("last_update_timestamp", "Jamais")
+                .apply();
+            Executors.newSingleThreadExecutor().execute(() -> {
+                db.signatureDao().clearAll();
+            });
+        }
+
         // Créer le canal de notification immédiatement au démarrage
         createNotificationChannel();
 
@@ -89,7 +103,13 @@ public class MainActivity extends AppCompatActivity {
             btnSyncNow.setEnabled(false);
             btnSyncNow.setText("Vérification en cours...");
             
-            OneTimeWorkRequest syncRequest = new OneTimeWorkRequest.Builder(SyncWorker.class).build();
+            androidx.work.Data inputData = new androidx.work.Data.Builder()
+                    .putBoolean("is_manual_sync", true)
+                    .build();
+            
+            OneTimeWorkRequest syncRequest = new OneTimeWorkRequest.Builder(SyncWorker.class)
+                    .setInputData(inputData)
+                    .build();
             WorkManager.getInstance(MainActivity.this).enqueue(syncRequest);
 
             WorkManager.getInstance(MainActivity.this)
@@ -242,13 +262,14 @@ public class MainActivity extends AppCompatActivity {
 
     private void refreshUiStats() {
         SharedPreferences prefs = getSharedPreferences("kefyl_prefs", MODE_PRIVATE);
+        boolean isFirstSyncDone = prefs.getBoolean("is_first_sync_done", false);
         
-        // 1. Lire le nombre de menaces interceptées localement
-        int blockedCount = prefs.getInt("blocked_threats_count", 0);
+        // 1. Lire le nombre de menaces interceptées localement (à 0 tant que la protection n'est pas active)
+        int blockedCount = isFirstSyncDone ? prefs.getInt("blocked_threats_count", 0) : 0;
         tvBlockedCount.setText(String.valueOf(blockedCount));
 
         // 2. Lire l'état et la date de dernière mise à jour
-        String lastUpdate = prefs.getString("last_update_timestamp", "Jamais");
+        String lastUpdate = isFirstSyncDone ? prefs.getString("last_update_timestamp", "Jamais") : "Jamais";
         if ("Jamais".equals(lastUpdate) || lastUpdate.isEmpty()) {
             tvLastUpdate.setText("Dernier contrôle de sécurité effectué : Jamais");
         } else {
@@ -257,10 +278,10 @@ public class MainActivity extends AppCompatActivity {
 
         // 3. Compter le nombre d'indicateurs d'attaques actifs en SQLite (Room)
         Executors.newSingleThreadExecutor().execute(() -> {
-            int count = db.signatureDao().getCount();
+            int count = isFirstSyncDone ? db.signatureDao().getCount() : 0;
             runOnUiThread(() -> {
                 tvSignaturesCount.setText(String.valueOf(count));
-                if (count == 0) {
+                if (!isFirstSyncDone || count == 0) {
                     btnSyncNow.setText("🔴 SÉCURITÉ INACTIVE\n(Touchez ici pour activer la protection)");
                     btnSyncNow.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFEF4444));
                 } else {
@@ -347,9 +368,27 @@ public class MainActivity extends AppCompatActivity {
         final android.app.Dialog dialog = new android.app.Dialog(this);
         dialog.requestWindowFeature(android.view.Window.FEATURE_NO_TITLE);
 
+        android.widget.ScrollView scrollView = new android.widget.ScrollView(this);
+        scrollView.setLayoutParams(new android.widget.FrameLayout.LayoutParams(
+                android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                android.widget.FrameLayout.LayoutParams.MATCH_PARENT
+        ));
+        scrollView.setFillViewport(true);
+        scrollView.setFocusable(true);
+        scrollView.setFocusableInTouchMode(true);
+        scrollView.setScrollContainer(true);
+        scrollView.setOverScrollMode(android.view.View.OVER_SCROLL_ALWAYS);
+        scrollView.setVerticalScrollBarEnabled(true);
+        scrollView.setScrollbarFadingEnabled(false);
+
         android.widget.LinearLayout root = new android.widget.LinearLayout(this);
         root.setOrientation(android.widget.LinearLayout.VERTICAL);
-        root.setPadding(dpToPx(22), dpToPx(22), dpToPx(22), dpToPx(22));
+        // Added generous bottom padding (110dp) so that step 3 and the close button are fully scrollable and not cut off
+        root.setPadding(dpToPx(20), dpToPx(20), dpToPx(20), dpToPx(110));
+        root.setLayoutParams(new android.widget.FrameLayout.LayoutParams(
+                android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                android.widget.FrameLayout.LayoutParams.WRAP_CONTENT
+        ));
 
         android.graphics.drawable.GradientDrawable background = new android.graphics.drawable.GradientDrawable();
         background.setColor(android.graphics.Color.parseColor("#0B0F14")); // Pitch black premium backgrounds
@@ -386,7 +425,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Explanations text
         android.widget.TextView explainTv = new android.widget.TextView(this);
-        explainTv.setText("Pour bloquer les cyber-fraudes, Android requiert d'activer notre service de surveillance. Cependant, parce que l'application est installée directement (via APK), Android 13+ bloque parfois cette activation avec le message :\n\n⚠️ \"Paramètre restreint : pour votre sécurité, ce paramètre est indisponible...\"");
+        explainTv.setText("Pour bloquer les cyber-fraudes, Android requiert d'activer notre service de surveillance. Cependant, parce que l'application est installée directement (via APK), Android 13+ bloque cette activation avec le message :\n\n⚠️ « Paramètre restreint : pour votre sécurité, ce paramètre est indisponible... »");
         explainTv.setTextColor(android.graphics.Color.parseColor("#CBD5E1"));
         explainTv.setTextSize(11.5f);
         explainTv.setPadding(0, dpToPx(16), 0, dpToPx(10));
@@ -394,7 +433,7 @@ public class MainActivity extends AppCompatActivity {
         root.addView(explainTv);
 
         android.widget.TextView subexplainTv = new android.widget.TextView(this);
-        subexplainTv.setText("Pas de panique ! Suivez ces étapes simples pour débloquer :");
+        subexplainTv.setText("Suivez ces étapes très simples pour débloquer :");
         subexplainTv.setTextColor(android.graphics.Color.parseColor("#94A3B8"));
         subexplainTv.setTextSize(11);
         subexplainTv.setTypeface(android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.BOLD));
@@ -419,7 +458,7 @@ public class MainActivity extends AppCompatActivity {
         step1Box.addView(step1Title);
 
         android.widget.TextView step1Desc = new android.widget.TextView(this);
-        step1Desc.setText("Cliquez sur le bouton ci-dessous.\n1. En haut à droite, cliquez sur les 3 petits points (⋮).\n2. Sélectionnez « Autoriser les paramètres restreints ».\n3. Confirmez avec votre code de déverrouillage.");
+        step1Desc.setText("Il s'agit d'une restriction d'Android liée aux APK hors Google Play Store.\n\n1. Cliquez sur le bouton bleu ci-dessous pour ouvrir les infos de l'application.\n2. En haut à droite, cliquez sur les 3 petits points (⋮).\n3. Sélectionnez « Autoriser les paramètres restreints ».\n4. Confirmez avec le code de votre téléphone (schéma ou empreinte).\n\n💡 Conseils Xiaomi / Samsung : Si vous ne voyez pas les 3 points (⋮) en haut à droite, faites défiler tout en bas de la page Infos de l'application pour trouver l'option « Autoriser les paramètres restreints » puis validez.");
         step1Desc.setTextColor(android.graphics.Color.parseColor("#94A3B8"));
         step1Desc.setTextSize(9.5f);
         step1Desc.setPadding(0, dpToPx(6), 0, dpToPx(10));
@@ -472,7 +511,7 @@ public class MainActivity extends AppCompatActivity {
         step2Box.setBackground(step2Bg);
 
         android.widget.TextView step2Title = new android.widget.TextView(this);
-        step2Title.setText("ÉTAPE 2 : Activer l'écouteur de sécurité");
+        step2Title.setText("ÉTAPE 2 : Activer l’écouteur de sécurité");
         step2Title.setTextColor(android.graphics.Color.parseColor("#00C896")); // Emerald
         step2Title.setTypeface(android.graphics.Typeface.create("sans-serif-black", android.graphics.Typeface.BOLD));
         step2Title.setTextSize(11);
@@ -560,9 +599,18 @@ public class MainActivity extends AppCompatActivity {
         btnStep3.setOnClickListener(v -> {
             try {
                 if (android.os.Build.VERSION.SDK_INT >= 23) {
-                    Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                            android.net.Uri.parse("package:" + getPackageName()));
-                    startActivity(intent);
+                    try {
+                        Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                android.net.Uri.parse("package:" + getPackageName()));
+                        startActivity(intent);
+                    } catch (android.content.ActivityNotFoundException anfe) {
+                        try {
+                            Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+                            startActivity(intent);
+                        } catch (Exception innerEx) {
+                            Toast.makeText(this, "Impossible d'ouvrir l'écran de superposition.", Toast.LENGTH_SHORT).show();
+                        }
+                    }
                     Toast.makeText(this, "Activez l'autorisation pour 'SP_TG Détecteur de Fraude'", Toast.LENGTH_LONG).show();
                 } else {
                     Toast.makeText(this, "Non requis sur votre version d'Android.", Toast.LENGTH_SHORT).show();
@@ -593,17 +641,18 @@ public class MainActivity extends AppCompatActivity {
         closeBtn.setOnClickListener(v -> dialog.dismiss());
         root.addView(closeBtn);
 
-        dialog.setContentView(root);
+        scrollView.addView(root);
+        dialog.setContentView(scrollView);
+
+        dialog.show();
 
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
             dialog.getWindow().setLayout(
                     android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT
             );
         }
-
-        dialog.show();
     }
 
     @Override
@@ -1330,8 +1379,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void triggerBackgroundSync() {
-        OneTimeWorkRequest syncRequest = new OneTimeWorkRequest.Builder(SyncWorker.class).build();
-        WorkManager.getInstance(this).enqueue(syncRequest);
+        SharedPreferences prefs = getSharedPreferences("kefyl_prefs", MODE_PRIVATE);
+        if (prefs.getBoolean("is_first_sync_done", false)) {
+            OneTimeWorkRequest syncRequest = new OneTimeWorkRequest.Builder(SyncWorker.class).build();
+            WorkManager.getInstance(this).enqueue(syncRequest);
+        }
     }
 
     private int dpToPx(int dp) {

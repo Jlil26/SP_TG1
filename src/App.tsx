@@ -81,41 +81,55 @@ export default function App() {
     try {
       // 1. Fetch Threats
       const threatRes = await fetch("/api/threats");
-      const threatObj = await threatRes.json();
-      if (threatObj.success) setThreats(threatObj.data);
+      if (threatRes.ok) {
+        const threatObj = await threatRes.json();
+        if (threatObj && threatObj.success) setThreats(threatObj.data);
+      }
 
       // 2. Fetch Campaigns
       const campaignRes = await fetch("/api/campaigns");
-      const campaignObj = await campaignRes.json();
-      if (campaignObj.success) setCampaigns(campaignObj.data);
+      if (campaignRes.ok) {
+        const campaignObj = await campaignRes.json();
+        if (campaignObj && campaignObj.success) setCampaigns(campaignObj.data);
+      }
 
       // 3. Fetch Mobile Agents
       const agentRes = await fetch("/api/agents");
-      const agentObj = await agentRes.json();
-      if (agentObj.success) setAgents(agentObj.data);
+      if (agentRes.ok) {
+        const agentObj = await agentRes.json();
+        if (agentObj && agentObj.success) setAgents(agentObj.data);
+      }
 
       // 4. Fetch Sync Config
       const configRes = await fetch("/api/config");
-      const configObj = await configRes.json();
-      if (configObj.success) setConfig(configObj.data);
+      if (configRes.ok) {
+        const configObj = await configRes.json();
+        if (configObj && configObj.success) setConfig(configObj.data);
+      }
 
       // 5. Fetch Forensics
       const forensicsRes = await fetch("/api/forensics/data");
-      const forensicsObj = await forensicsRes.json();
-      if (forensicsObj.success) setForensicsData(forensicsObj.analytics);
+      if (forensicsRes.ok) {
+        const forensicsObj = await forensicsRes.json();
+        if (forensicsObj && forensicsObj.success) setForensicsData(forensicsObj.analytics);
+      }
 
       // 6. Fetch Feed articles (We fetch on load dynamically)
       const feedRes = await fetch("/api/threats/scrape-feeds");
-      const feedObj = await feedRes.json();
-      if (feedObj.success) setScrapedArticles(feedObj.data);
+      if (feedRes.ok) {
+        const feedObj = await feedRes.json();
+        if (feedObj && feedObj.success) setScrapedArticles(feedObj.data);
+      }
 
       // 7. Fetch Mobile Signals
       const sigRes = await fetch("/api/signals");
-      const sigObj = await sigRes.json();
-      if (sigObj.success) setMobileSignals(sigObj.data);
+      if (sigRes.ok) {
+        const sigObj = await sigRes.json();
+        if (sigObj && sigObj.success) setMobileSignals(sigObj.data);
+      }
 
-    } catch (e) {
-      console.error("Failed to sync background data with the central Kéfyl server.", e);
+    } catch (e: any) {
+      console.warn("Central Kéfyl server synchronization status: Under initialization or temporarily offline.", e?.message || e);
     } finally {
       if (!silent) setLoadingData(false);
     }
