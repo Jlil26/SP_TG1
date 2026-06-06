@@ -66,10 +66,10 @@ public class MainActivity extends AppCompatActivity {
 
         // Si l'application vient d'être installée ou n'a pas encore fait sa première synchronisation manuelle
         // réussie avec succès, on s'assure d'initialiser d'office les signatures locales et les compteurs à zéro.
-        SharedPreferences sPrefs = getSharedPreferences("kefyl_prefs", MODE_PRIVATE);
-        boolean isFirstSyncDone = sPrefs.getBoolean("is_first_sync_done", false);
+        SharedPreferences initPrefs = getSharedPreferences("kefyl_prefs", MODE_PRIVATE);
+        boolean isFirstSyncDone = initPrefs.getBoolean("is_first_sync_done", false);
         if (!isFirstSyncDone) {
-            sPrefs.edit()
+            initPrefs.edit()
                 .putInt("blocked_threats_count", 0)
                 .putString("last_update_timestamp", "Jamais")
                 .apply();
