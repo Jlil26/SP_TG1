@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { 
   Database, 
   Search, 
@@ -21,7 +21,11 @@ import {
   Send,
   ShieldCheck,
   AlertOctagon,
-  Terminal
+  Terminal,
+  Shield,
+  Building,
+  CheckCircle,
+  HelpCircle
 } from "lucide-react";
 import { Threat } from "../types";
 
@@ -378,6 +382,8 @@ export default function SignaturesTab({ threats, onRefreshData }: Props) {
     }
   };
 
+  // --- COMPORTEMENT RECH/FILTRE ET CRUD SIGNATURES ---
+
   return (
     <div className="space-y-6 leading-relaxed">
 
@@ -461,7 +467,7 @@ export default function SignaturesTab({ threats, onRefreshData }: Props) {
           </div>
         </div>
       )}
-      
+
       {/* Upper header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#121A2F] border border-white/5 rounded-xl p-6 shadow-md">
         <div>

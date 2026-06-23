@@ -88,3 +88,24 @@ export interface MobileSignal {
   status: "pending" | "approved";
   agentName?: string;
 }
+
+export interface PhoneComplaint {
+  id: string;
+  agentId: string;
+  agentName: string;
+  phoneNumber: string;
+  category: string;
+  description: string;
+  status: "pending" | "confirmed_scam" | "dismissed";
+  createdAt: string;
+}
+
+export interface ScamPhoneNumber {
+  id: string;
+  phoneNumber: string;
+  reason: string;
+  reportedCount: number;
+  addedAt: string;
+  status: "active" | "archived";
+}
+

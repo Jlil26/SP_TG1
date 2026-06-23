@@ -7,7 +7,10 @@ import {
   Terminal, 
   FolderPlus, 
   AlertOctagon, 
-  Trash2
+  Trash2,
+  Calendar,
+  Filter,
+  Clock
 } from "lucide-react";
 import { ScrapedArticle } from "../types";
 
@@ -36,6 +39,11 @@ export default function ThreatIntelTab({
   // Loading state for scraping article actions
   const [processingArticles, setProcessingArticles] = useState<Record<string, boolean>>({});
 
+  // Clean, proper date filtering state for intelligence feeds matching user request
+  const [datePreset, setDatePreset] = useState<"all" | "48h" | "7d" | "30d" | "custom">("all");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+
   const processArticle = async (id: string) => {
     setProcessingArticles(prev => ({ ...prev, [id]: true }));
     try {
@@ -46,6 +54,41 @@ export default function ThreatIntelTab({
       setProcessingArticles(prev => ({ ...prev, [id]: false }));
     }
   };
+
+  // Custom high-fidelity sifting logic for live exfiltrations
+  const filteredArticles = scrapedArticles.filter(article => {
+    const articleDate = new Date(article.date);
+    const now = new Date();
+
+    if (datePreset === "48h") {
+      const diffMs = now.getTime() - articleDate.getTime();
+      const diffHours = diffMs / (1000 * 60 * 60);
+      return diffHours <= 48;
+    }
+    if (datePreset === "7d") {
+      const diffMs = now.getTime() - articleDate.getTime();
+      const diffDays = diffMs / (1000 * 60 * 60 * 24);
+      return diffDays <= 7;
+    }
+    if (datePreset === "30d") {
+      const diffMs = now.getTime() - articleDate.getTime();
+      const diffDays = diffMs / (1000 * 60 * 60 * 24);
+      return diffDays <= 30;
+    }
+    if (datePreset === "custom") {
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        if (articleDate < start) return false;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        if (articleDate > end) return false;
+      }
+    }
+    return true;
+  });
 
   return (
     <div className="space-y-6 leading-relaxed">
@@ -63,24 +106,91 @@ export default function ThreatIntelTab({
                 Automatisation d&apos;écoute et de scraping des flux ANCY et CERT.TG au Togo pour conversion directe en signatures de blocage.
               </p>
             </div>
+          </div>
 
-            <button 
-              onClick={onRefreshFeeds}
-              disabled={fetchingFeed}
-              className="px-4 py-2 bg-[#3B82F6] hover:bg-[#3B82F6]/90 active:bg-indigo-700 disabled:bg-[#121A2F] disabled:text-slate-500 text-white rounded-lg text-xs font-mono font-bold tracking-wider uppercase flex items-center gap-2 shrink-0 transition cursor-pointer shadow-sm"
-            >
-              {fetchingFeed ? (
-                <>
-                  <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                  Exfiltration...
-                </>
-              ) : (
-                <>
-                  <Rss className="w-3.5 h-3.5" />
-                  FORCER L&apos;EXFILTRATION CERT-TG
-                </>
+          {/* Clean and Tidy Date Interval Filter Toolbar */}
+          <div className="mt-5 p-4 bg-[#0B1020]/45 rounded-xl border border-white/5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            
+            {/* Left side: Date presets and Calendar custom inputs */}
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest flex items-center gap-1.5 mr-1">
+                <Filter className="w-3.5 h-3.5 text-[#3B82F6]" />
+                INTERVALLE :
+              </span>
+              
+              <div className="flex bg-[#121A2F]/90 rounded-lg p-0.5 border border-white/5">
+                {[
+                  { value: "all", label: "Tout" },
+                  { value: "48h", label: "48h" },
+                  { value: "7d", label: "7j" },
+                  { value: "30d", label: "30j" },
+                  { value: "custom", label: "Perso 📅" }
+                ].map((preset) => (
+                  <button
+                    key={preset.value}
+                    type="button"
+                    onClick={() => setDatePreset(preset.value as any)}
+                    className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all duration-200 cursor-pointer ${
+                      datePreset === preset.value 
+                        ? "bg-[#3B82F6] text-white shadow-sm font-black" 
+                        : "text-slate-400 hover:text-white hover:bg-white/5"
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Collapsible custom date bounds */}
+              {datePreset === "custom" && (
+                <div className="flex flex-wrap items-center gap-2 animate-fade-in">
+                  <div className="flex items-center gap-2 bg-[#121A2F]/80 px-2.5 py-1.5 rounded-lg border border-white/5">
+                    <span className="text-[9px] text-slate-500 uppercase">Du</span>
+                    <input 
+                      type="date" 
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="bg-transparent border-none text-white text-xs font-mono focus:outline-none w-28 [color-scheme:dark]"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 bg-[#121A2F]/80 px-2.5 py-1.5 rounded-lg border border-white/5">
+                    <span className="text-[9px] text-slate-500 uppercase">Au</span>
+                    <input 
+                      type="date" 
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="bg-transparent border-none text-white text-xs font-mono focus:outline-none w-28 [color-scheme:dark]"
+                    />
+                  </div>
+                </div>
               )}
-            </button>
+            </div>
+
+            {/* Right side: Scrapped articles tally and trigger scraper */}
+            <div className="flex items-center justify-between lg:justify-end gap-4 w-full lg:w-auto mt-2 lg:mt-0 border-t lg:border-t-0 pt-3 lg:pt-0 border-white/5">
+              <div className="text-[10px] font-mono text-slate-400">
+                Affiche <span className="text-white font-bold">{filteredArticles.length}</span> alertes exfiltrées
+              </div>
+              
+              <button 
+                onClick={onRefreshFeeds}
+                disabled={fetchingFeed}
+                className="px-4 py-2 bg-[#3B82F6] hover:bg-[#3B82F6]/90 active:bg-indigo-700 disabled:bg-[#121A2F] disabled:text-slate-500 text-white rounded-lg text-xs font-mono font-bold tracking-wider uppercase flex items-center gap-2 shrink-0 transition cursor-pointer shadow-sm border border-white/5"
+              >
+                {fetchingFeed ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    Exfiltration...
+                  </>
+                ) : (
+                  <>
+                    <Rss className="w-3.5 h-3.5" />
+                    EXFILTRER EN DIRECT
+                  </>
+                )}
+              </button>
+            </div>
+
           </div>
 
           {totalDeletedCount > 0 && onResetDeleted && (
@@ -100,8 +210,15 @@ export default function ThreatIntelTab({
 
           {/* List of articles */}
           <div className="mt-6 grid grid-cols-1 gap-6">
-            {scrapedArticles.map((article) => (
-              <div key={article.id} className="bg-[#0B1020]/45 border border-white/5 rounded-xl overflow-hidden shadow-sm grid grid-cols-1 xl:grid-cols-12 hover:border-white/10 transition">
+            {filteredArticles.length === 0 ? (
+              <div className="text-center p-12 border border-dashed border-white/5 bg-[#0B1020]/20 rounded-xl">
+                <Calendar className="w-7 h-7 text-slate-600 mx-auto mb-2" />
+                <p className="text-slate-500 uppercase tracking-wide text-[11px] font-mono">Aucune annonce trouvée pour cet intervalle</p>
+                <p className="text-slate-600 text-[10px] mt-1 font-sans">Veuillez élargir ou réinitialiser votre sélection de dates.</p>
+              </div>
+            ) : (
+              filteredArticles.map((article) => (
+                <div key={article.id} className="bg-[#0B1020]/45 border border-white/5 rounded-xl overflow-hidden shadow-sm grid grid-cols-1 xl:grid-cols-12 hover:border-white/10 transition">
                 
                 {/* Left Column: Article basic */}
                 <div className="p-5 xl:col-span-7 flex flex-col justify-between border-b xl:border-b-0 xl:border-r border-white/5">
@@ -232,7 +349,7 @@ export default function ThreatIntelTab({
                 </div>
 
               </div>
-            ))}
+            )))}
           </div>
         </div>
       </div>

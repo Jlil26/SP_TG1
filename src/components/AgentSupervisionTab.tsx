@@ -26,7 +26,9 @@ import {
   AlertCircle,
   Info,
   Mail,
-  Lock
+  Lock,
+  Phone,
+  FileText
 } from "lucide-react";
 import { 
   ResponsiveContainer, 
@@ -37,12 +39,14 @@ import {
   Tooltip, 
   CartesianGrid, 
 } from "recharts";
-import { MobileAgent, MobileSignal, Threat } from "../types";
+import { MobileAgent, MobileSignal, Threat, PhoneComplaint, ScamPhoneNumber } from "../types";
 
 interface Props {
   threats: Threat[];
   agents: MobileAgent[];
   mobileSignals: MobileSignal[];
+  complaints?: PhoneComplaint[];
+  scams?: ScamPhoneNumber[];
   onTriggerFlashUpdate: () => Promise<any>;
   onRefreshData?: () => void;
 }
@@ -51,6 +55,8 @@ export default function AgentSupervisionTab({
   threats,
   agents, 
   mobileSignals, 
+  complaints = [],
+  scams = [],
   onTriggerFlashUpdate,
   onRefreshData 
 }: Props) {
@@ -69,13 +75,27 @@ export default function AgentSupervisionTab({
     }
   });
   
-  const [phoneState, setPhoneState] = useState<"dashboard" | "receiving" | "quarantine">("dashboard");
+  const [phoneState, setPhoneState] = useState<"dashboard" | "receiving" | "quarantine" | "declarations">("dashboard");
   const [selectedTemplate, setSelectedTemplate] = useState(0);
   const [customSender, setCustomSender] = useState("+228 99 12 04 85");
   const [customText, setCustomText] = useState("");
   const [activeMessageText, setActiveMessageText] = useState("");
   const [activeSender, setActiveSender] = useState("");
   const [isSimulatingApiCall, setIsSimulatingApiCall] = useState(false);
+
+  // --- STATE FOR CITIZEN DECLARATIONS FORM ---
+  const [declaringPhone, setDeclaringPhone] = useState("+228 99 ");
+  const [declaringCategory, setDeclaringCategory] = useState("Vente pyramidale / Faux gains");
+  const [declaringDesc, setDeclaringDesc] = useState("");
+  const [declarationStatusMsg, setDeclarationStatusMsg] = useState("");
+  const [isSubmittingDeclaration, setIsSubmittingDeclaration] = useState(false);
+
+  // --- STATE FOR VOICE CALL SIMULATION ---
+  const [simMode, setSimMode] = useState<"sms" | "call" | "declaration">("sms");
+  const [incomingCallNumber, setIncomingCallNumber] = useState("+228 92 88 12 34");
+  const [voiceCallState, setVoiceCallState] = useState<"idle" | "incoming" | "active" | "alert">("idle");
+  const [isCallScam, setIsCallScam] = useState(false);
+  const [callerName, setCallerName] = useState("Numéro Inconnu");
 
   // New real-time intercept overlay variables
   const [showInAppOverlayAlert, setShowInAppOverlayAlert] = useState(false);
@@ -876,14 +896,124 @@ export default function AgentSupervisionTab({
               </div>
 
               {/* Status bar (Mock Android UI) */}
-              <div className="h-6 w-full px-4 pt-1 flex items-center justify-between text-[9px] font-mono text-slate-400 z-20 bg-black/60 font-medium">
-                <span>13:37</span>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[8px] bg-sky-500/10 text-[#38BDF8] px-1 rounded uppercase tracking-widest leading-none font-bold">SP_TG Net</span>
-                  <Wifi className="w-2.5 h-2.5 text-[#38BDF8]" />
-                  <Battery className="w-3.5 h-3.5 text-[#38BDF8]" />
+               <div className="h-6 w-full px-4 pt-1 flex items-center justify-between text-[9px] font-mono text-slate-400 z-20 bg-black/60 font-medium">
+                 <span>13:37</span>
+                 <div className="flex items-center gap-1.5">
+                   <span className="text-[8px] bg-sky-500/10 text-[#38BDF8] px-1 rounded uppercase tracking-widest leading-none font-bold">SP_TG Net</span>
+                   <Wifi className="w-2.5 h-2.5 text-[#38BDF8]" />
+                   <Battery className="w-3.5 h-3.5 text-[#38BDF8]" />
+                 </div>
+               </div>
+ 
+              {/* VOICE CALL SIMULATION SCREEN OVERLAY */}
+              {voiceCallState !== "idle" && (
+                <div className="absolute inset-0 bg-gradient-to-b from-[#0A1128] to-[#121F42] z-45 p-5 flex flex-col justify-between pt-10 text-white select-none animate-fade-in text-center font-sans">
+                  
+                  {/* Status Bar inside calling Screen */}
+                  <div className="absolute top-1 left-4 right-4 flex items-center justify-between text-[8px] font-mono text-slate-400 z-50 pt-2">
+                    <span>Appel Sécurisé</span>
+                    <span>Moov/Togo</span>
+                  </div>
+
+                  <div className="my-auto space-y-5 pt-8">
+                    {/* Pulsing Avatar or call indicator */}
+                    <div className="relative w-16 h-16 mx-auto flex items-center justify-center">
+                      <div className="absolute inset-0 bg-red-500/10 rounded-full animate-ping duration-2000"></div>
+                      <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 shadow-xl ${isCallScam ? "bg-red-950/80 border-red-500 text-red-100" : "bg-[#1D2B4A]/60 border-blue-500 text-slate-100"}`}>
+                        <Phone className="w-6 h-6 rotate-12 text-slate-200" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <span className="text-[9px] uppercase font-mono font-bold tracking-widest text-[#38BDF8] block animate-pulse">
+                        {voiceCallState === "incoming" ? "📟 Appel Entrant..." : "📞 En Conversation..."}
+                      </span>
+                      <h4 className="text-xs font-black text-white leading-tight break-all font-mono">
+                        {callerName}
+                      </h4>
+                      <p className="text-[9.5px] font-mono text-slate-400 tracking-wider select-all">
+                        {incomingCallNumber}
+                      </p>
+                    </div>
+
+                    {/* RULES TRIGGER WARNING */}
+                    <div className="mx-auto max-w-[210px] p-2.5 rounded-xl bg-black/60 border border-white/5 shadow leading-normal text-left">
+                      {isCallScam ? (
+                        <div className="space-y-1.5 text-slate-200">
+                          <div className="text-red-500 font-sans font-black text-[9.5px] uppercase tracking-wider flex items-center gap-1 leading-none animate-pulse">
+                            ⚠️ APPEL ARNAQUE !
+                          </div>
+                          <p className="text-[8.5px] text-red-300 leading-snug">
+                            <strong>Menteur connu :</strong> Ce numéro de téléphone essaie de vous mentir pour voler votre argent.
+                          </p>
+                          <div className="text-[8px] bg-red-950/40 p-1.5 rounded-lg border border-red-900/20 text-red-100/90 space-y-1 leading-tight">
+                            <div>• <strong>Ne répondez pas !</strong></div>
+                            <div>• N&apos;envoyez pas de Flooz ou Tmoney.</div>
+                            <div>• Ne donnez pas vos codes secrets.</div>
+                          </div>
+                        </div>
+                      ) : incomingCallNumber.trim().match(/^[A-Za-z\s]+$/) ? (
+                        <div className="space-y-1 text-center">
+                          <div className="text-emerald-400 font-sans font-black text-[8.5px] uppercase tracking-wider flex items-center justify-center gap-1 leading-none">
+                            🟢 SERVICE ENREGISTRÉ SÛR
+                          </div>
+                          <p className="text-[8px] text-slate-300 leading-normal">
+                            C&apos;est un service officiel du Togo (<strong>{incomingCallNumber}</strong>). Sûr à 100%.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-1 text-center">
+                          <div className="text-slate-400 font-sans font-bold text-[8.5px] uppercase tracking-wider leading-none">
+                            👤 APPEL STANDARD
+                          </div>
+                          <p className="text-[8px] text-slate-400 leading-normal">
+                            Numéro ordinaire. Pas de signalement d&apos;arnaque reçu.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* CALL BUTTONS ROW */}
+                  <div className="pb-4 pt-2 flex items-center justify-center gap-6 font-mono">
+                    {voiceCallState === "incoming" ? (
+                      <>
+                        <button
+                          onClick={() => {
+                            setVoiceCallState("idle");
+                            addLog(`❌ Appel décliné pour le numéro ${incomingCallNumber}.`, "info");
+                          }}
+                          className="w-10 h-10 bg-red-650 hover:bg-red-650 active:scale-90 rounded-full flex items-center justify-center text-white cursor-pointer transition shadow-lg shrink-0"
+                          title="Décliner l'appel"
+                        >
+                          <Phone className="w-4 h-4 rotate-135 text-white" />
+                        </button>
+                        
+                        <button
+                          onClick={() => {
+                            setVoiceCallState("active");
+                            addLog(`📞 Conversation activée avec le numéro ${incomingCallNumber}. Soyez vigilant.`, "info");
+                          }}
+                          className="w-10 h-10 bg-emerald-500 hover:bg-emerald-600 active:scale-90 rounded-full flex items-center justify-center text-white cursor-pointer transition shadow-lg shrink-0 animate-bounce"
+                          title="Répondre"
+                        >
+                          <Phone className="w-4 h-4 text-white" />
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setVoiceCallState("idle");
+                          addLog(`⏹️ Fin d'appel vocal avec le numéro ${incomingCallNumber}.`, "info");
+                        }}
+                        className="py-1.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-full text-[9px] uppercase font-bold tracking-widest cursor-pointer transition shadow-lg duration-200"
+                      >
+                        ⏹️ RACCROCHER
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* LIVE SIMULATIVE PUSH NOTIFICATION POPUP */}
               {showNotification && (
@@ -975,40 +1105,106 @@ export default function AgentSupervisionTab({
 
                 {/* REAL-TIME INTERCEPT OVERLAY MODAL */}
                 {showInAppOverlayAlert && (
-                  <div className="absolute inset-x-2 top-8 bottom-8 bg-slate-950/98 border border-red-500/50 rounded-2xl z-50 flex flex-col justify-between p-4 shadow-2xl animate-fade-in text-slate-100">
-                    <div className="flex items-center gap-1.5 border-b border-white/5 pb-2">
-                       <ShieldAlert className="w-5 h-5 text-red-500 shrink-0" />
-                       <div className="leading-none">
-                         <span className="font-mono font-bold text-[9px] text-red-400 block tracking-widest">{overlayAlertTitle}</span>
-                         <span className="text-[7px] text-slate-400 font-mono uppercase font-black block mt-0.5">INTERCEPTÉ PAR SP_TG</span>
-                       </div>
+                  <div className="absolute inset-x-2 top-8 bottom-8 bg-[#150404] border border-red-900/50 rounded-2xl z-50 flex flex-col justify-between p-3.5 shadow-2xl animate-fade-in text-slate-100 overflow-y-auto scrollbar-none text-left">
+                    <div className="flex items-center justify-between border-b border-red-900/20 pb-2">
+                      <div className="flex items-center gap-1.5 text-red-400">
+                        <ShieldAlert className="w-4 h-4 shrink-0" />
+                        <span className="font-mono font-black text-[9.5px] uppercase tracking-wide">
+                          Arnaque Bloquée !
+                        </span>
+                      </div>
+                      
+                      {isGroupSource ? (
+                        <span className="bg-[#128C7E]/20 text-[#25D366] text-[8px] font-mono font-bold tracking-wider px-2 py-0.5 rounded border border-[#128C7E]/40 uppercase">
+                          💬 Message WhatsApp
+                        </span>
+                      ) : (
+                        <span className="bg-blue-950/40 text-blue-300 text-[8px] font-mono font-bold tracking-wider px-2 py-0.5 rounded border border-blue-500/30 uppercase">
+                          ✉️ Message SMS
+                        </span>
+                      )}
                     </div>
 
-                    <div className="flex-1 flex flex-col justify-center my-2 space-y-2.5">
-                       <div className="bg-white/5 border border-white/5 p-2 rounded-lg text-left">
-                          <p className="text-[10px] text-slate-300 font-sans leading-relaxed">{overlayAlertMessage}</p>
-                       </div>
+                    <div className="flex-1 flex flex-col justify-between my-2 space-y-2">
+                      <div className="pt-1 select-text">
+                        <h4 className="text-[11px] font-bold text-red-200 leading-snug">
+                          {isGroupSource && !containsKnownSignature ? (
+                            "⚠️ Message suspect à vérifier"
+                          ) : isRegisteredContact ? (
+                            "⚠️ Message suspect venant d'un ami"
+                          ) : (
+                            "🚨 Attention, tentative d'arnaque !"
+                          )}
+                        </h4>
+                        <p className="text-[9px] text-red-300/80 leading-normal mt-1">
+                          {isGroupSource && !containsKnownSignature ? (
+                            "Un message suspect a été envoyé dans votre groupe. Prenez garde aux liens."
+                          ) : isRegisteredContact ? (
+                            `Votre contact (${registeredContacts[contactIndex]?.name || activeSender}) vous a envoyé un message dangereux. Son téléphone a peut-être été piraté, ou il a partagé ce piège sans le savoir.`
+                          ) : (
+                            "Une personne inconnue essaie de vous tromper pour vous voler de l'argent."
+                          )}
+                        </p>
+                      </div>
 
-                       <div className="bg-red-500/10 border border-red-500/20 p-2 rounded-lg text-left">
-                          <p className="text-[9px] text-red-300 font-mono font-bold leading-normal">{overlayAlertAction}</p>
-                       </div>
+                      <div className="bg-black/30 border border-white/5 p-2 rounded-lg space-y-1">
+                        <span className="text-[7.5px] text-slate-400 font-mono block uppercase">
+                          Message suspect intercepté :
+                        </span>
+                        <p className="text-[9px] text-amber-200 leading-relaxed italic">
+                          &quot;{activeMessageText}&quot;
+                        </p>
+                      </div>
 
-                       <div className="border-t border-white/5 pt-2">
-                          <span className="text-[7.5px] font-mono text-slate-500 block uppercase font-bold">Texte Intercepté :</span>
-                          <p className="text-[8px] text-slate-400 italic line-clamp-2 mt-0.5 leading-tight">"{activeMessageText}"</p>
-                       </div>
+                      <div className="bg-red-950/15 border border-red-900/30 p-2.5 rounded-lg space-y-2 text-left">
+                        <span className="text-[8px] text-red-300 uppercase font-black tracking-wider block">
+                          Ce que vous devez faire :
+                        </span>
+                        <ul className="text-[8.5px] text-red-100/90 space-y-1.5 leading-normal">
+                          <li className="flex items-start gap-1.5">
+                            <span className="text-red-500 font-bold shrink-0">❌</span>
+                            <span><strong>Ne cliquez sur aucun lien bleu</strong> dans ce message.</span>
+                          </li>
+                          <li className="flex items-start gap-1.5">
+                            <span className="text-red-500 font-bold shrink-0">❌</span>
+                            <span><strong>N'envoyez jamais d'argent</strong>, ni de transfert Flooz ou Tmoney.</span>
+                          </li>
+                          <li className="flex items-start gap-1.5">
+                            <span className="text-red-500 font-bold shrink-0">❌</span>
+                            <span><strong>Faites attention :</strong> ne donnez aucun code secret reçu par SMS.</span>
+                          </li>
+                          {isGroupSource ? (
+                            <li className="flex items-start gap-1.5 border-t border-red-900/10 pt-1.5 mt-1.5">
+                              <span className="text-amber-400 font-bold shrink-0">💡</span>
+                              <span>Quittez le groupe si des inconnus y partagent souvent des cadeaux ou des gains faciles.</span>
+                            </li>
+                          ) : isRegisteredContact ? (
+                            <li className="flex items-start gap-1.5 border-t border-red-900/10 pt-1.5 mt-1.5">
+                              <span className="text-amber-400 font-bold shrink-0">📞</span>
+                              <span className="text-amber-200 font-bold">Appelez directement votre proche au téléphone pour l'avertir et vérifier.</span>
+                            </li>
+                          ) : (
+                            <li className="flex items-start gap-1.5 border-t border-red-900/10 pt-1.5 mt-1.5">
+                              <span className="text-red-400 font-bold shrink-0">🚫</span>
+                              <span className="text-red-200 font-bold">Bloquez ce numéro immédiatement pour ne plus recevoir de messages de sa part.</span>
+                            </li>
+                          )}
+                        </ul>
+                      </div>
                     </div>
 
-                    <div className="text-[7.5px] font-mono text-center text-emerald-400 bg-emerald-500/10 rounded py-1 mb-2 font-bold flex items-center justify-center gap-1">
-                      <CheckCircle className="w-2.5 h-2.5 text-emerald-400" /> TRANSMIS AU SOC DE LOMÉ EN DIRECT
+                    <div className="pt-2">
+                      <button
+                        onClick={handleAcknowledgeOverlayAlert}
+                        className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 transition-colors text-white font-sans text-[9px] font-black uppercase tracking-wider rounded-xl cursor-pointer text-center flex items-center justify-center gap-1 shadow-lg shadow-emerald-950/20"
+                      >
+                        <CheckCircle className="w-3.5 h-3.5" />
+                        Compris, supprimer la menace
+                      </button>
+                      <p className="text-[6.8px] text-center text-slate-500 font-mono tracking-wide uppercase mt-2">
+                        🛡️ Protégé par SP_TG • Sécurité Nationale du Togo
+                      </p>
                     </div>
-
-                    <button
-                      onClick={handleAcknowledgeOverlayAlert}
-                      className="w-full py-2 bg-red-600 hover:bg-red-700 transition-colors text-white font-mono text-[9px] font-bold uppercase tracking-wider rounded-xl cursor-pointer shadow-lg active:scale-95"
-                    >
-                      ✓ VALIDER ET FERMER L&apos;ALERTE
-                    </button>
                   </div>
                 )}
 
@@ -1154,13 +1350,33 @@ export default function AgentSupervisionTab({
                         )}
                       </button>
 
-                      <p className="text-[6.8px] text-slate-500 font-sans leading-none text-center">
-                        * Fonctionne en toute sécurité sans connexion internet.
-                      </p>
-
-                      <p className="text-[8px] text-slate-500 font-sans text-center mt-1 pt-1 border-t border-white/5">
-                        Dernier contrôle de sécurité effectué : Aujourd&apos;hui
-                      </p>
+                       <p className="text-[6.8px] text-slate-500 font-sans leading-none text-center">
+                         * Fonctionne en toute sécurité sans connexion internet et protège les appels vocaux.
+                       </p>
+ 
+                       {/* NEW CALL COMPLAINT & REPORTING CORNER */}
+                       <div className="bg-amber-950/25 border border-amber-500/35 p-2.5 rounded-xl mt-2 space-y-1.5 text-left">
+                         <span className="text-[8px] font-mono font-bold text-amber-400 block tracking-wider uppercase">
+                           📞 DÉCLARATION DE CYBERMENACE
+                         </span>
+                         
+                         <div className="flex gap-1">
+                           <button
+                             onClick={() => {
+                               setPhoneState("declarations");
+                               setSimMode("declaration");
+                               setDeclarationStatusMsg("");
+                             }}
+                             className="flex-1 py-1.5 px-2.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 text-amber-200 font-sans text-[8.5px] font-black uppercase tracking-wide rounded-lg transition text-center cursor-pointer shadow-md"
+                           >
+                             ✍️ ZONE DE DÉCLARATION D&apos;APPEL
+                           </button>
+                         </div>
+                       </div>
+ 
+                       <p className="text-[8px] text-slate-500 font-sans text-center mt-1 pt-1 border-t border-white/5">
+                         Dernier contrôle de sécurité : Synchronisé avec l&apos;ANCY
+                       </p>
                     </div>
 
                   </div>
@@ -1183,188 +1399,256 @@ export default function AgentSupervisionTab({
                 )}
 
                 {phoneState === "quarantine" && (
-                  <div className="flex-1 flex flex-col justify-between z-10 pt-4 animate-fade-in text-slate-200">
-                    
-                    {/* Specialized view for Mild Group Warning to keep it soft and less scary */}
-                    {isGroupSource && !containsKnownSignature ? (
-                      <div className="flex flex-col justify-between flex-1">
-                        
-                        {/* Soft Yellow warning Header */}
-                        <div className="bg-amber-500/10 border border-amber-500/25 p-2 rounded-xl flex items-center gap-2">
-                          <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 animate-pulse" />
-                          <div className="leading-tight text-[10px]">
-                            <h4 className="font-bold text-amber-400 font-mono uppercase text-[9px] tracking-wide">
-                              💬 GROUPE SUSPECT (Vérification)
-                            </h4>
-                            <span className="text-[7.5px] text-slate-400 block font-mono">
-                              Vérification par précaution
+                  <div className="flex-1 flex flex-col justify-between z-10 pt-3 animate-fade-in text-slate-200">
+                    <div className="flex flex-col flex-1 bg-[#150404] border border-red-900/40 rounded-2xl p-3.5 shadow-2xl justify-between overflow-y-auto max-h-[355px] scrollbar-none text-left">
+                      
+                      {/* Unified Theme Header */}
+                      <div className="space-y-2">
+                        {/* 1. Differentiate SMS vs. WhatsApp via badges */}
+                        <div className="flex items-center justify-between border-b border-red-900/20 pb-2">
+                          <div className="flex items-center gap-1.5 text-red-400">
+                            <ShieldAlert className="w-4 h-4 shrink-0" />
+                            <span className="font-mono font-black text-[9.5px] uppercase tracking-wide">
+                              Arnaque Interceptée
                             </span>
                           </div>
-                        </div>
-
-                        {/* Description */}
-                        <div className="bg-slate-950 border border-white/5 p-2.5 rounded-xl mt-2 space-y-1 rounded-b-none flex-1 flex flex-col justify-between">
-                          <div>
-                            <span className="text-[8px] font-mono text-slate-400 block border-b border-white/5 pb-1">
-                              Dans le groupe : <strong className="text-white font-bold">{groupName}</strong>
-                            </span>
-                            <span className="text-[7.5px] text-slate-500 block font-mono mt-0.5">
-                              Expéditeur : {activeSender}
-                            </span>
-                            <p className="mt-1 text-[8.2px] text-slate-300 leading-tight italic bg-white/5 p-2 rounded">
-                              &quot;{activeMessageText}&quot;
-                            </p>
-                          </div>
-
-                          <div className="bg-slate-900/50 p-2 rounded border border-white/5 space-y-1">
-                            <h5 className="text-[8.5px] font-bold text-amber-400 font-mono">
-                              💡 EST-CE UNE FAUSSE ALERTE ?
-                            </h5>
-                            <p className="text-[7.8px] text-slate-400 leading-tight">
-                              Si vous faites confiance à 100% à ce groupe pour de vrai, mettez-le dans votre Liste Verte. Le garde-corps n&apos;analysera plus ses messages pour éviter de vous déranger !
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Interactive Action Choice for user */}
-                        <div className="space-y-1.5 mt-2 bg-slate-950/40 border border-white/5 p-2.5 rounded-b-xl border-t-0">
-                          <button
-                            onClick={handleTrustGroup}
-                            className="w-full py-1.5 bg-emerald-600 hover:bg-emerald-700 transition-colors text-white font-mono text-[8.5px] font-bold uppercase tracking-wide rounded-lg cursor-pointer flex items-center justify-center gap-1"
-                          >
-                            <CheckCircle className="w-3 h-3" />
-                            💚 Faire confiance à ce groupe (Liste Verte)
-                          </button>
                           
-                          <button
-                            onClick={handleReportGroup}
-                            className="w-full py-1 bg-red-650 hover:bg-red-700 text-white font-mono text-[8px] font-bold uppercase tracking-wide rounded-lg cursor-pointer transition-colors"
-                          >
-                            🚫 Signaler & Bloquer ce piège
-                          </button>
+                          {isGroupSource ? (
+                            <span className="bg-[#128C7E]/20 text-[#25D366] text-[8px] font-mono font-bold tracking-wider px-2 py-0.5 rounded border border-[#128C7E]/40 uppercase">
+                              💬 Message WhatsApp
+                            </span>
+                          ) : (
+                            <span className="bg-blue-950/40 text-blue-300 text-[8px] font-mono font-bold tracking-wider px-2 py-0.5 rounded border border-blue-500/30 uppercase">
+                              ✉️ Message SMS
+                            </span>
+                          )}
                         </div>
 
+                        {/* 2. Simple, non-technical explanation at a single glance */}
+                        <div className="pt-1.5">
+                          <h4 className="text-[11px] font-bold text-red-200 leading-snug">
+                            {isGroupSource && !containsKnownSignature ? (
+                              "⚠️ Message suspect à vérifier"
+                            ) : isRegisteredContact ? (
+                              "⚠️ Message suspect venant d'un ami"
+                            ) : (
+                              "🚨 Attention, tentative d'arnaque !"
+                            )}
+                          </h4>
+                          <p className="text-[9px] text-red-300/80 leading-normal mt-1">
+                            {isGroupSource && !containsKnownSignature ? (
+                              "Un message suspect a été envoyé dans votre groupe. Prenez garde aux liens."
+                            ) : isRegisteredContact ? (
+                              `Votre contact (${registeredContacts[contactIndex]?.name || activeSender}) vous a envoyé un message dangereux. Son téléphone a peut-être été piraté, ou il a partagé ce piège sans le savoir.`
+                            ) : (
+                              "Une personne inconnue essaie de vous tromper pour vous voler de l'argent."
+                            )}
+                          </p>
+                        </div>
+
+                        {/* 3. The Suspect Content Box */}
+                        <div className="bg-black/30 border border-white/5 p-2 rounded-lg space-y-1">
+                          <span className="text-[7.5px] text-slate-400 font-mono block uppercase">
+                            {isGroupSource 
+                              ? `Groupe : ${groupName} • Envoyé par : ${activeSender}`
+                              : `Expéditeur : ${isRegisteredContact ? (registeredContacts[contactIndex]?.name || activeSender) : activeSender}`
+                            }
+                          </span>
+                          <p className="text-[9px] text-amber-200 leading-relaxed italic">
+                            &quot;{activeMessageText}&quot;
+                          </p>
+                        </div>
+
+                        {/* 4. Actionable precautions / directly understandable instructions */}
+                        <div className="bg-red-950/15 border border-red-900/30 p-2.5 rounded-lg space-y-2">
+                          <span className="text-[8px] text-red-300 uppercase font-black tracking-wider block">
+                            Ce que vous devez faire :
+                          </span>
+                          <ul className="text-[8.5px] text-red-100/90 space-y-1.5 leading-normal">
+                            <li className="flex items-start gap-1.5">
+                              <span className="text-red-500 font-bold shrink-0">❌</span>
+                              <span><strong>Ne cliquez sur aucun lien bleu</strong> dans ce message.</span>
+                            </li>
+                            <li className="flex items-start gap-1.5">
+                              <span className="text-red-500 font-bold shrink-0">❌</span>
+                              <span><strong>N'envoyez jamais d'argent</strong>, ni de transfert Flooz ou Tmoney.</span>
+                            </li>
+                            <li className="flex items-start gap-1.5">
+                              <span className="text-red-500 font-bold shrink-0">❌</span>
+                              <span><strong>Faites attention :</strong> ne donnez aucun code secret reçu par SMS.</span>
+                            </li>
+                            {isGroupSource ? (
+                              <li className="flex items-start gap-1.5 border-t border-red-900/10 pt-1.5 mt-1.5">
+                                <span className="text-amber-400 font-bold shrink-0">💡</span>
+                                <span>Quittez le groupe si des inconnus y partagent souvent des cadeaux ou des gains faciles.</span>
+                              </li>
+                            ) : isRegisteredContact ? (
+                              <li className="flex items-start gap-1.5 border-t border-red-900/10 pt-1.5 mt-1.5">
+                                <span className="text-amber-400 font-bold shrink-0">📞</span>
+                                <span className="text-amber-200 font-bold">Appelez directement votre ami par téléphone pour l'avertir et vérifier si c'est bien lui.</span>
+                              </li>
+                            ) : (
+                              <li className="flex items-start gap-1.5 border-t border-red-900/10 pt-1.5 mt-1.5">
+                                <span className="text-red-400 font-bold shrink-0">🚫</span>
+                                <span className="text-red-200 font-bold">Bloquez ce numéro immédiatement pour ne plus recevoir de messages de sa part.</span>
+                              </li>
+                            )}
+                          </ul>
+                        </div>
                       </div>
-                    ) : (
-                      // STANDARD OR CRITICAL SCAM BLOCK SCREEN
-                      <div className="flex flex-col justify-between flex-1">
-                        
-                        {/* Nuanced Header based on whether sender is registered or unknown */}
-                        {isRegisteredContact ? (
-                          /* COMPASSIONATE WARNING FOR CONFIRMED FRAUD SENT BY A KNOWN CONTACT */
-                          <div className="p-2 rounded-xl flex items-center gap-2 bg-amber-500/15 border border-amber-500/35">
-                            <ShieldAlert className="w-5 h-5 text-amber-500 shrink-0" />
-                            <div className="leading-tight text-[10px]">
-                              <h4 className="font-bold text-amber-500 font-mono text-[9px] tracking-wide uppercase">
-                                ⚠️ MESSAGE SUSPECT • PROCHE ABUSÉ ?
-                              </h4>
-                              <span className="text-[7.5px] text-slate-400 block font-mono">
-                                Menace relayée par un de vos contacts
-                              </span>
-                            </div>
+
+                      {/* 5. Clean Action Buttons */}
+                      <div className="pt-3 border-t border-red-900/10 mt-3 space-y-2">
+                        {isGroupSource && !containsKnownSignature ? (
+                          <div className="grid grid-cols-2 gap-1.5">
+                            <button
+                              onClick={handleTrustGroup}
+                              className="py-1.5 bg-emerald-700 hover:bg-emerald-800 transition-colors text-white font-sans text-[8.5px] font-bold uppercase rounded-lg cursor-pointer flex items-center justify-center gap-1"
+                            >
+                              <CheckCircle className="w-3 h-3" />
+                              Faire confiance
+                            </button>
+                            <button
+                              onClick={handleReportGroup}
+                              className="py-1.5 bg-red-650 hover:bg-red-700 transition-colors text-white font-sans text-[8.5px] font-bold uppercase rounded-lg cursor-pointer flex items-center justify-center gap-1"
+                            >
+                              <span>🚫 Bloquer & Signaler</span>
+                            </button>
                           </div>
                         ) : (
-                          /* SEVERE ALARM FOR CONFIRMED FRAUD SENT BY AN UNKNOWN SENDER */
-                          <div className="p-2 rounded-xl flex items-center gap-2 bg-red-500/25 border border-red-500/40">
-                            <ShieldAlert className="w-5 h-5 text-red-500 shrink-0 animate-bounce" />
-                            <div className="leading-tight text-[10px]">
-                              <h4 className="font-bold text-red-400 font-mono text-[9px] tracking-wide uppercase">
-                                🚨 DANGER ARRÊTÉ • ALERTE ABSOLUE
-                              </h4>
-                              <span className="text-[7.5px] text-slate-450 block font-mono">
-                                Numéro inconnu répertorié par Lomé Sûre
-                              </span>
-                            </div>
-                          </div>
+                          <button
+                            onClick={() => setPhoneState("dashboard")}
+                            className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 transition-colors text-white font-sans text-[9px] font-black uppercase tracking-wider rounded-xl cursor-pointer text-center flex items-center justify-center gap-1 shadow-lg shadow-emerald-950/20"
+                          >
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            Compris, retourner à l&apos;accueil
+                          </button>
                         )}
+                        <p className="text-[6.8px] text-center text-slate-500 font-mono tracking-wide uppercase">
+                          🛡️ Protégé par SP_TG • Sécurité Nationale du Togo
+                        </p>
+                      </div>
 
-                        {/* SUSPECT MESSAGE INFO CONTAINER */}
-                        <div className="bg-slate-950 border border-white/5 p-2.5 rounded-xl mt-2.5 space-y-2 flex-1 flex flex-col justify-between">
-                          <div>
-                            <div className="flex items-center justify-between text-[7.8px] font-mono border-b border-white/5 pb-1">
-                              <span className="text-slate-400">
-                                {isGroupSource 
-                                  ? `Groupe : ${groupName}` 
-                                  : isRegisteredContact
-                                    ? `Contact enregistré : ${registeredContacts[contactIndex]?.name || activeSender}`
-                                    : `De (Inconnu) : ${activeSender}`
-                                }
-                              </span>
-                              <span className="text-red-400 uppercase font-bold tracking-wider text-[7.5px]">Piège Intercepté</span>
-                            </div>
-                            <p className="mt-1.5 text-[8.2px] font-sans text-amber-100 leading-snug italic bg-amber-500/5 p-2 rounded border border-amber-500/10 max-h-[85px] overflow-y-auto">
-                              &quot;{activeMessageText}&quot;
-                            </p>
-                          </div>
+                    </div>
+                  </div>
+                )}
 
-                          {/* DYNAMIC RULES & SOCIAL ADVISORY ACCORDING TO SENDER RELIABILITY */}
-                          {isRegisteredContact ? (
-                            <div className="bg-amber-950/20 p-2 border border-amber-500/15 rounded-lg space-y-1">
-                              <span className="text-[8.5px] font-mono font-bold text-amber-400 uppercase tracking-wider block">
-                                ℹ️ CONSEIL IMPORTANT ET BIENVEILLANT :
-                              </span>
-                              <div className="text-[7.8px] text-slate-300 font-sans space-y-1 leading-normal">
-                                <p>
-                                  Le numéro de votre proche <strong>{registeredContacts[contactIndex]?.name || activeSender}</strong> partage avec vous un message qui a été détecté comme utilisé par de nombreux attaquants et déclaré comme fraude auprès du poste central (SOC).
-                                </p>
-                                <p className="text-amber-300">
-                                  <strong>Ne blâmez pas l&apos;auteur !</strong> Votre proche n&apos;est probablement pas l&apos;attaquant : il a pu être lui-même piraté ou a simplement transféré ce piège de bonne foi. Ne lui en voulez pas.
-                                </p>
-                                <p className="font-bold">
-                                  👉 Veuillez simplement supprimer ce message, ne pas cliquer, et lui passer un appel téléphonique direct pour l&apos;avertir gentiment.
-                                </p>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="bg-red-950/25 p-2 border border-red-500/20 rounded-lg space-y-1">
-                              <span className="text-[8.5px] font-mono font-bold text-red-100/90 uppercase tracking-wider block">
-                                🛑 EXPÉDITEUR MALVEILLANT - ACTION DIRECTE :
-                              </span>
-                              <div className="text-[7.8px] text-slate-300 font-sans space-y-1 leading-normal">
-                                <p>
-                                  ⚠️ <strong>Bloquez ce numéro ({activeSender}) :</strong> C&apos;est une tentative claire d&apos;arnaque envoyée par un inconnu de façon malveillante.
-                                </p>
-                                <p>
-                                  ❌ <strong>Supprimez le message :</strong> Ne l&apos;envoyez à personne, ne cliquez sur aucun lien, et n&apos;indiquez aucun mot de passe ni versement d&apos;argent.
-                                </p>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Heuristics reasoning */}
-                          <div className="border-t border-white/5 pt-1">
-                            <span className="text-[7px] font-mono font-bold text-slate-500 uppercase tracking-wider block">Dossier de signalement au SOC :</span>
-                            <p className="text-[7.5px] text-slate-400 leading-normal font-mono mt-0.5">
-                              {simTemplates[selectedTemplate] ? simTemplates[selectedTemplate].heuristics : "Base de signatures de cybermenace de Lomé."}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Central remote sync status */}
-                        <div className="bg-[#06B6D4]/5 border border-[#06B6D4]/25 p-1.5 rounded-lg mt-2 flex items-center justify-between text-[7.5px] font-mono">
-                          <span className="text-slate-400 flex items-center gap-1">
-                            <Radio className="w-2.5 h-2.5 text-[#06B6D4] animate-pulse" />
-                            SIGNALÉ AU CENTRE
-                          </span>
-                          {isSimulatingApiCall ? (
-                            <span className="text-amber-400 animate-pulse font-bold">TRANSMISSION...</span>
-                          ) : (
-                            <span className="text-emerald-450 font-bold flex items-center gap-0.5">
-                              <CheckCircle className="w-2.5 h-2.5" /> BLOQUÉ DE SÉCURITÉ !
+                    {phoneState === "declarations" && (
+                      <div className="flex-1 flex flex-col justify-between z-10 pt-4 animate-fade-in text-slate-200 text-left">
+                        
+                        {/* Header bar styled like TitleBar */}
+                        <div className="bg-[#1D2B4A]/65 border border-white/5 p-2 rounded-xl flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-amber-500 shrink-0" />
+                          <div className="leading-tight">
+                            <h4 className="font-bold text-slate-100 font-mono text-[9px] tracking-wide uppercase">
+                              PORTAIL CITOYEN DE SIGNALEMENT
+                            </h4>
+                            <span className="text-[7.2px] text-slate-400 block font-mono">
+                              Déclarations d&apos;appels malveillants &amp; arnaques
                             </span>
-                          )}
+                          </div>
                         </div>
 
-                        {/* Reset Button */}
+                        {/* Form Body inside simulated phone screen */}
+                        <div className="bg-slate-950 border border-white/5 p-3 rounded-xl mt-2.5 space-y-2.5 flex-1 overflow-y-auto max-h-[290px] scrollbar-none">
+                          
+                          <div className="space-y-1">
+                            <label className="text-[8px] font-mono font-bold text-slate-400 uppercase block">
+                              Numéro responsable de l&apos;appel :
+                            </label>
+                            <input
+                              type="text"
+                              required
+                              value={declaringPhone}
+                              onChange={(e) => setDeclaringPhone(e.target.value)}
+                              placeholder="Ex: +228 92 88 12 34 ou Nom"
+                              className="w-full bg-[#121A2F]/80 border border-white/10 rounded-lg px-2.5 py-1 text-[10px] text-white font-mono focus:outline-none focus:border-red-500"
+                            />
+                            <p className="text-[7px] text-slate-500 italic leading-none">
+                              Peut être une chaîne si le numéro est masqué par un nom.
+                            </p>
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-[8px] font-mono font-bold text-slate-400 uppercase block">
+                              Catégorie de la tentative d&apos;arnaque :
+                            </label>
+                            <select
+                              value={declaringCategory}
+                              onChange={(e) => setDeclaringCategory(e.target.value)}
+                              className="w-full bg-[#121A2F]/80 border border-white/10 rounded-lg p-1.5 text-[9.5px] text-slate-200 font-sans focus:outline-none focus:border-red-500 cursor-pointer text-white"
+                            >
+                              <option value="Vente pyramidale / Faux gains" className="bg-[#121A2F] text-white">Vente pyramidale / Faux gains 🎁</option>
+                              <option value="Faux agents Moov / Togocom (Secours)" className="bg-[#121A2F] text-white">Faux agents (Secours Flooz/TMoney) 💸</option>
+                              <option value="Chantage au téléphone / Menaces" className="bg-[#121A2F] text-white">Chantage au téléphone / Menaces ⚠️</option>
+                              <option value="Harcèlement / Intrusions répétées" className="bg-[#121A2F] text-white">Harcèlement / Intrusions répétées 📞</option>
+                              <option value="Faux Positif (Testez la réputation)" className="bg-[#121A2F] text-white">Faux Positif (Signalement par erreur) ⚪</option>
+                            </select>
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-[8px] font-mono font-bold text-slate-400 uppercase block">
+                              Description / Preuves (Optionnel) :
+                            </label>
+                            <textarea
+                              rows={2}
+                              value={declaringDesc}
+                              onChange={(e) => setDeclaringDesc(e.target.value)}
+                              placeholder="Expliquez ce que l'appelant vous a demandé..."
+                              className="w-full bg-black/60 border border-white/10 rounded-lg p-2 text-[9px] text-slate-300 leading-normal focus:outline-none focus:border-red-500"
+                            />
+                          </div>
+
+                          {declarationStatusMsg && (
+                            <div className="text-[8.5px] font-mono p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 leading-tight">
+                              {declarationStatusMsg}
+                            </div>
+                          )}
+
+                          <button
+                            type="button"
+                            disabled={isSubmittingDeclaration || !declaringPhone.trim()}
+                            onClick={async () => {
+                              setIsSubmittingDeclaration(true);
+                              try {
+                                const response = await fetch("/api/complaints", {
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({
+                                    phoneNumber: declaringPhone,
+                                    category: declaringCategory,
+                                    description: declaringDesc,
+                                    agentId: agents[0]?.id || "UNKNOWN_AGENT",
+                                    agentName: agents[0]?.name || "Citoyen Volontaire"
+                                  }),
+                                  method: "POST"
+                                });
+                                if (response.ok) {
+                                  setDeclarationStatusMsg("✅ Transmis ! Traitement en cours par l'ANCY (SOC).");
+                                  setDeclaringPhone("+228 99 ");
+                                  setDeclaringDesc("");
+                                  onRefreshData?.();
+                                } else {
+                                  setDeclarationStatusMsg("⚠️ Impossible de transmettre.");
+                                }
+                              } catch (e) {
+                                setDeclarationStatusMsg("❌ Erreur de réseau.");
+                              } finally {
+                                setIsSubmittingDeclaration(false);
+                              }
+                            }}
+                            className="w-full py-2 bg-red-650 hover:bg-red-600 disabled:bg-slate-700 text-white font-mono text-[9px] font-bold uppercase rounded-lg cursor-pointer flex items-center justify-center gap-1 shadow-md shadow-red-500/15"
+                          >
+                            {isSubmittingDeclaration ? "TRANSMISSION SOC..." : "🚨 SOUMETTRE LA PLAINTE"}
+                          </button>
+                        </div>
+
+                        {/* Back navigation button inside telephone view */}
                         <button
                           onClick={() => setPhoneState("dashboard")}
-                          className="mt-2 w-full py-1.5 bg-[#10B981] hover:bg-emerald-650 transition-colors text-white font-mono text-[8px] font-bold uppercase tracking-widest rounded-lg cursor-pointer"
+                          className="mt-2 w-full py-1.5 bg-[#121A2F]/80 hover:bg-[#1E293B] hover:text-white transition text-slate-400 font-mono text-[8px] font-bold uppercase tracking-widest rounded-lg cursor-pointer text-center"
                         >
-                          Tout va bien, retourner à l&apos;accueil
+                          Retour au Dashboard Protec
                         </button>
-
-                      </div>
-                    )}
 
                   </div>
                 )}
@@ -1419,148 +1703,374 @@ export default function AgentSupervisionTab({
                 </div>
               </div>
 
-              {/* Provenance du message / Source selection */}
-              <div className="space-y-1">
-                <label className="text-[9px] text-[#38BDF8] block uppercase font-bold tracking-wider">Qui envoie le message ?</label>
-                <select
-                  value={messageSourceType}
-                  onChange={(e) => {
-                    const val = e.target.value as "unknown" | "contact" | "group";
-                    setMessageSourceType(val);
-                    if (val === "contact") {
-                      // Automatically update customSender with contact's phone
-                      setCustomSender(registeredContacts[contactIndex].phone);
-                    } else if (val === "unknown") {
-                      setCustomSender("+228 99 12 04 85");
-                    }
+              {/* PICKER BETWEEN SMS, CALLSIM, & CITIZEN DECLARATION */}
+              <div className="grid grid-cols-3 gap-1 p-1 bg-[#050B1D] border border-white/5 rounded-xl">
+                <button
+                  onClick={() => setSimMode("sms")}
+                  className={`py-1 rounded-lg text-[8px] font-bold transition flex items-center justify-center gap-1 cursor-pointer select-none ${simMode === "sms" ? "bg-[#3B82F6] text-white" : "text-slate-400 hover:text-white bg-transparent border-0"}`}
+                >
+                  💬 SMS / WA
+                </button>
+                <button
+                  onClick={() => setSimMode("call")}
+                  className={`py-1 rounded-lg text-[8px] font-bold transition flex items-center justify-center gap-1 cursor-pointer select-none ${simMode === "call" ? "bg-[#EF4444] text-white animate-pulse" : "text-slate-400 hover:text-white bg-transparent border-0"}`}
+                >
+                  📞 APPEL
+                </button>
+                <button
+                  onClick={() => {
+                    setSimMode("declaration");
+                    setPhoneState("declarations");
+                    setDeclarationStatusMsg("");
                   }}
-                  className="w-full bg-[#0B1020] border border-[#38BDF8]/20 text-[10px] p-1.5 rounded focus:outline-none text-sky-300 font-bold cursor-pointer"
+                  className={`py-1 rounded-lg text-[8px] font-bold transition flex items-center justify-center gap-1 cursor-pointer select-none ${simMode === "declaration" ? "bg-amber-600 text-white" : "text-slate-400 hover:text-white bg-transparent border-0"}`}
                 >
-                  <option value="unknown">👤 Un numéro inconnu (Non enregistré)</option>
-                  <option value="contact">👥 Un de mes contacts (Enregistré)</option>
-                  <option value="group">💬 Un message reçu dans un groupe WhatsApp</option>
-                </select>
+                  ✍️ DÉCLARER
+                </button>
               </div>
 
-              {/* Conditional Contact selection */}
-              {messageSourceType === "contact" && (
-                <div className="space-y-1 bg-sky-950/20 p-2 border border-sky-500/10 rounded animate-fade-in">
-                  <label className="text-[8.5px] text-sky-400 block uppercase font-bold">Choisir le contact :</label>
-                  <select
-                    value={contactIndex}
-                    onChange={(e) => {
-                      const idx = parseInt(e.target.value, 10);
-                      setContactIndex(idx);
-                      setCustomSender(registeredContacts[idx].phone);
-                    }}
-                    className="w-full bg-[#0B1020] border border-sky-500/15 text-[10px] p-1 rounded text-white cursor-pointer"
-                  >
-                    {registeredContacts.map((c, i) => (
-                      <option key={i} value={i}>{c.name} ({c.phone})</option>
-                    ))}
-                  </select>
-                  <span className="text-[7.5px] text-slate-450 leading-normal block pt-1">
-                    ℹ️ Vos contacts enregistrés sont réputés sûrs par défaut. L&apos;analyse d&apos;ingénierie sociale (NLP) y est désactivée pour zéro faux-positif. Seul un piratage avéré (détecté par la base de signatures de Lomé) lancera l&apos;alerte.
-                  </span>
-                </div>
-              )}
-
-              {/* Conditional Group Name input */}
-              {messageSourceType === "group" && (
-                <div className="space-y-1 bg-emerald-950/10 p-2 border border-emerald-500/10 rounded animate-fade-in">
-                  <label className="text-[8.5px] text-emerald-400 block uppercase font-bold">Nom du groupe :</label>
-                  <input
-                    type="text"
-                    value={groupName}
-                    onChange={(e) => setGroupName(e.target.value)}
-                    className="w-full bg-[#0B1020] border border-emerald-500/15 text-[10px] p-1.5 rounded text-white font-mono"
-                  />
-                  {trustedGroups.includes(groupName) ? (
-                    <span className="text-[7.8px] text-emerald-400 font-bold block pt-1">
-                      ✅ Ce groupe est dans votre LISTE VERTE. Les alertes de détection de manipulation en direct y sont désactivées.
-                    </span>
-                  ) : (
-                    <span className="text-[7.5px] text-amber-500 block pt-1">
-                      ⚠️ Groupe absent de votre Liste Verte. Vos défenses analyseront d&apos;éventuelles techniques de manipulation en direct pour vous alerter.
-                    </span>
-                  )}
-                </div>
-              )}
-
-              {/* Template dropdown list */}
-              <div className="space-y-1">
-                <label className="text-[9px] text-slate-400 block uppercase">Choisir un SMS / Message type :</label>
-                <select
-                  value={selectedTemplate}
-                  onChange={(e) => setSelectedTemplate(parseInt(e.target.value, 10))}
-                  className="w-full bg-[#0B1020] border border-white/10 text-[10px] p-1.5 rounded focus:outline-none text-slate-300 cursor-pointer text-[9.5px]"
-                >
-                  <option value={-1}>Saisie personnalisée (Écrire vous-même)</option>
-                  {simTemplates.map((tpl, i) => (
-                    <option key={i} value={i}>
-                      {tpl.title} {tpl.isSignature ? "• [🔴 Présent dans la base de données]" : "• [🟡 Non répertorié dans la base]"}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Custom sender number */}
-              <div className="grid grid-cols-1 gap-1.5">
-                {messageSourceType !== "contact" && (
-                  <div>
-                    <label className="text-[9px] text-slate-450 block uppercase">Numéro de l&apos;expéditeur :</label>
-                    <input
-                      type="text"
-                      value={customSender}
+              {simMode === "sms" && (
+                <div className="space-y-3 animate-fade-in text-left">
+                  {/* Provenance du message / Source selection */}
+                  <div className="space-y-1">
+                    <label className="text-[9px] text-[#38BDF8] block uppercase font-bold tracking-wider">Qui envoie le message ?</label>
+                    <select
+                      value={messageSourceType}
                       onChange={(e) => {
-                        setCustomSender(e.target.value);
-                        setSelectedTemplate(-1);
+                        const val = e.target.value as "unknown" | "contact" | "group";
+                        setMessageSourceType(val);
+                        if (val === "contact") {
+                          // Automatically update customSender with contact's phone
+                          setCustomSender(registeredContacts[contactIndex].phone);
+                        } else if (val === "unknown") {
+                          setCustomSender("+228 99 12 04 85");
+                        }
                       }}
-                      placeholder="+228..."
-                      className="w-full bg-[#0B1020] border border-white/10 text-[10px] p-1 rounded font-mono text-white text-[9.5px]"
-                    />
+                      className="w-full bg-[#0B1020] border border-[#38BDF8]/20 text-[10px] p-1.5 rounded focus:outline-none text-sky-300 font-bold cursor-pointer text-white"
+                    >
+                      <option value="unknown" className="bg-[#0B1020]">👤 Un numéro inconnu (Non enregistré)</option>
+                      <option value="contact" className="bg-[#0B1020]">👥 Un de mes contacts (Enregistré)</option>
+                      <option value="group" className="bg-[#0B1020]">💬 Un message reçu dans un groupe WhatsApp</option>
+                    </select>
                   </div>
-                )}
-                
-                {/* Custom text body */}
-                <div>
-                  <label className="text-[9px] text-slate-450 block uppercase">Texte du message à tester :</label>
-                  <textarea
-                    value={customText}
-                    onChange={(e) => {
-                      setCustomText(e.target.value);
-                      setSelectedTemplate(-1);
-                    }}
-                    rows={3}
-                    placeholder="Contenu du SMS à intercepter..."
-                    className="w-full bg-[#0B1020] border border-white/10 text-[10px] p-1.5 rounded resize-none text-slate-200"
-                  />
-                  {containsKnownSignature && (
-                    <div className="text-[8px] text-red-500 font-bold font-mono mt-1 flex items-center gap-1 animate-pulse">
-                      <span className="w-1.5 h-1.5 bg-red-400 rounded-full shrink-0"></span>
-                      DÉTECTÉ : Contient une signature de la base locale de Lomé !
+
+                  {/* Conditional Contact selection */}
+                  {messageSourceType === "contact" && (
+                    <div className="space-y-1 bg-sky-950/20 p-2 border border-sky-500/10 rounded animate-fade-in">
+                      <label className="text-[8.5px] text-sky-400 block uppercase font-bold">Choisir le contact :</label>
+                      <select
+                        value={contactIndex}
+                        onChange={(e) => {
+                          const idx = parseInt(e.target.value, 10);
+                          setContactIndex(idx);
+                          setCustomSender(registeredContacts[idx].phone);
+                        }}
+                        className="w-full bg-[#0B1020] border border-sky-500/15 text-[10px] p-1 rounded text-white cursor-pointer"
+                      >
+                        {registeredContacts.map((c, i) => (
+                          <option key={i} value={i}>{c.name} ({c.phone})</option>
+                        ))}
+                      </select>
+                      <span className="text-[7.5px] text-slate-450 leading-normal block pt-1">
+                        ℹ️ Vos contacts enregistrés sont réputés sûrs par défaut. L&apos;analyse d&apos;ingénierie sociale (NLP) y est désactivée pour zéro faux-positif. Seul un piratage avéré (détecté par la base de signatures de Lomé) lancera l&apos;alerte.
+                      </span>
                     </div>
                   )}
+
+                  {/* Conditional Group Name input */}
+                  {messageSourceType === "group" && (
+                    <div className="space-y-1 bg-emerald-950/10 p-2 border border-emerald-500/10 rounded animate-fade-in font-mono">
+                      <label className="text-[8.5px] text-emerald-400 block uppercase font-bold font-mono">Nom du groupe :</label>
+                      <input
+                        type="text"
+                        value={groupName}
+                        onChange={(e) => setGroupName(e.target.value)}
+                        className="w-full bg-[#0B1020] border border-emerald-500/15 text-[10px] p-1.5 rounded text-white font-mono"
+                      />
+                      {trustedGroups.includes(groupName) ? (
+                        <span className="text-[7.8px] text-emerald-400 font-bold block pt-1">
+                          ✅ Ce groupe est dans votre LISTE VERTE. Les alertes de détection de manipulation en direct y sont désactivées.
+                        </span>
+                      ) : (
+                        <span className="text-[7.5px] text-amber-500 block pt-1 font-sans">
+                          ⚠️ Groupe absent de votre Liste Verte. Vos défenses analyseront d&apos;éventuelles techniques de manipulation en direct pour vous alerter.
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Template dropdown list */}
+                  <div className="space-y-1">
+                    <label className="text-[9px] text-slate-400 block uppercase">Choisir un SMS / Message type :</label>
+                    <select
+                      value={selectedTemplate}
+                      onChange={(e) => setSelectedTemplate(parseInt(e.target.value, 10))}
+                      className="w-full bg-[#0B1020] border border-white/10 text-[10px] p-1.5 rounded focus:outline-none text-slate-300 cursor-pointer text-[9.5px]"
+                    >
+                      <option value={-1}>Saisie personnalisée (Écrire vous-même)</option>
+                      {simTemplates.map((tpl, i) => (
+                        <option key={i} value={i}>
+                          {tpl.title} {tpl.isSignature ? "• [🔴 Présent dans la base de données]" : "• [🟡 Non répertorié dans la base]"}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Custom sender number */}
+                  <div className="grid grid-cols-1 gap-1.5">
+                    {messageSourceType !== "contact" && (
+                      <div>
+                        <label className="text-[9px] text-slate-450 block uppercase">Numéro de l&apos;expéditeur :</label>
+                        <input
+                          type="text"
+                          value={customSender}
+                          onChange={(e) => {
+                            setCustomSender(e.target.value);
+                            setSelectedTemplate(-1);
+                          }}
+                          placeholder="+228..."
+                          className="w-full bg-[#0B1020] border border-white/10 text-[10px] p-1 rounded font-mono text-white text-[9.5px]"
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Custom text body */}
+                    <div>
+                      <label className="text-[9px] text-slate-450 block uppercase">Texte du message à tester :</label>
+                      <textarea
+                        value={customText}
+                        onChange={(e) => {
+                          setCustomText(e.target.value);
+                          setSelectedTemplate(-1);
+                        }}
+                        rows={3}
+                        placeholder="Contenu du SMS à intercepter..."
+                        className="w-full bg-[#0B1020] border border-white/10 text-[10px] p-1.5 rounded resize-none text-slate-200"
+                      />
+                      {containsKnownSignature && (
+                        <div className="text-[8px] text-red-500 font-bold font-mono mt-1 flex items-center gap-1 animate-pulse">
+                          <span className="w-1.5 h-1.5 bg-red-400 rounded-full shrink-0"></span>
+                          DÉTECTÉ : Contient une signature de la base locale de Lomé !
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* ACTION TRIGGER BUTTON */}
+                  <button
+                    onClick={handleSimulateSMS}
+                    disabled={!customText.trim()}
+                    className="w-full py-2.5 bg-[#EF4444] hover:bg-rose-600 disabled:bg-slate-800 disabled:text-slate-500 font-mono text-[9px] font-bold text-white rounded-xl uppercase transition tracking-wider flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-red-550/10 active:scale-[98%]"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    📱 ENVOYER LE MESSAGE SUR LE TÉLÉPHONE
+                  </button>
+
+                  <div className="bg-blue-950/20 border border-blue-500/10 p-2 rounded text-[8.5px] text-slate-400 text-center leading-normal">
+                    💡 <strong>Priorité de Blocage :</strong>
+                    <ul className="text-left list-disc list-inside mt-1 space-y-1 text-slate-400 font-sans">
+                      <li><strong>Téléphone actif (Allumé) :</strong> L&apos;alerte détaillée s&apos;ouvre <span className="text-red-400 font-bold">instantanément</span> en plein écran pour faire barrière, sans nécessiter aucun clic sur une notification.</li>
+                      <li><strong>Téléphone verrouillé :</strong> L&apos;alerte attend le déverrouillage de l&apos;appareil puis surgit automatiquement à l&apos;écran pour bloquer l&apos;utilisateur avant toute lecture.</li>
+                    </ul>
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {/* ACTION TRIGGER BUTTON */}
-              <button
-                onClick={handleSimulateSMS}
-                disabled={!customText.trim()}
-                className="w-full py-2.5 bg-[#EF4444] hover:bg-rose-600 disabled:bg-slate-800 disabled:text-slate-500 font-mono text-[9px] font-bold text-white rounded-xl uppercase transition tracking-wider flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-red-550/10 active:scale-[98%]"
-              >
-                <Send className="w-3.5 h-3.5" />
-                📱 ENVOYER LE MESSAGE SUR LE TÉLÉPHONE
-              </button>
+              {simMode === "call" && (
+                <div className="space-y-3 animate-fade-in text-left">
+                  <div className="space-y-1">
+                    <label className="text-[9px] text-[#38BDF8] block uppercase font-bold tracking-wider">
+                      Numéro ou Nom de l&apos;Appelant :
+                    </label>
+                    <input
+                      type="text"
+                      value={incomingCallNumber}
+                      onChange={(e) => setIncomingCallNumber(e.target.value)}
+                      placeholder="Ex: +228 92 88 12 34 ou ORabank"
+                      className="w-full bg-[#0B1020] border border-white/10 text-[10px] p-2 rounded font-mono text-white text-[10px]"
+                    />
+                    <div className="flex flex-wrap gap-1 mt-1 font-mono">
+                      <button
+                        onClick={() => setIncomingCallNumber("ORabank")}
+                        className="p-1 px-1.5 bg-[#121A2F] border border-white/5 rounded text-[8px] text-slate-300 hover:text-white cursor-pointer font-sans"
+                      >
+                        🏦 ORabank (Service)
+                      </button>
+                      <button
+                        onClick={() => {
+                          const scamNum = scams.length > 0 ? scams[0].phoneNumber : "+228 92 88 12 34";
+                          setIncomingCallNumber(scamNum);
+                        }}
+                        className="p-1 px-1.5 bg-[#121A2F] border border-white/5 rounded text-[8px] text-red-400 hover:text-red-300 cursor-pointer font-sans"
+                      >
+                        🚨 Spammer base noire
+                      </button>
+                      <button
+                        onClick={() => setIncomingCallNumber("+228 97 55 11 22")}
+                        className="p-1 px-1.5 bg-[#121A2F] border border-white/5 rounded text-[8px] text-slate-300 hover:text-white cursor-pointer font-sans"
+                      >
+                        👤 Inconnu Lambda
+                      </button>
+                    </div>
+                  </div>
 
-              <div className="bg-blue-950/20 border border-blue-500/10 p-2 rounded text-[8.5px] text-slate-400 text-center leading-normal">
-                💡 <strong>Priorité de Blocage :</strong>
-                <ul className="text-left list-disc list-inside mt-1 space-y-1 text-slate-400">
-                  <li><strong>Téléphone actif (Allumé) :</strong> L&apos;alerte détaillée s&apos;ouvre <span className="text-red-400 font-bold">instantanément</span> en plein écran pour faire barrière, sans nécessiter aucun clic sur une notification.</li>
-                  <li><strong>Téléphone verrouillé :</strong> L&apos;alerte attend le déverrouillage de l&apos;appareil puis surgit automatiquement à l&apos;écran pour bloquer l&apos;utilisateur avant toute lecture.</li>
-                </ul>
-              </div>
+                  <div className="bg-[#050B1D]/50 border border-white/5 p-2 rounded-xl text-[8.5px] leading-tight space-y-1.5 font-sans">
+                    <span className="text-[7.8px] font-mono text-[#38BDF8] block uppercase font-bold">
+                      💡 Règles d&apos;évaluation d&apos;appel :
+                    </span>
+                    <ul className="list-disc list-inside space-y-1 text-slate-350">
+                      <li>
+                        <strong>Chaîne alphabétique (ex: ORabank, SURPRISE) :</strong> Traité comme Service particulier au Togo. Aucun moteur de détection ne s&apos;y applique.
+                      </li>
+                      <li>
+                        <strong>Présence en Base Noire ANCY :</strong> Alerte écarlate immédiate d&apos;escroquerie.
+                      </li>
+                      <li>
+                        <strong>Inconnu standard :</strong> Appel normal sécurisé sans blocage.
+                      </li>
+                    </ul>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      // Check if the number is in scams database
+                      const cleanPhone = incomingCallNumber.trim().replace(/\s+/g, "");
+                      const isListed = scams.some(s => s.phoneNumber.trim().replace(/\s+/g, "") === cleanPhone);
+                      
+                      setIsCallScam(isListed);
+
+                      // Check if alphabetical string
+                      const isAlphabeticalOnly = /^[a-zA-Z\s]+$/.test(incomingCallNumber.trim());
+                      if (isAlphabeticalOnly) {
+                        setCallerName(incomingCallNumber);
+                      } else {
+                        // Check if in registered contacts list
+                        const matchedContact = registeredContacts.find(rc => rc.phone.trim().replace(/\s+/g, "") === cleanPhone);
+                        if (matchedContact) {
+                          setCallerName(matchedContact.name);
+                        } else {
+                          setCallerName("Inconnu");
+                        }
+                      }
+
+                      setVoiceCallState("incoming");
+                      addLog(`📞 Appel simulé de : ${incomingCallNumber} (${isAlphabeticalOnly ? "Service spécial" : isListed ? "🔴 ESCROC RECONNU" : "Standard"})`, isListed ? "warn" : "info");
+                    }}
+                    className="w-full py-2.5 bg-red-650 hover:bg-red-600 font-mono text-[9px] font-bold text-white rounded-xl uppercase transition tracking-wider flex items-center justify-center gap-1 cursor-pointer shadow-lg active:scale-[98%]"
+                  >
+                    📲 SIMULER L&apos;APPEL ENTRANT
+                  </button>
+                </div>
+              )}
+
+              {simMode === "declaration" && (
+                <div className="space-y-3 animate-fade-in text-left">
+                  <div className="bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-xl">
+                    <span className="text-[10px] font-bold text-amber-400 font-mono block uppercase">
+                      ✍️ ZONE DE DÉCLARATION DIRECTE
+                    </span>
+                    <p className="text-[9px] text-slate-300 leading-normal mt-1">
+                      Signalez un appel frauduleux ou une tentative d&apos;arnaque reçue au Togo. Votre déclaration alimente en temps réel la base de signatures de Lomé Sûre.
+                    </p>
+                  </div>
+
+                  <div className="space-y-2 bg-[#050B1D]/50 border border-white/5 p-3 rounded-xl">
+                    <div className="space-y-1">
+                      <label className="text-[9px] text-slate-400 block uppercase font-bold">
+                        Numéro de l&apos;appelant suspect :
+                      </label>
+                      <input
+                        type="text"
+                        value={declaringPhone}
+                        onChange={(e) => {
+                          setDeclaringPhone(e.target.value);
+                          setPhoneState("declarations");
+                        }}
+                        placeholder="Ex: +228 92 88 12 34 ou Nom"
+                        className="w-full bg-[#0B1020] border border-white/10 text-[10px] p-2 rounded font-mono text-white focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[9px] text-slate-400 block uppercase font-bold">
+                        Type d&apos;arnaque :
+                      </label>
+                      <select
+                        value={declaringCategory}
+                        onChange={(e) => {
+                          setDeclaringCategory(e.target.value);
+                          setPhoneState("declarations");
+                        }}
+                        className="w-full bg-[#0B1020] border border-white/10 text-[10px] p-1.5 rounded focus:outline-none text-slate-300 cursor-pointer text-white"
+                      >
+                        <option value="Vente pyramidale / Faux gains">🎁 Faux gains / Loterie / Cadeaux</option>
+                        <option value="Faux agents Moov / Togocom (Secours)">💸 Faux Agents (Tmoney/Flooz)</option>
+                        <option value="Chantage au téléphone / Menaces">⚠️ Chantage, Menaces, Pressions</option>
+                        <option value="Harcèlement / Intrusions répétées">📞 Harcèlement d&apos;appels</option>
+                        <option value="Faux Positif (Testez la réputation)">⚪ Signalement d&apos;erreur / Test</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[9px] text-slate-400 block uppercase font-bold">
+                        Description / Preuves de l&apos;appel :
+                      </label>
+                      <textarea
+                        value={declaringDesc}
+                        onChange={(e) => {
+                          setDeclaringDesc(e.target.value);
+                          setPhoneState("declarations");
+                        }}
+                        rows={3}
+                        placeholder="Qu'est-ce que l'arnaqueur vous a raconté ?"
+                        className="w-full bg-[#0B1020] border border-white/10 text-[10px] p-2 rounded text-slate-200 resize-none leading-normal focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
+
+                    {declarationStatusMsg && (
+                      <div className="text-[8.5px] font-mono p-2 rounded bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 leading-tight">
+                        {declarationStatusMsg}
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      disabled={isSubmittingDeclaration || !declaringPhone.trim()}
+                      onClick={async () => {
+                        setIsSubmittingDeclaration(true);
+                        try {
+                          const response = await fetch("/api/complaints", {
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                              phoneNumber: declaringPhone,
+                              category: declaringCategory,
+                              description: declaringDesc,
+                              agentId: agents[0]?.id || "UNKNOWN_AGENT",
+                              agentName: agents[0]?.name || "Citoyen Volontaire"
+                            }),
+                            method: "POST"
+                          });
+                          if (response.ok) {
+                            setDeclarationStatusMsg("✅ Transmis ! Traitement en cours par l'ANCY (SOC).");
+                            setDeclaringPhone("+228 99 ");
+                            setDeclaringDesc("");
+                            onRefreshData?.();
+                          } else {
+                            setDeclarationStatusMsg("⚠️ Impossible de transmettre.");
+                          }
+                        } catch (e) {
+                          setDeclarationStatusMsg("❌ Erreur de réseau.");
+                        } finally {
+                          setIsSubmittingDeclaration(false);
+                        }
+                      }}
+                      className="w-full py-2 bg-amber-500 hover:bg-amber-650 disabled:bg-slate-800 disabled:text-slate-500 font-mono text-[9px] font-black text-white rounded-xl uppercase transition tracking-wider flex items-center justify-center gap-1 cursor-pointer shadow-lg shadow-amber-550/10"
+                    >
+                      {isSubmittingDeclaration ? "ENVOI EN COURS..." : "🚨 SOUMETTRE LA DÉCLARATION"}
+                    </button>
+                  </div>
+                </div>
+              )}
 
             </div>
 

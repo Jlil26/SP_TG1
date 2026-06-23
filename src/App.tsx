@@ -28,7 +28,7 @@ import ForensicsTab from "./components/ForensicsTab";
 import AdminsTab from "./components/AdminsTab";
 import SignaturesTab from "./components/SignaturesTab";
 import AgentSupervisionTab from "./components/AgentSupervisionTab";
-import { Threat, Campaign, MobileAgent, SyncConfig, ScrapedArticle, ForensicsData, MobileSignal } from "./types";
+import { Threat, Campaign, MobileAgent, SyncConfig, ScrapedArticle, ForensicsData, MobileSignal, PhoneComplaint, ScamPhoneNumber } from "./types";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<"dashboard" | "intel" | "deployment" | "forensics" | "admins" | "signatures" | "agent_supervision">("dashboard");
@@ -55,12 +55,15 @@ export default function App() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [agents, setAgents] = useState<MobileAgent[]>([]);
   const [mobileSignals, setMobileSignals] = useState<MobileSignal[]>([]);
+  const [complaints, setComplaints] = useState<PhoneComplaint[]>([]);
+  const [scams, setScams] = useState<ScamPhoneNumber[]>([]);
   const [config, setConfig] = useState<SyncConfig>({
     defaultSyncIntervalDays: 14,
     lastFlashUpdateAt: null,
     flashUpdateStatus: "Idle"
   });
   const [scrapedArticles, setScrapedArticles] = useState<ScrapedArticle[]>([]);
+  const [forensicsData, setForensicsData] = useState<ForensicsData | null>(null);
   const [deletedArticleIds, setDeletedArticleIds] = useState<string[]>(() => {
     try {
       const stored = localStorage.getItem("kelashield_deleted_articles");
@@ -69,8 +72,6 @@ export default function App() {
       return [];
     }
   });
-  const [forensicsData, setForensicsData] = useState<ForensicsData | null>(null);
-
   // Loading indicator states
   const [loadingData, setLoadingData] = useState(true);
   const [fetchingFeed, setFetchingFeed] = useState(false);
@@ -126,6 +127,20 @@ export default function App() {
       if (sigRes.ok) {
         const sigObj = await sigRes.json();
         if (sigObj && sigObj.success) setMobileSignals(sigObj.data);
+      }
+
+      // 8. Fetch Phone Call Complaints
+      const compRes = await fetch("/api/complaints");
+      if (compRes.ok) {
+        const compObj = await compRes.json();
+        if (compObj && compObj.success) setComplaints(compObj.data);
+      }
+
+      // 9. Fetch Phone Scams Database
+      const scamsRes = await fetch("/api/scams");
+      if (scamsRes.ok) {
+        const scamsObj = await scamsRes.json();
+        if (scamsObj && scamsObj.success) setScams(scamsObj.data);
       }
 
     } catch (e: any) {
@@ -511,99 +526,141 @@ export default function App() {
           </div>
 
           {/* Nav menu links with elegant grouped structure */}
-          <nav className="p-4 space-y-4 font-mono text-xs">
+          <nav className="p-4 space-y-4 font-sans text-xs">
             
             {/* Group 1: Surveillance & Supervision */}
             <div className="space-y-1">
-              <div className="px-3 py-1 text-[8px] font-bold text-[#94A3B8]/60 uppercase tracking-widest">
+              <div className="px-3 py-1 text-[8px] font-mono font-bold text-[#3B82F6] uppercase tracking-widest">
                 Surveillance Active
               </div>
-              <div className="space-y-1 mt-1">
+              <div className="space-y-1.5 mt-1">
                 <button
                   onClick={() => { setActiveTab("dashboard"); setSidebarOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2 rounded-xl transition font-semibold border ${activeTab === "dashboard" ? "bg-[#1A2542] border-white/5 text-white shadow-sm" : "border-transparent text-[#94A3B8] hover:bg-[#1A2542] hover:text-white"}`}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition border cursor-pointer group ${
+                    activeTab === "dashboard" 
+                      ? "bg-[#3B82F6]/10 border-[#3B82F6]/35 text-white shadow-[0_0_12px_rgba(59,130,246,0.08)]" 
+                      : "border-transparent text-[#94A3B8] hover:text-white hover:bg-[#1A2542]"
+                  }`}
                 >
-                  <LayoutDashboard className="w-4 h-4 text-[#3B82F6] shrink-0" />
-                  <span>DASHBOARD GLOBAL</span>
+                  <div className="flex items-center gap-2.5 truncate">
+                    <LayoutDashboard className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 group-hover:scale-110 ${activeTab === "dashboard" ? "text-[#3B82F6]" : "text-slate-400 group-hover:text-white"}`} />
+                    <span className="font-bold tracking-tight text-[11px] truncate whitespace-nowrap">DASHBOARD CENTRAL</span>
+                  </div>
                 </button>
 
                 <button
                   onClick={() => { setActiveTab("agent_supervision"); setSidebarOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2 rounded-xl transition font-semibold border ${activeTab === "agent_supervision" ? "bg-[#1A2542] border-white/5 text-white shadow-sm" : "border-transparent text-[#94A3B8] hover:bg-[#1A2542] hover:text-white"}`}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition border cursor-pointer group ${
+                    activeTab === "agent_supervision" 
+                      ? "bg-[#06B6D4]/10 border-[#06B6D4]/35 text-white shadow-[0_0_12px_rgba(6,182,212,0.08)]" 
+                      : "border-transparent text-[#94A3B8] hover:text-white hover:bg-[#1A2542]"
+                  }`}
                 >
-                  <Server className="w-4 h-4 text-[#06B6D4] shrink-0" />
-                  <span>SUPERVISION AGENTS</span>
+                  <div className="flex items-center gap-2.5 truncate">
+                    <Server className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 group-hover:scale-110 ${activeTab === "agent_supervision" ? "text-[#06B6D4]" : "text-slate-400 group-hover:text-white"}`} />
+                    <span className="font-bold tracking-tight text-[11px] truncate whitespace-nowrap">SUPERVISION AGENTS</span>
+                  </div>
                 </button>
               </div>
             </div>
 
             {/* Group 2: Analyse Intel */}
             <div className="space-y-1">
-              <div className="px-3 py-1 text-[8px] font-bold text-[#94A3B8]/60 uppercase tracking-widest">
+              <div className="px-3 py-1 text-[8px] font-mono font-bold text-[#06B6D4] uppercase tracking-widest">
                 Analyse &amp; Menaces
               </div>
-              <div className="space-y-1 mt-1">
+              <div className="space-y-1.5 mt-1">
                 <button
                   onClick={() => { setActiveTab("intel"); setSidebarOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2 rounded-xl transition font-semibold border ${activeTab === "intel" ? "bg-[#1A2542] border-white/5 text-white shadow-sm" : "border-transparent text-[#94A3B8] hover:bg-[#1A2542] hover:text-white"}`}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition border cursor-pointer group ${
+                    activeTab === "intel" 
+                      ? "bg-[#06B6D4]/10 border-[#06B6D4]/35 text-white shadow-[0_0_12px_rgba(6,182,212,0.08)]" 
+                      : "border-transparent text-[#94A3B8] hover:text-white hover:bg-[#1A2542]"
+                  }`}
                 >
-                  <Rss className="w-4 h-4 text-[#06B6D4] shrink-0" />
-                  <span>THREAT INTEL (IA)</span>
+                  <div className="flex items-center gap-2.5 truncate">
+                    <Rss className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 group-hover:scale-110 ${activeTab === "intel" ? "text-[#06B6D4]" : "text-slate-400 group-hover:text-white"}`} />
+                    <span className="font-bold tracking-tight text-[11px] truncate whitespace-nowrap">THREAT INTEL (IA)</span>
+                  </div>
                 </button>
 
                 <button
                   onClick={() => { setActiveTab("signatures"); setSidebarOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2 rounded-xl transition font-semibold border ${activeTab === "signatures" ? "bg-[#1A2542] border-white/5 text-white shadow-sm" : "border-transparent text-[#94A3B8] hover:bg-[#1A2542] hover:text-white"}`}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition border cursor-pointer group ${
+                    activeTab === "signatures" 
+                      ? "bg-[#06B6D4]/10 border-[#06B6D4]/35 text-white shadow-[0_0_12px_rgba(6,182,212,0.08)]" 
+                      : "border-transparent text-[#94A3B8] hover:text-white hover:bg-[#1A2542]"
+                  }`}
                 >
-                  <Database className="w-4 h-4 text-[#06B6D4] shrink-0" />
-                  <span>BASE DE SIGNATURES</span>
+                  <div className="flex items-center gap-2.5 truncate">
+                    <Database className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 group-hover:scale-110 ${activeTab === "signatures" ? "text-[#06B6D4]" : "text-slate-400 group-hover:text-white"}`} />
+                    <span className="font-bold tracking-tight text-[11px] truncate whitespace-nowrap">BASE SIGNATURES</span>
+                  </div>
                 </button>
               </div>
             </div>
 
             {/* Group 3: Enquêtes Judiciaires */}
             <div className="space-y-1">
-              <div className="px-3 py-1 text-[8px] font-bold text-[#94A3B8]/60 uppercase tracking-widest">
-                Enquêtes &amp; Réponses
+              <div className="px-3 py-1 text-[8px] font-mono font-bold text-[#EF4444] uppercase tracking-widest">
+                Enquêtes &amp; Souveraineté
               </div>
-              <div className="space-y-1 mt-1">
+              <div className="space-y-1.5 mt-1">
                 <button
                   onClick={() => { setActiveTab("forensics"); setSidebarOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2 rounded-xl transition font-semibold border ${activeTab === "forensics" ? "bg-[#1A2542] border-white/5 text-white shadow-sm" : "border-transparent text-[#94A3B8] hover:bg-[#1A2542] hover:text-white"}`}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition border cursor-pointer group ${
+                    activeTab === "forensics" 
+                      ? "bg-[#EF4444]/10 border-[#EF4444]/35 text-white shadow-[0_0_12px_rgba(239,68,68,0.08)]" 
+                      : "border-transparent text-[#94A3B8] hover:text-white hover:bg-[#1A2542]"
+                  }`}
                 >
-                  <FileText className="w-4 h-4 text-[#EF4444] shrink-0" />
-                  <span>ENQUÊTE JUDICIAIRE</span>
+                  <div className="flex items-center gap-2.5 truncate">
+                    <FileText className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 group-hover:scale-110 ${activeTab === "forensics" ? "text-[#EF4444]" : "text-slate-400 group-hover:text-white"}`} />
+                    <span className="font-bold tracking-tight text-[11px] truncate whitespace-nowrap">ZONE ENQUÊTE GSM</span>
+                  </div>
                 </button>
               </div>
             </div>
 
             {/* Group 4: Administration du SOC */}
             <div className="space-y-1">
-              <div className="px-3 py-1 text-[8px] font-bold text-[#94A3B8]/60 uppercase tracking-widest">
+              <div className="px-3 py-1 text-[8px] font-mono font-bold text-slate-400 uppercase tracking-widest">
                 Configuration du SOC
               </div>
-              <div className="space-y-1 mt-1">
+              <div className="space-y-1.5 mt-1">
                 <button
                   onClick={() => { setActiveTab("deployment"); setSidebarOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2 rounded-xl transition font-semibold border ${activeTab === "deployment" ? "bg-[#1A2542] border-white/5 text-white shadow-sm" : "border-transparent text-[#94A3B8] hover:bg-[#1A2542] hover:text-white"}`}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition border cursor-pointer group ${
+                    activeTab === "deployment" 
+                      ? "bg-slate-700/15 border-slate-700/35 text-white shadow-[0_0_12px_rgba(255,255,255,0.02)]" 
+                      : "border-transparent text-[#94A3B8] hover:text-white hover:bg-[#1A2542]"
+                  }`}
                 >
-                  <Settings className="w-4 h-4 text-[#94A3B8] shrink-0" />
-                  <span>FLUX DE SYNCHRO AGENTS</span>
+                  <div className="flex items-center gap-2.5 truncate">
+                    <Settings className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 group-hover:scale-110 ${activeTab === "deployment" ? "text-slate-300" : "text-slate-400 group-hover:text-white"}`} />
+                    <span className="font-bold tracking-tight text-[11px] truncate whitespace-nowrap">SYNCHRO AGENTS</span>
+                  </div>
                 </button>
 
                 <button
                   onClick={() => { setActiveTab("admins"); setSidebarOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2 rounded-xl transition font-semibold border ${activeTab === "admins" ? "bg-[#1A2542] border-white/5 text-white shadow-sm" : "border-transparent text-[#94A3B8] hover:bg-[#1A2542] hover:text-white"}`}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition border cursor-pointer group ${
+                    activeTab === "admins" 
+                      ? "bg-[#3B82F6]/10 border-[#3B82F6]/35 text-white shadow-[0_0_12px_rgba(59,130,246,0.08)]" 
+                      : "border-transparent text-[#94A3B8] hover:text-white hover:bg-[#1A2542]"
+                  }`}
                 >
-                  <KeyRound className="w-4 h-4 text-[#3B82F6] shrink-0" />
-                  <span>CONTRÔLE DES ACCÈS</span>
+                  <div className="flex items-center gap-2.5 truncate">
+                    <KeyRound className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 group-hover:scale-110 ${activeTab === "admins" ? "text-[#3B82F6]" : "text-slate-400 group-hover:text-white"}`} />
+                    <span className="font-bold tracking-tight text-[11px] truncate whitespace-nowrap">CONTRÔLE ACCÈS</span>
+                  </div>
                 </button>
               </div>
             </div>
 
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl transition font-semibold text-[#EF4444] hover:bg-[#EF4444]/10 hover:text-rose-400 border border-transparent hover:border-[#EF4444]/25 mt-6 cursor-pointer"
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl transition font-bold text-[#EF4444] hover:bg-[#EF4444]/10 hover:text-red-400 border border-transparent hover:border-[#EF4444]/25 mt-6 cursor-pointer text-[11px]"
               title="Déconnecter la session centrale de surveillance"
             >
               <LogOut className="w-4 h-4 shrink-0" />
@@ -709,6 +766,8 @@ export default function App() {
                   threats={threats}
                   agents={agents}
                   mobileSignals={mobileSignals}
+                  complaints={complaints}
+                  scams={scams}
                   onTriggerFlashUpdate={handleTriggerFlashUpdate}
                   onRefreshData={() => fetchAllData(true)}
                 />
@@ -727,6 +786,19 @@ export default function App() {
                 />
               )}
 
+              {activeTab === "forensics" && (
+                <ForensicsTab 
+                  forensicsData={forensicsData}
+                  threats={threats}
+                  campaigns={campaigns}
+                  agents={agents}
+                  mobileSignals={mobileSignals}
+                  complaints={complaints}
+                  scams={scams}
+                  onRefreshData={() => fetchAllData(true)}
+                />
+              )}
+
               {activeTab === "deployment" && (
                 <DeploymentTab 
                   agents={agents} 
@@ -737,16 +809,7 @@ export default function App() {
                 />
               )}
 
-              {activeTab === "forensics" && (
-                <ForensicsTab 
-                  forensicsData={forensicsData} 
-                  threats={threats} 
-                  campaigns={campaigns}
-                  agents={agents} 
-                  mobileSignals={mobileSignals}
-                  onRefreshData={() => fetchAllData(true)}
-                />
-              )}
+
 
               {activeTab === "admins" && (
                 <AdminsTab 
