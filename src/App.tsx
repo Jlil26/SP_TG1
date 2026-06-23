@@ -63,6 +63,8 @@ export default function App() {
     flashUpdateStatus: "Idle"
   });
   const [scrapedArticles, setScrapedArticles] = useState<ScrapedArticle[]>([]);
+  const [lastScrapLogs, setLastScrapLogs] = useState<string[]>([]);
+  const [lastScrapSummary, setLastScrapSummary] = useState<any>(null);
   const [forensicsData, setForensicsData] = useState<ForensicsData | null>(null);
   const [deletedArticleIds, setDeletedArticleIds] = useState<string[]>(() => {
     try {
@@ -359,11 +361,15 @@ export default function App() {
   // Trigger manual scrap scan refresh
   const triggerScrapeRefresh = async () => {
     setFetchingFeed(true);
+    setLastScrapLogs([]);
+    setLastScrapSummary(null);
     try {
       const response = await fetch("/api/threats/scrape-feeds");
       const obj = await response.json();
       if (obj.success) {
         setScrapedArticles(obj.data);
+        if (obj.logs) setLastScrapLogs(obj.logs);
+        if (obj.summary) setLastScrapSummary(obj.summary);
       }
     } catch (e) {
       console.error(e);
@@ -783,6 +789,8 @@ export default function App() {
                   onDeleteArticle={handleDeleteArticle}
                   totalDeletedCount={deletedArticleIds.length}
                   onResetDeleted={handleResetDeletedArticles}
+                  lastScrapLogs={lastScrapLogs}
+                  lastScrapSummary={lastScrapSummary}
                 />
               )}
 

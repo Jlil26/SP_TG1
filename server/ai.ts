@@ -50,6 +50,7 @@ export interface AlertAnalysisResult {
 
 export interface ScraperAnalysisResult {
   isThreatNews: boolean;
+  hasSignatures: boolean;
   detectedMaliciousIndicators: Array<{
     type: "domain" | "ip" | "email" | "phone" | "text_pattern";
     valeur: string;
@@ -58,6 +59,7 @@ export interface ScraperAnalysisResult {
   }>;
   category: string;
   togoRelevance: string;
+  briefing: string;
 }
 
 export interface URLSandboxAnalysisResult {
@@ -233,7 +235,13 @@ export async function analyzeScrapedArticle(title: string, body: string): Promis
   }
 
   try {
-    const prompt = `Analyze this cybersecurity article scraped from West African security authorities (Togo CERT.tg or ANCY). Inspect if it describes active cyberthreats, newly observed phishing URLs/IPs, massive malware waves, or banking malware. Extract indicators of compromise (IoC) so they can be pushed as a signature to mobile agents in Togo:
+    const prompt = `Analyze this security or governmental news article/announcement scraped from Togo's cyber authorities (CERT.TG or ANCY). 
+    Inspect if it describes active cyberthreats, phishing links, phone numbers used by fraudsters, malware waves, or general digital hygiene news, corporate partnerships, or official meetings.
+    
+    CRITICAL: You MUST analyze and process absolutely EVERY article. 
+    - If the article describes an active cyberthreat with actionable signatures (phone numbers, malicious domains, fraudulent keywords), set hasSignatures to true and populate detectedMaliciousIndicators.
+    - If the article is general official news/meetings/events and DOES NOT contain active scammer signatures, set hasSignatures to false, return an empty detectedMaliciousIndicators array, but STILL write a clear, professional 1-2 sentence French summary/briefing under "briefing" explaining what the article is about. This proves that our exfiltration reads and understands the content.
+    
     ------
     TITLE: ${title}
     BODY: ${body}
@@ -243,29 +251,31 @@ export async function analyzeScrapedArticle(title: string, body: string): Promis
       model: "gemini-3.5-flash",
       contents: prompt,
       config: {
-        systemInstruction: "You are a threat detection intelligence system mapping warnings from Togo administrative cyber authorities (CERT.TG, ANCY) to mobile client signatures. Identify specific actionable indicators list.",
+        systemInstruction: "You are an expert West African Cyber Threat Intelligence system mapping announcements from Togo (CERT.TG, ANCY) to mobile/SOC client briefings and indicators. You must analyze every input and return a professional structured assessment in French.",
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            isThreatNews: { type: Type.BOOLEAN },
+            isThreatNews: { type: Type.BOOLEAN, description: "Whether this article is related to cybersecurity/digital security topics." },
+            hasSignatures: { type: Type.BOOLEAN, description: "Whether active scammer signatures (links, phone numbers) were identified in this article." },
             detectedMaliciousIndicators: {
               type: Type.ARRAY,
               items: {
                 type: Type.OBJECT,
                 properties: {
                   type: { type: Type.STRING, description: "domain, ip, email, phone, text_pattern" },
-                  valeur: { type: Type.STRING },
+                  valeur: { type: Type.STRING, description: "The extracted indicator value" },
                   severity: { type: Type.STRING, description: "Low, Medium, Critical" },
-                  description: { type: Type.STRING }
+                  description: { type: Type.STRING, description: "Short description of the threat context" }
                 },
                 required: ["type", "valeur", "severity", "description"]
               }
             },
-            category: { type: Type.STRING, description: "Phishing, Ransomware, Spam, Scam" },
-            togoRelevance: { type: Type.STRING, description: "Detailed local impact on Lomé, general populations or specific administration." }
+            category: { type: Type.STRING, description: "e.g., Phishing, Fraude Flooz/TMoney, Alerte Logiciel, Communiqué Officiel, Coopération, Formation" },
+            togoRelevance: { type: Type.STRING, description: "What this means for Togo (e.g. Lomé population impact, administration, or general security)." },
+            briefing: { type: Type.STRING, description: "A highly concise, professional 1-2 sentence summary/briefing in French explaining what the article is about." }
           },
-          required: ["isThreatNews", "detectedMaliciousIndicators", "category", "togoRelevance"]
+          required: ["isThreatNews", "hasSignatures", "detectedMaliciousIndicators", "category", "togoRelevance", "briefing"]
         }
       }
     });
@@ -275,7 +285,15 @@ export async function analyzeScrapedArticle(title: string, body: string): Promis
       throw new Error("Empty scraper response from Gemini");
     }
 
-    return JSON.parse(bodyText.trim());
+    const parsed = JSON.parse(bodyText.trim());
+    return {
+      isThreatNews: Boolean(parsed.isThreatNews),
+      hasSignatures: Boolean(parsed.hasSignatures),
+      detectedMaliciousIndicators: Array.isArray(parsed.detectedMaliciousIndicators) ? parsed.detectedMaliciousIndicators : [],
+      category: parsed.category || "Actualité",
+      togoRelevance: parsed.togoRelevance || "Veille de cybersécurité nationale.",
+      briefing: parsed.briefing || "Résumé indisponible."
+    };
 
   } catch (e) {
     console.error("Gemini Scraper Analysis failed. Running offline fallback.", e);
@@ -355,10 +373,12 @@ function simulateLocalScrapingAnalysis(title: string, body: string): ScraperAnal
   const indicators: ScraperAnalysisResult["detectedMaliciousIndicators"] = [];
   let category = "Actualités de Cybersécurité";
   let togoRelevance = "Concerne la veille générale de sécurité informatique en Afrique de l'Ouest.";
+  let briefing = `Analyse locale de l'article "${title}".`;
 
   if (normText.includes("bancaire") || normText.includes("credit")) {
     category = "Phishing Financier";
     togoRelevance = "Risque potentiel élevé d'usurpation d'adresses ou SMS pour les titulaires de comptes bancaires à Lomé.";
+    briefing = "Mise en garde contre des vagues de hameçonnage usurpant de grandes institutions bancaires togolaises.";
     indicators.push({
       type: "domain",
       valeur: "secured-atlantique-togo-check.net",
@@ -368,13 +388,21 @@ function simulateLocalScrapingAnalysis(title: string, body: string): ScraperAnal
   } else if (normText.includes("moov") || normText.includes("flooz") || normText.includes("tmoney") || normText.includes("togo cell")) {
     category = "Faux Transactions SMS / USSD";
     togoRelevance = "Impact immédiat sur les abonnés mobiles ruraux et urbains hors-murs.";
+    briefing = "Campagne frauduleuse par SMS usurpant Moov Flooz et Togocom Tmoney.";
     indicators.push({
       type: "phone",
       valeur: "+22899120485",
       severity: "Critical",
       description: "Auteur prolifique de SMS d'usurpation détecté."
     });
+  } else if (normText.includes("coopération") || normText.includes("visite") || normText.includes("formation") || normText.includes("partenariat") || normText.includes("séminaire")) {
+    category = "Communiqué Officiel";
+    togoRelevance = "Renforce les capacités institutionnelles de l'ANCY et de la cyber-protection nationale.";
+    briefing = "Annonce officielle concernant un événement de formation ou un partenariat bilatéral cyber au Togo.";
   } else {
+    category = "Note d'Information";
+    togoRelevance = "Sensibilisation générale de la population togolaise à l'hygiène informatique.";
+    briefing = "Recommandation d'usage pour la protection de la souveraineté numérique.";
     indicators.push({
       type: "domain",
       valeur: "togo-alert-update.org",
@@ -383,11 +411,15 @@ function simulateLocalScrapingAnalysis(title: string, body: string): ScraperAnal
     });
   }
 
+  const hasSignatures = indicators.length > 0;
+
   return {
     isThreatNews,
+    hasSignatures,
     detectedMaliciousIndicators: indicators,
     category,
-    togoRelevance
+    togoRelevance,
+    briefing
   };
 }
 

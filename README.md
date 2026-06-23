@@ -24,11 +24,14 @@ L'agent mobile s'installe via un binaire APK et protège l'usager sans nécessit
 * **Moteur d'Heuristique Comportementale (Privilège Offline)** : Si un expéditeur est inconnu, l'application évalue la structure sémantique en direct (recherche de l'appât du gain, de sentiment d'urgence ou d'usurpation d'autorité d'autres administrations togolaises). En cas de menace détectée, elle bloque temporairement et envoie une alerte.
 * **Gestion Nuancée des Contacts Connus** : Pour ne pas froisser les liens familiaux ou amicaux, si une signature malveillante est interceptée depuis un **contact enregistré**, l'application ne va pas accuser l'expéditeur mais guider l'utilisateur avec bienveillance (ex: avertir que le proche s'est fait pirater ou a relayé le message par inadvertance, conseiller de l'appeler pour le prévenir).
 * **Liste de Confiance (Liste Verte)** : L'usager peut ajouter un correspondant ou un groupe à sa Liste Verte pour désactiver l'analyse psychologique comportementale et éviter de faux signaux.
+* **Zone de Déclaration Citoyenne Directe (Nouveau!)** : Intégration d'un module de signalement citoyen. Tout utilisateur peut directement déclarer un appel vocal suspect ou un SMS malveillant reçu, spécifier la catégorie de cybermenace (Flooz/TMoney, cadeaux, chantage/menace, harcèlement) et décrire l'escroquerie.
+* **Alertes Vocales & Visuelles Éducatives (Nouveau!)** : En cas d'appel vocal suspect, l'agent affiche des avertissements vulgarisés et clairs en français pour guider le citoyen (ne pas décrocher, ne jamais effectuer de transfert Flooz/TMoney, préserver les codes secrets). Les écrans d'interception (Overlay) et de quarantaine sémantique adoptent une charte visuelle rouge sombre harmonisée (`#150404`).
 
 ### 💻 Le Tableau de bord d'Administration de Lomé (SOC)
 * **Cartographie en Temps Réel** : Visualise directement la provenance des signaux d'arnaques remontés par les téléphones sur une carte du Togo (Lomé, Sokodé, Kara, Atakpamé, Kpalimé, Dapaong, etc.).
-* **Téléphone Virtuel de Simulation** : Un onglet de supervision (Dashboard) intègre un smartphone de simulation interactif. Ce simulateur permet de tester le moteur de l'application et les alertes (contacts répertoriés vs numéros inconnus) directement depuis le navigateur sans nécessiter d'appareil ou d'APK physique.
+* **Téléphone Virtuel de Simulation** : Un onglet de supervision (Dashboard) intègre un smartphone de simulation interactif. Ce simulateur permet de tester le moteur de l'application, de simuler des SMS/WhatsApp suspects, de passer des appels frauduleux, et de tester la zone de déclaration citoyenne en direct.
 * **Threat Intelligence & Scraping** : Le back-end scrape en continu les communiqués des sites gouvernementaux officiels **CERT.TG** et **ANCY (ancy.gouv.tg)**. L'IA Gemini extrait de manière structurée les adjectifs, numéros et liens malveillants pour mettre à jour la base noire d'un seul clic.
+* **Inclusion Directe des Déclarations** : Les plaintes et déclarations soumises par les citoyens via le module de déclaration alimentent instantanément le registre de conformité et l'analyse judiciaire (Forensics) du SOC de Lomé.
 
 ---
 

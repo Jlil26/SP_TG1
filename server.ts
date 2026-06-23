@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { dbManager } from "./serveur_dashboard_react/gestionnaire_base_donnees";
 import { analyzeAlertText, analyzeURLWithAI } from "./serveur_dashboard_react/analyseur_ia_gemini";
@@ -11,6 +12,13 @@ async function startServer() {
 
   // Middleware
   app.use(express.json());
+
+  // Ensure scraped_pdfs directory exists and serve PDF files statically
+  const pdfDir = path.join(process.cwd(), "scraped_pdfs");
+  if (!fs.existsSync(pdfDir)) {
+    fs.mkdirSync(pdfDir, { recursive: true });
+  }
+  app.use("/api/pdfs", express.static(pdfDir));
 
   // Log all request routes for clear administration observability
   app.use((req, res, next) => {
@@ -763,8 +771,14 @@ async function startServer() {
   // 6. Threat Intel Automated Exfiltration APIs
   app.get("/api/threats/scrape-feeds", async (req, res) => {
     try {
-      const data = await scrapeGovernmentFeeds();
-      res.json({ success: true, count: data.length, data });
+      const result = await scrapeGovernmentFeeds();
+      res.json({ 
+        success: true, 
+        count: result.articles.length, 
+        summary: result.summary,
+        logs: result.logs,
+        data: result.articles 
+      });
     } catch (e: any) {
       res.status(500).json({ success: false, error: e.message });
     }

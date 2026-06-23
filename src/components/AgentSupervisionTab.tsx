@@ -1021,12 +1021,12 @@ export default function AgentSupervisionTab({
                   className={`absolute top-7 left-2 right-2 p-3 bg-slate-950/95 border rounded-xl text-[11px] text-white shadow-xl z-50 animate-bounce cursor-pointer ${
                     containsKnownSignature 
                       ? "border-red-500/40 shadow-red-500/5 hover:border-red-400/50" 
-                      : "border-amber-500/25 hover:border-amber-400/40"
+                      : "border-emerald-500/30 hover:border-emerald-400/50"
                   }`}
                   onClick={handleOpenAlertAndBlock}
                 >
                   <div className={`flex items-center gap-2 mb-1.5 font-mono text-[9px] tracking-wider font-bold ${
-                    containsKnownSignature ? "text-red-400" : "text-amber-400"
+                    containsKnownSignature ? "text-red-400" : "text-emerald-400"
                   }`}>
                     <Bell className="w-3 h-3 animate-pulse" />
                     <span>
@@ -1039,7 +1039,7 @@ export default function AgentSupervisionTab({
                   </div>
                   <div className="flex items-start gap-2">
                     <div className={`p-1 rounded shrink-0 ${
-                      containsKnownSignature ? "bg-red-500/10 text-red-400" : "bg-amber-500/10 text-amber-400"
+                      containsKnownSignature ? "bg-red-500/10 text-red-400" : "bg-emerald-500/10 text-emerald-400"
                     }`}>
                       <Mail className="w-3.5 h-3.5" />
                     </div>
@@ -1151,7 +1151,7 @@ export default function AgentSupervisionTab({
                         <span className="text-[7.5px] text-slate-400 font-mono block uppercase">
                           Message suspect intercepté :
                         </span>
-                        <p className="text-[9px] text-amber-200 leading-relaxed italic">
+                        <p className="text-[9px] text-slate-200 leading-relaxed italic">
                           &quot;{activeMessageText}&quot;
                         </p>
                       </div>
@@ -1175,13 +1175,13 @@ export default function AgentSupervisionTab({
                           </li>
                           {isGroupSource ? (
                             <li className="flex items-start gap-1.5 border-t border-red-900/10 pt-1.5 mt-1.5">
-                              <span className="text-amber-400 font-bold shrink-0">💡</span>
+                              <span className="text-emerald-400 font-bold shrink-0">💡</span>
                               <span>Quittez le groupe si des inconnus y partagent souvent des cadeaux ou des gains faciles.</span>
                             </li>
                           ) : isRegisteredContact ? (
                             <li className="flex items-start gap-1.5 border-t border-red-900/10 pt-1.5 mt-1.5">
-                              <span className="text-amber-400 font-bold shrink-0">📞</span>
-                              <span className="text-amber-200 font-bold">Appelez directement votre proche au téléphone pour l'avertir et vérifier.</span>
+                              <span className="text-emerald-400 font-bold shrink-0">📞</span>
+                              <span className="text-emerald-200 font-bold">Appelez directement votre proche au téléphone pour l'avertir et vérifier.</span>
                             </li>
                           ) : (
                             <li className="flex items-start gap-1.5 border-t border-red-900/10 pt-1.5 mt-1.5">
@@ -1241,7 +1241,7 @@ export default function AgentSupervisionTab({
                           <p className="text-[8.2px] text-slate-350 line-clamp-2 mt-1 leading-snug">
                             &quot;{activeMessageText}&quot;
                           </p>
-                          <div className="text-[7.2px] font-mono text-amber-500 font-black mt-2 text-right border-t border-white/5 pt-1 uppercase tracking-wide">
+                          <div className="text-[7.2px] font-mono text-emerald-400 font-black mt-2 text-right border-t border-white/5 pt-1 uppercase tracking-wide">
                             👉 Cliquez pour déverrouiller et sécuriser
                           </div>
                         </div>
@@ -1355,9 +1355,9 @@ export default function AgentSupervisionTab({
                        </p>
  
                        {/* NEW CALL COMPLAINT & REPORTING CORNER */}
-                       <div className="bg-amber-950/25 border border-amber-500/35 p-2.5 rounded-xl mt-2 space-y-1.5 text-left">
-                         <span className="text-[8px] font-mono font-bold text-amber-400 block tracking-wider uppercase">
-                           📞 DÉCLARATION DE CYBERMENACE
+                       <div className="bg-[#0B1226]/90 border border-emerald-500/30 p-2.5 rounded-xl mt-2 space-y-1.5 text-left">
+                         <span className="text-[8px] font-mono font-bold text-emerald-400 block tracking-wider uppercase">
+                           🚨 SIGNALER UN ABUS DIRECTEMENT
                          </span>
                          
                          <div className="flex gap-1">
@@ -1367,9 +1367,9 @@ export default function AgentSupervisionTab({
                                setSimMode("declaration");
                                setDeclarationStatusMsg("");
                              }}
-                             className="flex-1 py-1.5 px-2.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 text-amber-200 font-sans text-[8.5px] font-black uppercase tracking-wide rounded-lg transition text-center cursor-pointer shadow-md"
+                             className="flex-1 py-2 px-2.5 bg-emerald-600/15 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-100 font-sans text-[8.2px] font-bold tracking-wide rounded-lg transition text-center cursor-pointer shadow-md leading-normal"
                            >
-                             ✍️ ZONE DE DÉCLARATION D&apos;APPEL
+                             💬 Tu as reçu un appel d&apos;un escroc ? Signale-le directement ici.
                            </button>
                          </div>
                        </div>
@@ -1385,10 +1385,10 @@ export default function AgentSupervisionTab({
                 {phoneState === "receiving" && (
                   <div className="flex-1 flex flex-col justify-between z-10 pt-6 animate-pulse">
                     <div className="text-center my-auto space-y-3">
-                      <div className="w-12 h-12 rounded-full border-2 border-amber-500 border-t-transparent animate-spin mx-auto flex items-center justify-center">
-                        <Cpu className="w-5 h-5 text-amber-500" />
+                      <div className="w-12 h-12 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin mx-auto flex items-center justify-center">
+                        <Cpu className="w-5 h-5 text-emerald-500" />
                       </div>
-                      <h4 className="text-[10px] font-mono font-bold text-amber-500 uppercase tracking-widest text-center">
+                      <h4 className="text-[10px] font-mono font-bold text-emerald-500 uppercase tracking-widest text-center">
                         RECHERCHE DE PIÈGES EN COURS...
                       </h4>
                       <p className="text-[9px] text-slate-400 font-sans max-w-[180px] mx-auto leading-normal">
@@ -1454,7 +1454,7 @@ export default function AgentSupervisionTab({
                               : `Expéditeur : ${isRegisteredContact ? (registeredContacts[contactIndex]?.name || activeSender) : activeSender}`
                             }
                           </span>
-                          <p className="text-[9px] text-amber-200 leading-relaxed italic">
+                          <p className="text-[9px] text-slate-200 leading-relaxed italic">
                             &quot;{activeMessageText}&quot;
                           </p>
                         </div>
@@ -1479,13 +1479,13 @@ export default function AgentSupervisionTab({
                             </li>
                             {isGroupSource ? (
                               <li className="flex items-start gap-1.5 border-t border-red-900/10 pt-1.5 mt-1.5">
-                                <span className="text-amber-400 font-bold shrink-0">💡</span>
+                                <span className="text-emerald-400 font-bold shrink-0">💡</span>
                                 <span>Quittez le groupe si des inconnus y partagent souvent des cadeaux ou des gains faciles.</span>
                               </li>
                             ) : isRegisteredContact ? (
                               <li className="flex items-start gap-1.5 border-t border-red-900/10 pt-1.5 mt-1.5">
-                                <span className="text-amber-400 font-bold shrink-0">📞</span>
-                                <span className="text-amber-200 font-bold">Appelez directement votre ami par téléphone pour l'avertir et vérifier si c'est bien lui.</span>
+                                <span className="text-emerald-400 font-bold shrink-0">📞</span>
+                                <span className="text-emerald-200 font-bold">Appelez directement votre ami par téléphone pour l'avertir et vérifier si c'est bien lui.</span>
                               </li>
                             ) : (
                               <li className="flex items-start gap-1.5 border-t border-red-900/10 pt-1.5 mt-1.5">
@@ -1538,7 +1538,7 @@ export default function AgentSupervisionTab({
                         
                         {/* Header bar styled like TitleBar */}
                         <div className="bg-[#1D2B4A]/65 border border-white/5 p-2 rounded-xl flex items-center gap-2">
-                          <FileText className="w-4 h-4 text-amber-500 shrink-0" />
+                          <FileText className="w-4 h-4 text-emerald-400 shrink-0" />
                           <div className="leading-tight">
                             <h4 className="font-bold text-slate-100 font-mono text-[9px] tracking-wide uppercase">
                               PORTAIL CITOYEN DE SIGNALEMENT
@@ -1696,7 +1696,7 @@ export default function AgentSupervisionTab({
                       setPhoneState("dashboard");
                       addLog("🔒 Téléphone configuré : Éteint / Verrouillé (Mode Veille).", "info");
                     }}
-                    className={`py-1.5 px-2 rounded-lg text-[8px] border font-bold font-mono transition duration-200 cursor-pointer text-center select-none ${phoneLocked ? "bg-amber-500/15 text-amber-400 border-amber-500/35" : "bg-transparent text-slate-500 border-white/5 hover:text-slate-350"}`}
+                    className={`py-1.5 px-2 rounded-lg text-[8px] border font-bold font-mono transition duration-200 cursor-pointer text-center select-none ${phoneLocked ? "bg-slate-800/50 text-slate-200 border-slate-600/50" : "bg-transparent text-slate-500 border-white/5 hover:text-slate-350"}`}
                   >
                     🔒 VERROUILLÉ
                   </button>
@@ -1723,9 +1723,9 @@ export default function AgentSupervisionTab({
                     setPhoneState("declarations");
                     setDeclarationStatusMsg("");
                   }}
-                  className={`py-1 rounded-lg text-[8px] font-bold transition flex items-center justify-center gap-1 cursor-pointer select-none ${simMode === "declaration" ? "bg-amber-600 text-white" : "text-slate-400 hover:text-white bg-transparent border-0"}`}
+                  className={`py-1 rounded-lg text-[8px] font-bold transition flex items-center justify-center gap-1 cursor-pointer select-none ${simMode === "declaration" ? "bg-emerald-600 text-white" : "text-slate-400 hover:text-white bg-transparent border-0"}`}
                 >
-                  ✍️ DÉCLARER
+                  ✍️ SIGNALER
                 </button>
               </div>
 
@@ -1792,8 +1792,8 @@ export default function AgentSupervisionTab({
                           ✅ Ce groupe est dans votre LISTE VERTE. Les alertes de détection de manipulation en direct y sont désactivées.
                         </span>
                       ) : (
-                        <span className="text-[7.5px] text-amber-500 block pt-1 font-sans">
-                          ⚠️ Groupe absent de votre Liste Verte. Vos défenses analyseront d&apos;éventuelles techniques de manipulation en direct pour vous alerter.
+                        <span className="text-[7.5px] text-slate-400 block pt-1 font-sans">
+                          ℹ️ Groupe absent de votre Liste Verte. Vos défenses analyseront d&apos;éventuelles techniques de manipulation en direct pour vous alerter.
                         </span>
                       )}
                     </div>
@@ -1965,9 +1965,9 @@ export default function AgentSupervisionTab({
 
               {simMode === "declaration" && (
                 <div className="space-y-3 animate-fade-in text-left">
-                  <div className="bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-xl">
-                    <span className="text-[10px] font-bold text-amber-400 font-mono block uppercase">
-                      ✍️ ZONE DE DÉCLARATION DIRECTE
+                  <div className="bg-emerald-500/10 border border-emerald-500/20 p-2.5 rounded-xl">
+                    <span className="text-[10px] font-bold text-emerald-400 font-mono block uppercase">
+                      ✍️ SÉCURITÉ CITOYENNE : SIGNALER UN ABUS
                     </span>
                     <p className="text-[9px] text-slate-300 leading-normal mt-1">
                       Signalez un appel frauduleux ou une tentative d&apos;arnaque reçue au Togo. Votre déclaration alimente en temps réel la base de signatures de Lomé Sûre.
@@ -1987,7 +1987,7 @@ export default function AgentSupervisionTab({
                           setPhoneState("declarations");
                         }}
                         placeholder="Ex: +228 92 88 12 34 ou Nom"
-                        className="w-full bg-[#0B1020] border border-white/10 text-[10px] p-2 rounded font-mono text-white focus:outline-none focus:border-amber-500"
+                        className="w-full bg-[#0B1020] border border-white/10 text-[10px] p-2 rounded font-mono text-white focus:outline-none focus:border-emerald-500"
                       />
                     </div>
 
@@ -2023,7 +2023,7 @@ export default function AgentSupervisionTab({
                         }}
                         rows={3}
                         placeholder="Qu'est-ce que l'arnaqueur vous a raconté ?"
-                        className="w-full bg-[#0B1020] border border-white/10 text-[10px] p-2 rounded text-slate-200 resize-none leading-normal focus:outline-none focus:border-amber-500"
+                        className="w-full bg-[#0B1020] border border-white/10 text-[10px] p-2 rounded text-slate-200 resize-none leading-normal focus:outline-none focus:border-emerald-500"
                       />
                     </div>
 
@@ -2064,9 +2064,9 @@ export default function AgentSupervisionTab({
                           setIsSubmittingDeclaration(false);
                         }
                       }}
-                      className="w-full py-2 bg-amber-500 hover:bg-amber-650 disabled:bg-slate-800 disabled:text-slate-500 font-mono text-[9px] font-black text-white rounded-xl uppercase transition tracking-wider flex items-center justify-center gap-1 cursor-pointer shadow-lg shadow-amber-550/10"
+                      className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-500 font-mono text-[9px] font-black text-white rounded-xl uppercase transition tracking-wider flex items-center justify-center gap-1 cursor-pointer shadow-lg shadow-emerald-950/15"
                     >
-                      {isSubmittingDeclaration ? "ENVOI EN COURS..." : "🚨 SOUMETTRE LA DÉCLARATION"}
+                      {isSubmittingDeclaration ? "ENVOI EN COURS..." : "🚨 SOUMETTRE LE SIGNALEMENT"}
                     </button>
                   </div>
                 </div>

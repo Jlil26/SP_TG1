@@ -57,8 +57,11 @@ export interface ScrapedArticle {
   snippet: string;
   fullText: string;
   processed: boolean;
+  contentHash?: string;
+  pdfUrl?: string | null;
   analysis?: {
     isThreatNews: boolean;
+    hasSignatures?: boolean;
     detectedMaliciousIndicators: Array<{
       type: "domain" | "ip" | "email" | "phone" | "text_pattern";
       valeur: string;
@@ -67,6 +70,7 @@ export interface ScrapedArticle {
     }>;
     category: string;
     togoRelevance: string;
+    briefing?: string;
   };
 }
 
