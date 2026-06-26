@@ -760,6 +760,8 @@ export default function App() {
                 <DashboardTab 
                   threats={threats} 
                   agents={agents} 
+                  mobileSignals={mobileSignals}
+                  complaints={complaints}
                   onQuickAddThreat={handleQuickAddThreat}
                   onResetToZero={handleResetToZero}
                   onLoadDemoData={handleLoadDemodata}

@@ -42,6 +42,11 @@ public class MainActivity extends AppCompatActivity {
     
     private Button btnSyncNow;
     private Button btnEnablePermission;
+    
+    // Declaration Area Views
+    private EditText etReportSender;
+    private EditText etReportText;
+    private Button btnSubmitReport;
 
     private AppDatabase db;
     private StatsReceiver statsReceiver;
@@ -91,6 +96,14 @@ public class MainActivity extends AppCompatActivity {
 
         btnSyncNow = findViewById(R.id.btnSyncNow);
         btnEnablePermission = findViewById(R.id.btnEnablePermission);
+
+        etReportSender = findViewById(R.id.etReportSender);
+        etReportText = findViewById(R.id.etReportText);
+        btnSubmitReport = findViewById(R.id.btnSubmitReport);
+
+        if (btnSubmitReport != null) {
+            btnSubmitReport.setOnClickListener(v -> submitManualReport());
+        }
 
         // Actionneur pour les paramètres d'URL cachés (icône engrenage)
         android.widget.ImageButton btnOpenSettings = findViewById(R.id.btnOpenSettings);
@@ -1389,5 +1402,82 @@ public class MainActivity extends AppCompatActivity {
     private int dpToPx(int dp) {
         float density = getResources().getDisplayMetrics().density;
         return Math.round((float) dp * density);
+    }
+
+    private void submitManualReport() {
+        final String sender = etReportSender.getText().toString().trim();
+        final String evidence = etReportText.getText().toString().trim();
+
+        if (android.text.TextUtils.isEmpty(sender)) {
+            android.widget.Toast.makeText(this, "Veuillez entrer le numéro suspect ou l'expéditeur.", android.widget.Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (android.text.TextUtils.isEmpty(evidence)) {
+            android.widget.Toast.makeText(this, "Veuillez décrire brièvement le message ou l'arnaque.", android.widget.Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        btnSubmitReport.setEnabled(false);
+        btnSubmitReport.setText("Envoi en cours...");
+
+        // Retrieve location from current Agent or default to "Lomé (Déclaration)"
+        SharedPreferences sPrefs = getSharedPreferences("kefyl_prefs", MODE_PRIVATE);
+        final String agentCity = sPrefs.getString("agent_registered_city", "Lomé (Déclaration)");
+        String deviceIdVal = android.provider.Settings.Secure.getString(
+                getContentResolver(), 
+                android.provider.Settings.Secure.ANDROID_ID
+        );
+        if (deviceIdVal == null || deviceIdVal.isEmpty()) {
+            deviceIdVal = "TG-MANUAL";
+        }
+        final String deviceId = deviceIdVal;
+
+        java.util.Map<String, Object> metaData = new java.util.HashMap<>();
+        metaData.put("platform", "Android (Manual)");
+        metaData.put("agent_name", sPrefs.getString("agent_registered_name", "Anonyme"));
+        metaData.put("submitted_at", String.valueOf(System.currentTimeMillis()));
+        final java.util.Map<String, Object> finalMetaData = metaData;
+
+        final com.kefyl.shield.api.ReportSubmission submission = new com.kefyl.shield.api.ReportSubmission(
+                deviceId,
+                sender,
+                evidence,
+                agentCity,
+                finalMetaData
+        );
+
+        java.util.concurrent.Executors.newSingleThreadExecutor().execute(() -> {
+            boolean success = false;
+            if (isNetworkAvailable()) {
+                try {
+                    retrofit2.Response<okhttp3.ResponseBody> response = com.kefyl.shield.api.RetrofitClient.getApiService(this)
+                            .submitReport(submission)
+                            .execute();
+                    if (response.isSuccessful()) {
+                        success = true;
+                    }
+                } catch (Exception e) {
+                    android.util.Log.e("MainActivity", "Erreur d'envoi du rapport : " + e.getMessage());
+                }
+            }
+
+            final boolean finalSuccess = success;
+            runOnUiThread(() -> {
+                btnSubmitReport.setEnabled(true);
+                btnSubmitReport.setText("ENVOYER LA DÉCLARATION AU SOC");
+                if (finalSuccess) {
+                    android.widget.Toast.makeText(this, "✅ Déclaration envoyée avec succès au SOC national !", android.widget.Toast.LENGTH_LONG).show();
+                    etReportSender.setText("");
+                    etReportText.setText("");
+                } else {
+                    // Save offline if network failed
+                    com.kefyl.shield.api.RetrofitClient.saveOfflineReport(this, submission);
+                    android.widget.Toast.makeText(this, "🛜 Hors ligne. Déclaration sauvegardée et mise en file d'attente !", android.widget.Toast.LENGTH_LONG).show();
+                    etReportSender.setText("");
+                    etReportText.setText("");
+                }
+            });
+        });
     }
 }

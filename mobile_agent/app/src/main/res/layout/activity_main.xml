@@ -466,6 +466,170 @@
             android:layout_marginBottom="24dp"
             android:fontFamily="sans-serif" />
 
+        <!-- REPORT / DECLARATION FORM SECTION -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="#1C1E24"
+            android:layout_marginBottom="24dp">
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="1.5dp"
+                app:cardCornerRadius="18.5dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#111827">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="📢"
+                            android:textSize="18sp"
+                            android:layout_marginEnd="8dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="DÉCLARATION CITOYENNE DIRECTE"
+                            android:textColor="#3B82F6"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:fontFamily="monospace"
+                            android:letterSpacing="0.05" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Signalez les numéros ou messages frauduleux pour alerter l'ensemble de la population togolaise en temps réel."
+                        android:textColor="#94A3B8"
+                        android:textSize="11sp"
+                        android:layout_marginBottom="16dp"
+                        android:fontFamily="sans-serif"
+                        android:lineSpacingExtra="3dp" />
+
+                    <!-- Sender input label -->
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Numéro suspect ou Expéditeur :"
+                        android:textColor="#64748B"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif"
+                        android:layout_marginBottom="6dp" />
+
+                    <!-- Styled Input Container for Sender -->
+                    <androidx.cardview.widget.CardView
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        app:cardCornerRadius="10dp"
+                        app:cardElevation="0dp"
+                        app:cardBackgroundColor="#1C1E24"
+                        android:layout_marginBottom="12dp">
+
+                        <androidx.cardview.widget.CardView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_margin="1dp"
+                            app:cardCornerRadius="9dp"
+                            app:cardElevation="0dp"
+                            app:cardBackgroundColor="#0B0F14">
+
+                            <EditText
+                                android:id="@+id/etReportSender"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:background="@android:color/transparent"
+                                android:hint="+228 99 12 04 85 ou nom"
+                                android:textColorHint="#475569"
+                                android:textColor="#FFFFFF"
+                                android:textSize="13sp"
+                                android:fontFamily="monospace"
+                                android:paddingHorizontal="14dp"
+                                android:inputType="text"
+                                android:maxLines="1" />
+                        </androidx.cardview.widget.CardView>
+                    </androidx.cardview.widget.CardView>
+
+                    <!-- Content input label -->
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Détails du message reçu ou Motif de l'arnaque :"
+                        android:textColor="#64748B"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif"
+                        android:layout_marginBottom="6dp" />
+
+                    <!-- Styled Input Container for Content -->
+                    <androidx.cardview.widget.CardView
+                        android:layout_width="match_parent"
+                        android:layout_height="96dp"
+                        app:cardCornerRadius="10dp"
+                        app:cardElevation="0dp"
+                        app:cardBackgroundColor="#1C1E24"
+                        android:layout_marginBottom="16dp">
+
+                        <androidx.cardview.widget.CardView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_margin="1dp"
+                            app:cardCornerRadius="9dp"
+                            app:cardElevation="0dp"
+                            app:cardBackgroundColor="#0B0F14">
+
+                            <EditText
+                                android:id="@+id/etReportText"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:background="@android:color/transparent"
+                                android:hint="Ex: Reçu SMS demandant de rappeler pour gains Moov Money..."
+                                android:textColorHint="#475569"
+                                android:textColor="#FFFFFF"
+                                android:textSize="12sp"
+                                android:padding="12dp"
+                                android:gravity="top|start"
+                                android:inputType="textMultiLine"
+                                android:scrollbars="vertical" />
+                        </androidx.cardview.widget.CardView>
+                    </androidx.cardview.widget.CardView>
+
+                    <!-- Submit Button -->
+                    <Button
+                        android:id="@+id/btnSubmitReport"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:text="ENVOYER LA DÉCLARATION AU SOC"
+                        android:backgroundTint="#00C896"
+                        android:textColor="#FFFFFF"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-black"
+                        android:letterSpacing="0.05"
+                        app:cornerRadius="12dp" />
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+        </androidx.cardview.widget.CardView>
+
         <!-- Footer status -->
         <TextView
             android:id="@+id/tvLastUpdate"

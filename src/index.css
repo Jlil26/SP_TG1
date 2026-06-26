@@ -1,10 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-display: "Inter", var(--font-sans);
-  --font-mono: "Inter", var(--font-sans);
+  --font-display: "Space Grotesk", var(--font-sans);
+  --font-mono: "JetBrains Mono", monospace;
 }
 
 :root {
@@ -28,15 +28,23 @@
   body {
     background-color: #040814 !important;
     color: #F1F5F9 !important;
-    font-family: "Inter", sans-serif !important;
+    font-family: var(--font-sans) !important;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 }
 
-/* Force global uniform typography across everything */
-* {
-  font-family: "Inter", sans-serif !important;
+/* Force global uniform typography across everything, allowing display and mono overrides */
+body, button, input, select, textarea {
+  font-family: var(--font-sans) !important;
+}
+
+.font-display {
+  font-family: var(--font-display) !important;
+}
+
+.font-mono {
+  font-family: var(--font-mono) !important;
 }
 
 /* Base resets & extreme contrast protection */
