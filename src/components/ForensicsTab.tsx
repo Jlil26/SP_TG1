@@ -15,6 +15,8 @@ import {
   Link as LinkIcon,
   Check,
   Smartphone,
+  ShieldAlert,
+  Radio,
   X,
   Eye
 } from "lucide-react";
@@ -1002,7 +1004,7 @@ Cyber Expert Certifié - SOC ANCY - République Togolaise.
                                       title="Valider et bloquer à l'échelle nationale"
                                       className="px-2 py-1 bg-red-650 hover:bg-red-600 text-white rounded text-[9px] font-mono font-bold uppercase tracking-wide flex items-center gap-1 cursor-pointer transition shadow"
                                     >
-                                      🚨 Bloquer
+                                      <ShieldAlert className="w-3.5 h-3.5 text-white" /> Bloquer
                                     </button>
                                     <button
                                       type="button"
@@ -1010,7 +1012,7 @@ Cyber Expert Certifié - SOC ANCY - République Togolaise.
                                       title="Classer comme faux positif"
                                       className="px-2 py-1 bg-[#121A2F]/80 hover:bg-[#1E293B] border border-white/5 text-slate-300 rounded text-[9px] font-mono font-bold uppercase tracking-wide flex items-center gap-1 cursor-pointer transition"
                                     >
-                                      ⚪ Classer RAS
+                                      Classer RAS
                                     </button>
                                   </>
                                 )}
@@ -1020,9 +1022,9 @@ Cyber Expert Certifié - SOC ANCY - République Togolaise.
                                     type="button"
                                     onClick={() => handleTriggerMassSensitization(c.phoneNumber)}
                                     title="Déclencher de toute urgence une campagne de sensibilisation massive (SMS/Moov/Togo)"
-                                    className="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-black font-mono font-bold uppercase text-[9px] rounded flex items-center gap-0.5 cursor-pointer shadow-lg animate-bounce"
+                                    className="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-black font-mono font-bold uppercase text-[9px] rounded flex items-center gap-1 cursor-pointer shadow-lg animate-bounce"
                                   >
-                                    📢 Sensibiliser
+                                    <Radio className="w-3.5 h-3.5 text-black shrink-0 animate-pulse" /> Sensibiliser
                                   </button>
                                 )}
 
@@ -1048,7 +1050,7 @@ Cyber Expert Certifié - SOC ANCY - République Togolaise.
               <div className="mt-6 border-t border-white/5 pt-5">
                 <div className="flex items-center justify-between pb-2">
                   <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest block font-mono">
-                    📡 Console de Sensibilisation Publique Massive (Broadcasts ANCY)
+                    <Radio className="w-3.5 h-3.5 text-slate-400 inline-block mr-1 align-middle animate-pulse" /> Console de Sensibilisation Publique Massive (Broadcasts ANCY)
                   </span>
                   <span className="text-[8px] font-mono text-emerald-405 font-bold uppercase bg-emerald-500/10 px-2 py-0.5 rounded leading-none">
                     Liaison Moov-Togocom Active
@@ -1057,7 +1059,7 @@ Cyber Expert Certifié - SOC ANCY - République Togolaise.
                 <div className="bg-black/90 p-4 rounded-xl border border-white/5 h-28 overflow-y-auto font-mono text-[9.5px] leading-relaxed text-slate-300 space-y-1.5">
                   {sensitizationLogsArr.length === 0 ? (
                     <p className="text-slate-500 italic p-1">
-                      🛰️ Aucun broadcast de sensibilisation n&apos;est actuellement diffusé. Si le même numéro d&apos;arnaqueur réapparaît dans plusieurs plaintes d&apos;utilisateurs différents, un bouton d&apos;urgence du SOC &quot;Sensibiliser&quot; s&apos;activera pour diffuser l&apos;alerte SOS.
+                      Aucun broadcast de sensibilisation n&apos;est actuellement diffusé. Si le même numéro d&apos;arnaqueur réapparaît dans plusieurs plaintes d&apos;utilisateurs différents, un bouton d&apos;urgence du SOC &quot;Sensibiliser&quot; s&apos;activera pour diffuser l&apos;alerte SOS.
                     </p>
                   ) : (
                     sensitizationLogsArr.map((logStr, idx) => (
@@ -1208,7 +1210,7 @@ Cyber Expert Certifié - SOC ANCY - République Togolaise.
                           Modifier le Statut d&apos;Alerte
                         </span>
                         <span className="text-[9px] font-bold text-white font-mono bg-white/5 px-2 py-0.5 rounded uppercase">
-                          {(signalStatuses[selectedHistoryAlert.id] || "pending") === "approved" ? "🟢 Signé" : (signalStatuses[selectedHistoryAlert.id] || "pending") === "false_positive" ? "⚪ Faux Positif" : "🟡 En attente"}
+                          {(signalStatuses[selectedHistoryAlert.id] || "pending") === "approved" ? "Signé" : (signalStatuses[selectedHistoryAlert.id] || "pending") === "false_positive" ? "Faux Positif" : "En attente"}
                         </span>
                       </div>
                       
@@ -1222,7 +1224,7 @@ Cyber Expert Certifié - SOC ANCY - République Togolaise.
                               : "bg-[#121A2F]/50 text-slate-400 border-white/5 hover:text-white hover:bg-slate-800"
                           }`}
                         >
-                          <span>🟡</span>
+                          <AlertOctagon className="w-4 h-4 text-amber-500" />
                           <span>En attente</span>
                         </button>
 
@@ -1235,7 +1237,7 @@ Cyber Expert Certifié - SOC ANCY - République Togolaise.
                               : "bg-[#121A2F]/50 text-slate-400 border-white/5 hover:text-white hover:bg-slate-800"
                           }`}
                         >
-                          <span>⚪</span>
+                          <X className="w-4 h-4 text-slate-400" />
                           <span>Faux Positif</span>
                         </button>
 
@@ -1248,8 +1250,8 @@ Cyber Expert Certifié - SOC ANCY - République Togolaise.
                               : "bg-[#121A2F]/50 text-slate-400 border-white/5 hover:text-white hover:bg-slate-800"
                           }`}
                         >
-                          <span>🟢</span>
-                          <span>Valider / Approuvé</span>
+                          <Check className="w-4 h-4 text-emerald-400" />
+                          <span>Approuvé</span>
                         </button>
                       </div>
                     </div>

@@ -294,12 +294,12 @@ public class MainActivity extends AppCompatActivity {
             int count = isFirstSyncDone ? db.signatureDao().getCount() : 0;
             runOnUiThread(() -> {
                 tvSignaturesCount.setText(String.valueOf(count));
-                if (!isFirstSyncDone || count == 0) {
-                    btnSyncNow.setText("🔴 SÉCURITÉ INACTIVE\n(Touchez ici pour activer la protection)");
-                    btnSyncNow.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFEF4444));
+                if (!isFirstSyncDone) {
+                    btnSyncNow.setText("🔄 SYNCHRONISATION REQUISE\n(Appuyez pour synchroniser)");
+                    btnSyncNow.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF59E0B)); // Amber
                 } else {
-                    btnSyncNow.setText("🟢 PROTECTION ACTIVÉE ET SÛRE\n(Appuyez pour vérifier à nouveau)");
-                    btnSyncNow.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFF00C896));
+                    btnSyncNow.setText("🟢 SURVEILLANCE ACTIVE ET PROTÉGÉE\n(Appuyez pour mettre à jour la base)");
+                    btnSyncNow.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFF00C896)); // Green emerald
                 }
             });
         });
@@ -1117,32 +1117,33 @@ public class MainActivity extends AppCompatActivity {
         etPhone.setLayoutParams(lpPhone);
         root.addView(etPhone);
 
-        // Field 3: City
+        // Field 3: Region/Zone
         android.widget.TextView cityLabel = new android.widget.TextView(this);
-        cityLabel.setText("Ville de déploiement (Localisation) :");
+        cityLabel.setText("Zone / Région de déploiement :");
         cityLabel.setTextColor(android.graphics.Color.parseColor("#CBD5E1"));
         cityLabel.setTextSize(11);
         cityLabel.setTypeface(android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.NORMAL));
         cityLabel.setPadding(0, 0, 0, dpToPx(4));
         root.addView(cityLabel);
 
-        final android.widget.EditText etCity = new android.widget.EditText(this);
-        etCity.setText("Lomé");
-        etCity.setTextColor(android.graphics.Color.WHITE);
-        etCity.setHintTextColor(android.graphics.Color.parseColor("#475569"));
-        etCity.setTextSize(12.5f);
-        etCity.setPadding(dpToPx(14), dpToPx(13), dpToPx(14), dpToPx(13));
+        final android.widget.Spinner spinnerRegion = new android.widget.Spinner(this);
+        final String[] regionsList = {"Maritime", "Plateaux", "Centrale", "Kara", "Savanes"};
+        android.widget.ArrayAdapter<String> adapter = new android.widget.ArrayAdapter<>(this, android.R.layout.simple_spinner_item, regionsList);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerRegion.setAdapter(adapter);
+        
         android.graphics.drawable.GradientDrawable etBg3 = new android.graphics.drawable.GradientDrawable();
         etBg3.setColor(android.graphics.Color.parseColor("#111827"));
         etBg3.setCornerRadius((float) dpToPx(12));
         etBg3.setStroke(dpToPx(1), android.graphics.Color.parseColor("#1E293B"));
-        etCity.setBackground(etBg3);
+        spinnerRegion.setBackground(etBg3);
+        spinnerRegion.setPadding(dpToPx(14), dpToPx(13), dpToPx(14), dpToPx(13));
         
         android.widget.LinearLayout.LayoutParams lpCity = new android.widget.LinearLayout.LayoutParams(
                 android.widget.LinearLayout.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
         lpCity.setMargins(0, 0, 0, dpToPx(14));
-        etCity.setLayoutParams(lpCity);
-        root.addView(etCity);
+        spinnerRegion.setLayoutParams(lpCity);
+        root.addView(spinnerRegion);
 
         // Optional Anonymity CheckBox (Reassuring default-on option)
         final android.widget.CheckBox cbAnonymous = new android.widget.CheckBox(this);
@@ -1170,7 +1171,7 @@ public class MainActivity extends AppCompatActivity {
         submitBtn.setOnClickListener(v -> {
             String nameVal = etName.getText().toString().trim();
             String phoneVal = etPhone.getText().toString().trim();
-            String cityVal = etCity.getText().toString().trim();
+            String cityVal = spinnerRegion.getSelectedItem().toString();
 
             if (nameVal.isEmpty() || nameVal.length() < 3) {
                 etName.setError("Le nom doit contenir au moins 3 caractères !");
@@ -1179,9 +1180,6 @@ public class MainActivity extends AppCompatActivity {
             if (phoneVal.isEmpty() || phoneVal.length() < 8) {
                 etPhone.setError("Le numéro de téléphone est obligatoire !");
                 return;
-            }
-            if (cityVal.isEmpty()) {
-                cityVal = "Lomé";
             }
 
             // Save in SharedPreferences
@@ -1195,11 +1193,9 @@ public class MainActivity extends AppCompatActivity {
             editor.apply();
 
             dialog.dismiss();
-            Toast.makeText(this, "Enrôlement en cours pour : " + nameVal, Toast.LENGTH_LONG).show();
-
-            // Force immediate first sync and dynamic registration
-            triggerBackgroundSync();
-            refreshUiStats();
+            
+            // Show the initial synchronization screen so user directly accesses a fully active protection state
+            showInitialSyncDialog(nameVal);
         });
 
         android.widget.LinearLayout.LayoutParams lpBtn = new android.widget.LinearLayout.LayoutParams(
@@ -1219,13 +1215,160 @@ public class MainActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    private void showSettingsDialog() {
-        final android.app.Dialog dialog = new android.app.Dialog(this);
-        dialog.requestWindowFeature(android.view.Window.FEATURE_NO_TITLE);
+    private void showInitialSyncDialog(final String agentName) {
+        final android.app.Dialog syncDialog = new android.app.Dialog(this);
+        syncDialog.requestWindowFeature(android.view.Window.FEATURE_NO_TITLE);
+        syncDialog.setCancelable(false); // They must sync to complete enrollment
 
         android.widget.LinearLayout root = new android.widget.LinearLayout(this);
         root.setOrientation(android.widget.LinearLayout.VERTICAL);
         root.setPadding(dpToPx(22), dpToPx(22), dpToPx(22), dpToPx(22));
+
+        android.graphics.drawable.GradientDrawable background = new android.graphics.drawable.GradientDrawable();
+        background.setColor(android.graphics.Color.parseColor("#0B0F14"));
+        background.setCornerRadius((float) dpToPx(18));
+        background.setStroke(dpToPx(1), android.graphics.Color.parseColor("#1E293B"));
+        root.setBackground(background);
+
+        // Header Title
+        android.widget.TextView titleTv = new android.widget.TextView(this);
+        titleTv.setText("🔄 INITIALISATION DU SYSTEME");
+        titleTv.setTextColor(android.graphics.Color.WHITE);
+        titleTv.setTextSize(14);
+        titleTv.setGravity(android.view.Gravity.CENTER_HORIZONTAL);
+        titleTv.setTypeface(android.graphics.Typeface.create("sans-serif-black", android.graphics.Typeface.BOLD));
+        titleTv.setPadding(0, 0, 0, dpToPx(8));
+        root.addView(titleTv);
+
+        // Subtitle explanation
+        android.widget.TextView descTv = new android.widget.TextView(this);
+        descTv.setText("Agent " + agentName + " enregistré avec succès !\n\nPour activer la protection nationale, veuillez synchroniser votre application afin de télécharger la base d'indicateurs d'attaques actifs au Togo.");
+        descTv.setTextColor(android.graphics.Color.parseColor("#94A3B8"));
+        descTv.setTextSize(11.5f);
+        descTv.setGravity(android.view.Gravity.CENTER_HORIZONTAL);
+        descTv.setLineSpacing(0f, 1.2f);
+        descTv.setPadding(0, 0, 0, dpToPx(24));
+        root.addView(descTv);
+
+        // Progress Text
+        final android.widget.TextView statusTv = new android.widget.TextView(this);
+        statusTv.setText("En attente d'initialisation...");
+        statusTv.setTextColor(android.graphics.Color.parseColor("#3B82F6"));
+        statusTv.setTextSize(11);
+        statusTv.setGravity(android.view.Gravity.CENTER_HORIZONTAL);
+        statusTv.setPadding(0, 0, 0, dpToPx(14));
+        root.addView(statusTv);
+
+        // Spinner / ProgressBar
+        final android.widget.ProgressBar progressBar = new android.widget.ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
+        progressBar.setIndeterminate(true);
+        progressBar.setVisibility(android.view.View.INVISIBLE);
+        android.widget.LinearLayout.LayoutParams progressLp = new android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+        progressLp.setMargins(0, 0, 0, dpToPx(18));
+        progressBar.setLayoutParams(progressLp);
+        root.addView(progressBar);
+
+        // Button Sync Action
+        final android.widget.Button actionBtn = new android.widget.Button(this);
+        actionBtn.setText("🔄 SYNCHRONISER L'APPLICATION");
+        android.graphics.drawable.GradientDrawable btnBg = new android.graphics.drawable.GradientDrawable();
+        btnBg.setColor(android.graphics.Color.parseColor("#00C896")); // Green emerald
+        btnBg.setCornerRadius((float) dpToPx(12));
+        actionBtn.setBackground(btnBg);
+        actionBtn.setTextColor(android.graphics.Color.WHITE);
+        actionBtn.setTypeface(android.graphics.Typeface.create("sans-serif-black", android.graphics.Typeface.BOLD));
+        actionBtn.setTextSize(12);
+
+        actionBtn.setOnClickListener(v -> {
+            actionBtn.setEnabled(false);
+            actionBtn.setText("Synchronisation...");
+            actionBtn.setBackgroundColor(android.graphics.Color.parseColor("#1E293B"));
+            progressBar.setVisibility(android.view.View.VISIBLE);
+            statusTv.setText("Connexion sécurisée au SOC de Lomé...");
+
+            // Trigger background sync with manual flag set to true
+            androidx.work.Data inputData = new androidx.work.Data.Builder()
+                    .putBoolean("is_manual_sync", true)
+                    .build();
+
+            OneTimeWorkRequest syncRequest = new OneTimeWorkRequest.Builder(SyncWorker.class)
+                    .setInputData(inputData)
+                    .build();
+            WorkManager.getInstance(MainActivity.this).enqueue(syncRequest);
+
+            WorkManager.getInstance(MainActivity.this)
+                    .getWorkInfoByIdLiveData(syncRequest.getId())
+                    .observe(MainActivity.this, workInfo -> {
+                        if (workInfo != null) {
+                            if (workInfo.getState() == androidx.work.WorkInfo.State.RUNNING) {
+                                statusTv.setText("Téléchargement de la base d'indicateurs de fraude...");
+                            } else if (workInfo.getState().isFinished()) {
+                                progressBar.setVisibility(android.view.View.INVISIBLE);
+                                SharedPreferences prefs = getSharedPreferences("kefyl_prefs", MODE_PRIVATE);
+                                boolean isDone = prefs.getBoolean("is_first_sync_done", false);
+                                if (isDone) {
+                                    statusTv.setText("✅ Synchronisation réussie avec succès !");
+                                    statusTv.setTextColor(android.graphics.Color.parseColor("#00C896"));
+                                    actionBtn.setText("ACCÉDER À L'INTERFACE");
+                                    actionBtn.setEnabled(true);
+                                    android.graphics.drawable.GradientDrawable doneBg = new android.graphics.drawable.GradientDrawable();
+                                    doneBg.setColor(android.graphics.Color.parseColor("#00C896"));
+                                    doneBg.setCornerRadius((float) dpToPx(12));
+                                    actionBtn.setBackground(doneBg);
+                                    
+                                    actionBtn.setOnClickListener(v2 -> {
+                                        syncDialog.dismiss();
+                                        refreshUiStats();
+                                    });
+                                } else {
+                                    statusTv.setText("❌ Échec de la synchronisation. Vérifiez l'adresse ou la connexion.");
+                                    statusTv.setTextColor(android.graphics.Color.RED);
+                                    actionBtn.setText("RÉESSAYER");
+                                    actionBtn.setEnabled(true);
+                                    android.graphics.drawable.GradientDrawable errBg = new android.graphics.drawable.GradientDrawable();
+                                    errBg.setColor(android.graphics.Color.parseColor("#EF4444"));
+                                    errBg.setCornerRadius((float) dpToPx(12));
+                                    actionBtn.setBackground(errBg);
+                                    
+                                    actionBtn.setOnClickListener(v3 -> {
+                                        // retry
+                                        actionBtn.setEnabled(false);
+                                        actionBtn.setText("Synchronisation...");
+                                        actionBtn.setBackgroundColor(android.graphics.Color.parseColor("#1E293B"));
+                                        progressBar.setVisibility(android.view.View.VISIBLE);
+                                        statusTv.setText("Connexion sécurisée au SOC de Lomé...");
+                                        WorkManager.getInstance(MainActivity.this).enqueue(syncRequest);
+                                    });
+                                }
+                            }
+                        }
+                    });
+        });
+
+        android.widget.LinearLayout.LayoutParams lpBtn = new android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT, dpToPx(48));
+        actionBtn.setLayoutParams(lpBtn);
+        root.addView(actionBtn);
+
+        syncDialog.setContentView(root);
+        if (syncDialog.getWindow() != null) {
+            syncDialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+            syncDialog.getWindow().setLayout(
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+        }
+        syncDialog.show();
+    }
+
+    private void showSettingsDialog() {
+        final android.app.Dialog dialog = new android.app.Dialog(this);
+        dialog.requestWindowFeature(android.view.Window.FEATURE_NO_TITLE);
+
+        final android.widget.LinearLayout root = new android.widget.LinearLayout(this);
+        root.setOrientation(android.widget.LinearLayout.VERTICAL);
+        root.setPadding(dpToPx(20), dpToPx(20), dpToPx(20), dpToPx(20));
 
         android.graphics.drawable.GradientDrawable background = new android.graphics.drawable.GradientDrawable();
         background.setColor(android.graphics.Color.parseColor("#0B0F14")); // Deep professional pitch black backgrounds
@@ -1233,32 +1376,79 @@ public class MainActivity extends AppCompatActivity {
         background.setStroke(dpToPx(1), android.graphics.Color.parseColor("#1E293B"));
         root.setBackground(background);
 
-        // Header Info
+        // Title Header
         android.widget.TextView titleTv = new android.widget.TextView(this);
-        titleTv.setText("⚙️ CONFIGURATION DU SERVEUR SOC");
-        titleTv.setTextColor(android.graphics.Color.parseColor("#3B82F6")); // Electric blue header
+        titleTv.setText("⚙️ CONTRÔLE DE SÉCURITÉ SP SENTINEL");
+        titleTv.setTextColor(android.graphics.Color.WHITE);
         titleTv.setTextSize(12);
         titleTv.setTypeface(android.graphics.Typeface.create("sans-serif-black", android.graphics.Typeface.BOLD));
         titleTv.setLetterSpacing(0.04f);
-        titleTv.setPadding(0, 0, 0, dpToPx(12));
+        titleTv.setPadding(0, 0, 0, dpToPx(14));
+        titleTv.setGravity(android.view.Gravity.CENTER_HORIZONTAL);
         root.addView(titleTv);
 
-        // Server Input Label
+        // TABS BUTTONS HEADER
+        android.widget.LinearLayout tabsLayout = new android.widget.LinearLayout(this);
+        tabsLayout.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+        android.widget.LinearLayout.LayoutParams tabsLp = new android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+        tabsLp.setMargins(0, 0, 0, dpToPx(16));
+        tabsLayout.setLayoutParams(tabsLp);
+
+        final android.widget.TextView tabConfig = new android.widget.TextView(this);
+        tabConfig.setText("⚙️ CONFIGURATION");
+        tabConfig.setTextColor(android.graphics.Color.WHITE);
+        tabConfig.setTextSize(10.5f);
+        tabConfig.setGravity(android.view.Gravity.CENTER);
+        tabConfig.setTypeface(android.graphics.Typeface.create("sans-serif-black", android.graphics.Typeface.BOLD));
+        android.widget.LinearLayout.LayoutParams tab1Lp = new android.widget.LinearLayout.LayoutParams(0, dpToPx(38), 1.0f);
+        tabConfig.setLayoutParams(tab1Lp);
+        tabConfig.setPadding(0, dpToPx(8), 0, dpToPx(8));
+
+        final android.widget.TextView tabStatus = new android.widget.TextView(this);
+        tabStatus.setText("🔄 SYNCHRONISATION");
+        tabStatus.setTextColor(android.graphics.Color.parseColor("#64748B"));
+        tabStatus.setTextSize(10.5f);
+        tabStatus.setGravity(android.view.Gravity.CENTER);
+        tabStatus.setTypeface(android.graphics.Typeface.create("sans-serif-black", android.graphics.Typeface.BOLD));
+        android.widget.LinearLayout.LayoutParams tab2Lp = new android.widget.LinearLayout.LayoutParams(0, dpToPx(38), 1.0f);
+        tabStatus.setLayoutParams(tab2Lp);
+        tabStatus.setPadding(0, dpToPx(8), 0, dpToPx(8));
+
+        // Background Drawables for active vs inactive tabs
+        final android.graphics.drawable.GradientDrawable activeTabBg = new android.graphics.drawable.GradientDrawable();
+        activeTabBg.setColor(android.graphics.Color.parseColor("#1E293B"));
+        activeTabBg.setCornerRadius((float) dpToPx(10));
+
+        final android.graphics.drawable.GradientDrawable inactiveTabBg = new android.graphics.drawable.GradientDrawable();
+        inactiveTabBg.setColor(android.graphics.Color.TRANSPARENT);
+
+        tabConfig.setBackground(activeTabBg);
+        tabStatus.setBackground(inactiveTabBg);
+
+        tabsLayout.addView(tabConfig);
+        tabsLayout.addView(tabStatus);
+        root.addView(tabsLayout);
+
+        // CONTENANT TAB 1: CONFIGURATION
+        final android.widget.LinearLayout layoutConfig = new android.widget.LinearLayout(this);
+        layoutConfig.setOrientation(android.widget.LinearLayout.VERTICAL);
+        layoutConfig.setVisibility(android.view.View.VISIBLE);
+
         android.widget.TextView labelTv = new android.widget.TextView(this);
-        labelTv.setText("Adresse URL de connexion au SOC national :");
+        labelTv.setText("Adresse de connexion au SOC national (Lomé) :");
         labelTv.setTextColor(android.graphics.Color.parseColor("#94A3B8"));
         labelTv.setTextSize(11);
         labelTv.setPadding(0, 0, 0, dpToPx(6));
-        root.addView(labelTv);
+        layoutConfig.addView(labelTv);
 
-        // Server Input
         final android.widget.EditText etIp = new android.widget.EditText(this);
         String currentIp = getSharedPreferences("kefyl_prefs", MODE_PRIVATE)
                 .getString("server_ip_address", "https://sp-sentinel-hq.onrender.com");
         etIp.setText(currentIp);
         etIp.setTextColor(android.graphics.Color.WHITE);
-        etIp.setTextSize(12.5f);
-        etIp.setPadding(dpToPx(14), dpToPx(13), dpToPx(14), dpToPx(13));
+        etIp.setTextSize(12);
+        etIp.setPadding(dpToPx(14), dpToPx(12), dpToPx(14), dpToPx(12));
         android.graphics.drawable.GradientDrawable etBg = new android.graphics.drawable.GradientDrawable();
         etBg.setColor(android.graphics.Color.parseColor("#111827"));
         etBg.setCornerRadius((float) dpToPx(12));
@@ -1267,110 +1457,267 @@ public class MainActivity extends AppCompatActivity {
         
         android.widget.LinearLayout.LayoutParams lp = new android.widget.LinearLayout.LayoutParams(
                 android.widget.LinearLayout.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
-        lp.setMargins(0, 0, 0, dpToPx(14));
+        lp.setMargins(0, 0, 0, dpToPx(12));
         etIp.setLayoutParams(lp);
-        root.addView(etIp);
+        layoutConfig.addView(etIp);
 
-        // Presets Layout for Easy Jury Testing (Local vs Prod toggles)
+        // Presets
         android.widget.LinearLayout presetsLayout = new android.widget.LinearLayout(this);
         presetsLayout.setOrientation(android.widget.LinearLayout.HORIZONTAL);
         android.widget.LinearLayout.LayoutParams presetsLp = new android.widget.LinearLayout.LayoutParams(
                 android.widget.LinearLayout.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
-        presetsLp.setMargins(0, 0, 0, dpToPx(18));
+        presetsLp.setMargins(0, 0, 0, dpToPx(14));
         presetsLayout.setLayoutParams(presetsLp);
 
-        // Prod button
         android.widget.Button prodBtn = new android.widget.Button(this);
         prodBtn.setText("PROD LIGNE");
-        prodBtn.setTextSize(10);
+        prodBtn.setTextSize(9.5f);
         prodBtn.setTextColor(android.graphics.Color.WHITE);
         android.graphics.drawable.GradientDrawable prodBg = new android.graphics.drawable.GradientDrawable();
-        prodBg.setColor(android.graphics.Color.parseColor("#00C896")); // Premium emerald Green
+        prodBg.setColor(android.graphics.Color.parseColor("#00C896"));
         prodBg.setCornerRadius((float) dpToPx(10));
         prodBtn.setBackground(prodBg);
-        android.widget.LinearLayout.LayoutParams prodLp = new android.widget.LinearLayout.LayoutParams(
-                0, dpToPx(38), 1.0f);
+        android.widget.LinearLayout.LayoutParams prodLp = new android.widget.LinearLayout.LayoutParams(0, dpToPx(38), 1.0f);
         prodLp.setMargins(0, 0, dpToPx(8), 0);
         prodBtn.setLayoutParams(prodLp);
         prodBtn.setTypeface(android.graphics.Typeface.create("sans-serif-black", android.graphics.Typeface.BOLD));
         prodBtn.setOnClickListener(v -> etIp.setText("https://sp-sentinel-hq.onrender.com"));
 
-        // Local button
         android.widget.Button localBtn = new android.widget.Button(this);
         localBtn.setText("TEST LOCAL");
-        localBtn.setTextSize(10);
+        localBtn.setTextSize(9.5f);
         localBtn.setTextColor(android.graphics.Color.WHITE);
         android.graphics.drawable.GradientDrawable localBg = new android.graphics.drawable.GradientDrawable();
-        localBg.setColor(android.graphics.Color.parseColor("#1B2434")); // Slate elegant grey-blue shape
+        localBg.setColor(android.graphics.Color.parseColor("#1B2434"));
         localBg.setCornerRadius((float) dpToPx(10));
         localBtn.setBackground(localBg);
-        android.widget.LinearLayout.LayoutParams localLp = new android.widget.LinearLayout.LayoutParams(
-                0, dpToPx(38), 1.0f);
+        android.widget.LinearLayout.LayoutParams localLp = new android.widget.LinearLayout.LayoutParams(0, dpToPx(38), 1.0f);
         localBtn.setLayoutParams(localLp);
         localBtn.setTypeface(android.graphics.Typeface.create("sans-serif-black", android.graphics.Typeface.BOLD));
-        localBtn.setOnClickListener(v -> etIp.setText("http://10.0.2.2:3000")); // Android emulator loopback IP for computer localhost:3000
+        localBtn.setOnClickListener(v -> etIp.setText("http://10.0.2.2:3000"));
 
         presetsLayout.addView(prodBtn);
         presetsLayout.addView(localBtn);
-        root.addView(presetsLayout);
+        layoutConfig.addView(presetsLayout);
 
-        // Save Button
+        // Save button
         android.widget.Button saveBtn = new android.widget.Button(this);
         saveBtn.setText("SAUVEGARDER L'ADRESSE");
         android.graphics.drawable.GradientDrawable btnBg = new android.graphics.drawable.GradientDrawable();
-        btnBg.setColor(android.graphics.Color.parseColor("#3B82F6")); // Electric blue button matching SOC
+        btnBg.setColor(android.graphics.Color.parseColor("#3B82F6"));
         btnBg.setCornerRadius((float) dpToPx(12));
         saveBtn.setBackground(btnBg);
         saveBtn.setTextColor(android.graphics.Color.WHITE);
         saveBtn.setTypeface(android.graphics.Typeface.create("sans-serif-black", android.graphics.Typeface.BOLD));
-        saveBtn.setTextSize(11.5f);
-
+        saveBtn.setTextSize(11);
+        android.widget.LinearLayout.LayoutParams saveBtnLp = new android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT, dpToPx(44));
+        saveBtnLp.setMargins(0, 0, 0, dpToPx(10));
+        saveBtn.setLayoutParams(saveBtnLp);
         saveBtn.setOnClickListener(v -> {
             String ipVal = etIp.getText().toString().trim();
             if (!android.text.TextUtils.isEmpty(ipVal)) {
                 RetrofitClient.saveServerIp(MainActivity.this, ipVal);
-                Toast.makeText(MainActivity.this, "Adresse serveur enregistrée : " + ipVal, Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Adresse serveur enregistrée !", Toast.LENGTH_SHORT).show();
                 dialog.dismiss();
                 triggerBackgroundSync();
             } else {
                 etIp.setError("Saisie requise !");
             }
         });
+        layoutConfig.addView(saveBtn);
 
-        android.widget.LinearLayout.LayoutParams saveBtnLp = new android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT, dpToPx(48));
-        saveBtn.setLayoutParams(saveBtnLp);
-        root.addView(saveBtn);
-
-        android.view.View spacer = new android.view.View(this);
-        android.widget.LinearLayout.LayoutParams spacerLp = new android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT, dpToPx(12));
-        spacer.setLayoutParams(spacerLp);
-        root.addView(spacer);
-
+        // Re-enrollment option
         android.widget.Button enrollBtn = new android.widget.Button(this);
         enrollBtn.setText("👤 RE-MODIFIER L'ENRÔLEMENT DE L'AGENT");
         android.graphics.drawable.GradientDrawable enrollBg = new android.graphics.drawable.GradientDrawable();
-        enrollBg.setColor(android.graphics.Color.parseColor("#1B2434")); 
+        enrollBg.setColor(android.graphics.Color.parseColor("#1B2434"));
         enrollBg.setCornerRadius((float) dpToPx(12));
         enrollBg.setStroke(dpToPx(1), android.graphics.Color.parseColor("#26354A"));
         enrollBtn.setBackground(enrollBg);
         enrollBtn.setTextColor(android.graphics.Color.parseColor("#3B82F6"));
         enrollBtn.setTypeface(android.graphics.Typeface.create("sans-serif-black", android.graphics.Typeface.BOLD));
-        enrollBtn.setTextSize(11);
-
+        enrollBtn.setTextSize(10.5f);
+        android.widget.LinearLayout.LayoutParams enrollBtnLp = new android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT, dpToPx(44));
+        enrollBtn.setLayoutParams(enrollBtnLp);
         enrollBtn.setOnClickListener(v -> {
             dialog.dismiss();
             showRegistrationFormDialog();
         });
+        layoutConfig.addView(enrollBtn);
 
-        android.widget.LinearLayout.LayoutParams enrollBtnLp = new android.widget.LinearLayout.LayoutParams(
+        root.addView(layoutConfig);
+
+        // CONTENANT TAB 2: SYNCHRONISATION STATUS
+        final android.widget.LinearLayout layoutSync = new android.widget.LinearLayout(this);
+        layoutSync.setOrientation(android.widget.LinearLayout.VERTICAL);
+        layoutSync.setVisibility(android.view.View.GONE);
+
+        // Identity card
+        android.widget.LinearLayout idCard = new android.widget.LinearLayout(this);
+        idCard.setOrientation(android.widget.LinearLayout.VERTICAL);
+        idCard.setPadding(dpToPx(14), dpToPx(14), dpToPx(14), dpToPx(14));
+        android.graphics.drawable.GradientDrawable cardBg = new android.graphics.drawable.GradientDrawable();
+        cardBg.setColor(android.graphics.Color.parseColor("#111827"));
+        cardBg.setCornerRadius((float) dpToPx(12));
+        cardBg.setStroke(dpToPx(1), android.graphics.Color.parseColor("#1E293B"));
+        idCard.setBackground(cardBg);
+        
+        android.widget.LinearLayout.LayoutParams idCardLp = new android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+        idCardLp.setMargins(0, 0, 0, dpToPx(14));
+        idCard.setLayoutParams(idCardLp);
+
+        SharedPreferences prefs = getSharedPreferences("kefyl_prefs", MODE_PRIVATE);
+        String nameVal = prefs.getString("agent_registered_name", "Non enrôlé");
+        String phoneVal = prefs.getString("agent_registered_phone", "N/A");
+        String lastSync = prefs.getString("last_update_timestamp", "Jamais");
+
+        android.widget.TextView idTitle = new android.widget.TextView(this);
+        idTitle.setText("👤 IDENTITÉ DU TERMINAL ENRÔLÉ");
+        idTitle.setTextColor(android.graphics.Color.parseColor("#00C896"));
+        idTitle.setTextSize(10);
+        idTitle.setTypeface(android.graphics.Typeface.create("sans-serif-black", android.graphics.Typeface.BOLD));
+        idTitle.setPadding(0, 0, 0, dpToPx(6));
+        idCard.addView(idTitle);
+
+        android.widget.TextView idName = new android.widget.TextView(this);
+        idName.setText("Agent : " + nameVal);
+        idName.setTextColor(android.graphics.Color.WHITE);
+        idName.setTextSize(12);
+        idName.setPadding(0, 0, 0, dpToPx(2));
+        idCard.addView(idName);
+
+        android.widget.TextView idPhone = new android.widget.TextView(this);
+        idPhone.setText("Mobile : " + phoneVal);
+        idPhone.setTextColor(android.graphics.Color.parseColor("#94A3B8"));
+        idPhone.setTextSize(11);
+        idPhone.setPadding(0, 0, 0, dpToPx(2));
+        idCard.addView(idPhone);
+
+        android.widget.TextView idLastSync = new android.widget.TextView(this);
+        idLastSync.setText("Dernière liaison : " + lastSync);
+        idLastSync.setTextColor(android.graphics.Color.parseColor("#94A3B8"));
+        idLastSync.setTextSize(11);
+        idCard.addView(idLastSync);
+
+        layoutSync.addView(idCard);
+
+        // Server Reachability Status Area
+        android.widget.LinearLayout statusArea = new android.widget.LinearLayout(this);
+        statusArea.setOrientation(android.widget.LinearLayout.VERTICAL);
+        statusArea.setPadding(dpToPx(14), dpToPx(14), dpToPx(14), dpToPx(14));
+        android.graphics.drawable.GradientDrawable statusBg = new android.graphics.drawable.GradientDrawable();
+        statusBg.setColor(android.graphics.Color.parseColor("#111827"));
+        statusBg.setCornerRadius((float) dpToPx(12));
+        statusBg.setStroke(dpToPx(1), android.graphics.Color.parseColor("#1E293B"));
+        statusArea.setBackground(statusBg);
+
+        android.widget.TextView statusTitle = new android.widget.TextView(this);
+        statusTitle.setText("🖥️ ÉTAT DU SERVEUR DISTANT");
+        statusTitle.setTextColor(android.graphics.Color.parseColor("#3B82F6"));
+        statusTitle.setTextSize(10);
+        statusTitle.setTypeface(android.graphics.Typeface.create("sans-serif-black", android.graphics.Typeface.BOLD));
+        statusTitle.setPadding(0, 0, 0, dpToPx(8));
+        statusArea.addView(statusTitle);
+
+        final android.widget.TextView pingStatusTv = new android.widget.TextView(this);
+        pingStatusTv.setText("🔄 Vérification en cours...");
+        pingStatusTv.setTextColor(android.graphics.Color.parseColor("#F59E0B"));
+        pingStatusTv.setTextSize(12);
+        statusArea.addView(pingStatusTv);
+
+        layoutSync.addView(statusArea);
+
+        // Spacer + Close Button
+        android.widget.LinearLayout.LayoutParams spacerLp = new android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT, dpToPx(14));
+        android.view.View tabSpacer = new android.view.View(this);
+        tabSpacer.setLayoutParams(spacerLp);
+        layoutSync.addView(tabSpacer);
+
+        android.widget.Button closeTabBtn = new android.widget.Button(this);
+        closeTabBtn.setText("FERMER LES PARAMÈTRES");
+        android.graphics.drawable.GradientDrawable closeBg = new android.graphics.drawable.GradientDrawable();
+        closeBg.setColor(android.graphics.Color.parseColor("#1B2434"));
+        closeBg.setCornerRadius((float) dpToPx(12));
+        closeTabBtn.setBackground(closeBg);
+        closeTabBtn.setTextColor(android.graphics.Color.WHITE);
+        closeTabBtn.setTypeface(android.graphics.Typeface.create("sans-serif-black", android.graphics.Typeface.BOLD));
+        closeTabBtn.setTextSize(11);
+        android.widget.LinearLayout.LayoutParams closeBtnLp = new android.widget.LinearLayout.LayoutParams(
                 android.widget.LinearLayout.LayoutParams.MATCH_PARENT, dpToPx(44));
-        enrollBtn.setLayoutParams(enrollBtnLp);
-        root.addView(enrollBtn);
+        closeTabBtn.setLayoutParams(closeBtnLp);
+        closeTabBtn.setOnClickListener(v -> dialog.dismiss());
+        layoutSync.addView(closeTabBtn);
+
+        root.addView(layoutSync);
+
+        // TAB CLICK LISTENERS
+        tabConfig.setOnClickListener(v -> {
+            tabConfig.setBackground(activeTabBg);
+            tabStatus.setBackground(inactiveTabBg);
+            tabConfig.setTextColor(android.graphics.Color.WHITE);
+            tabStatus.setTextColor(android.graphics.Color.parseColor("#64748B"));
+            layoutConfig.setVisibility(android.view.View.VISIBLE);
+            layoutSync.setVisibility(android.view.View.GONE);
+        });
+
+        tabStatus.setOnClickListener(v -> {
+            tabStatus.setBackground(activeTabBg);
+            tabConfig.setBackground(inactiveTabBg);
+            tabStatus.setTextColor(android.graphics.Color.WHITE);
+            tabConfig.setTextColor(android.graphics.Color.parseColor("#64748B"));
+            layoutConfig.setVisibility(android.view.View.GONE);
+            layoutSync.setVisibility(android.view.View.VISIBLE);
+
+            // Execute dynamic ping reachability check
+            if (!isNetworkAvailable()) {
+                pingStatusTv.setText("🔴 HORS-LIGNE (Pas de connexion internet sur ce mobile)");
+                pingStatusTv.setTextColor(android.graphics.Color.parseColor("#EF4444"));
+            } else {
+                pingStatusTv.setText("🔄 Connexion au serveur distant...");
+                pingStatusTv.setTextColor(android.graphics.Color.parseColor("#F59E0B"));
+
+                final String serverIp = etIp.getText().toString().trim();
+                Executors.newSingleThreadExecutor().execute(() -> {
+                    boolean online = false;
+                    try {
+                        java.net.URL url = new java.net.URL(serverIp + "/api/v1/sync?since=all&agent_version=1.0.0");
+                        java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+                        conn.setConnectTimeout(4000);
+                        conn.setReadTimeout(4000);
+                        conn.setRequestMethod("GET");
+                        // Add auth token if available
+                        String token = getSharedPreferences("kefyl_prefs", MODE_PRIVATE).getString("agent_secure_token", "");
+                        if (!token.isEmpty()) {
+                            conn.setRequestProperty("Authorization", "Bearer " + token);
+                            conn.setRequestProperty("x-agent-token", token);
+                        }
+                        int code = conn.getResponseCode();
+                        if (code == 200 || code == 401 || code == 403) {
+                            // Response from server means online
+                            online = true;
+                        }
+                    } catch (Exception e) {
+                        online = false;
+                    }
+                    final boolean finalOnline = online;
+                    runOnUiThread(() -> {
+                        if (finalOnline) {
+                            pingStatusTv.setText("🟢 EN LIGNE (Connecté avec succès au SOC National)");
+                            pingStatusTv.setTextColor(android.graphics.Color.parseColor("#00C896"));
+                        } else {
+                            pingStatusTv.setText("🔴 INACCESSIBLE (Serveur indisponible ou hors-ligne)");
+                            pingStatusTv.setTextColor(android.graphics.Color.parseColor("#EF4444"));
+                        }
+                    });
+                });
+            }
+        });
 
         dialog.setContentView(root);
-
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
             dialog.getWindow().setLayout(
@@ -1378,7 +1725,6 @@ public class MainActivity extends AppCompatActivity {
                     android.view.ViewGroup.LayoutParams.WRAP_CONTENT
             );
         }
-
         dialog.show();
     }
 

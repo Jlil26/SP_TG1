@@ -397,8 +397,8 @@ export default function DeploymentTab({ agents, config, onUpdateSyncDays, onTrig
                 onChange={(e) => setAiSelectionValue(e.target.value as any)}
                 className="bg-[#0B1020] border border-white/5 text-slate-300 font-mono text-xs rounded-lg p-2.5 w-full focus:outline-none focus:border-[#3B82F6] cursor-pointer"
               >
-                <option value="gemini">Google Gemini active 🔴</option>
-                <option value="simulation">Simulation Heuristique Locale ⚪</option>
+                <option value="gemini">Google Gemini active (Système)</option>
+                <option value="simulation">Simulation Heuristique Locale</option>
               </select>
             </div>
 

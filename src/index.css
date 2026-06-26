@@ -1,33 +1,33 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-display: "Space Grotesk", var(--font-sans);
+  --font-display: "Space Grotesk", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
 }
 
 :root {
-  --bg-principal: #040814;
-  --bg-card: #0B1226;
-  --bg-hover: #121F3F;
-  --bg-wow: #121A2F;
-  --border-color: rgba(59, 130, 246, 0.2);
+  --bg-principal: #0B1220;
+  --bg-card: #111827;
+  --bg-hover: #1F2937;
+  --bg-wow: #111827;
+  --border-color: rgba(255, 255, 255, 0.06);
   
-  --text-principal: #FFFFFF;
+  --text-principal: #F9FAFB;
   --text-secondary: #94A3B8;
   
-  --color-accent: #3B82F6;
-  --color-accent-secondary: #06B6D4;
+  --color-accent: #2563EB;
+  --color-accent-secondary: #0ea5e9;
   --color-danger: #EF4444;
   --color-warning: #F59E0B;
-  --color-success: #10B981;
+  --color-success: #22C55E;
 }
 
 @layer base {
   body {
-    background-color: #040814 !important;
-    color: #F1F5F9 !important;
+    background-color: #0B1220 !important;
+    color: #F9FAFB !important;
     font-family: var(--font-sans) !important;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -51,41 +51,42 @@ body, button, input, select, textarea {
 
 /* Main backdrop */
 .bg-\[\#0B1020\] {
-  background-color: #040814 !important;
-  color: #FFFFFF !important;
+  background-color: #0B1220 !important;
+  color: #F9FAFB !important;
 }
 
-/* Premium Dark Steel Royal Blue Cards with high contrast cyber borders */
+/* Premium Crowdstrike-style Card component */
 .bg-\[\#121A2F\] {
-  background-color: #0B1226 !important;
-  color: #FFFFFF !important;
-  border-color: rgba(59, 130, 246, 0.25) !important;
+  background-color: #111827 !important;
+  color: #F9FAFB !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
   border-width: 1px !important;
   border-style: solid !important;
-  box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.6) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.25) !important;
 }
 
-/* Custom Header area */
+/* Custom Header area with high end glassy feel */
 header.bg-\[\#121A2F\]\/45 {
-  background-color: rgba(4, 8, 20, 0.8) !important;
+  background-color: rgba(17, 24, 39, 0.7) !important;
   backdrop-filter: blur(12px) !important;
-  border-color: rgba(59, 130, 246, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
   border-bottom-width: 1px !important;
 }
 
 /* Sub-containers & panels */
 .bg-\[\#0B1020\]\/45 {
-  background-color: #060B1C !important;
-  color: #FFFFFF !important;
-  border-color: rgba(59, 130, 246, 0.15) !important;
+  background-color: #0B1220 !important;
+  color: #F9FAFB !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
   border-width: 1px !important;
 }
 
 /* Hover areas, selected list rows, and accents inside cards */
 .bg-\[\#1A2542\] {
-  background-color: #121F3F !important;
-  color: #FFFFFF !important;
-  border-color: rgba(59, 130, 246, 0.4) !important;
+  background-color: #1F2937 !important;
+  color: #F9FAFB !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 /* Guarantee extreme contrast text visibility on dark elements */
@@ -94,7 +95,7 @@ h1, h2, h3, h4, h5, h6,
 strong,
 th,
 .text-slate-100 {
-  color: #FFFFFF !important;
+  color: #F9FAFB !important;
 }
 
 .text-\[\#94A3B8\],
@@ -105,56 +106,55 @@ p {
 }
 
 .text-slate-300 {
-  color: #CBD5E1 !important;
+  color: #E2E8F0 !important;
 }
 
 /* ── Harmonization of Light Gray Bands / Table Headers and Lists ── */
-/* If elements have bg-slate-100/50, we override them to premium cyber slate backgrounds so they NEVER look like washed out gray-on-dark! */
 thead tr, 
 .bg-slate-100, 
 .bg-slate-50,
 .bg-slate-200 {
-  background-color: #0E1A33 !important;
-  color: #FFFFFF !important;
-  border-color: rgba(59, 130, 246, 0.2) !important;
+  background-color: #1F2937 !important;
+  color: #F9FAFB !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
 }
 
-/* Sub-indicators or headers like "Identificateur inspecté" */
+/* Sub-indicators or headers */
 td.bg-slate-100,
 th.bg-slate-100 {
-  background-color: #13244D !important;
-  color: #FFFFFF !important;
-  border-bottom: 1px solid rgba(59, 130, 246, 0.25) !important;
-  border-right: 1px solid rgba(59, 130, 246, 0.25) !important;
+  background-color: #111827 !important;
+  color: #F9FAFB !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
 }
 
-/* Override text-slate-700/600 labels inside grey bands with highly legible white/cyan values */
+/* Override text-slate-700/600 labels inside grey bands */
 .bg-slate-100 *, 
 .bg-slate-50 *,
 .text-slate-700,
 .text-slate-600,
 .text-gray-700,
 .text-gray-600 {
-  color: #CBD5E1 !important;
+  color: #E2E8F0 !important;
 }
 
-/* Sidebar navigation in clean royal blue & cyan highlight theme */
+/* Sidebar navigation in clean cyber theme */
 aside.bg-\[\#121A2F\] {
-  background-color: #050B1D !important;
-  color: #FFFFFF !important;
-  border-right: 1px solid rgba(59, 130, 246, 0.25) !important;
+  background-color: #111827 !important;
+  color: #F9FAFB !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
 }
 
 aside.bg-\[\#121A2F\] .text-\[\#94A3B8\],
 aside.bg-\[\#121A2F\] .text-slate-400 {
-  color: #38BDF8 !important;
+  color: #94A3B8 !important;
 }
 
 aside.bg-\[\#121A2F\] .bg-\[\#1A2542\],
 aside.bg-\[\#121A2F\] button:hover {
-  background-color: #101F42 !important;
-  border-color: #38BDF8 !important;
-  color: #FFFFFF !important;
+  background-color: #1F2937 !important;
+  border-color: #2563EB !important;
+  color: #F9FAFB !important;
 }
 
 /* Inputs & select options visibility */

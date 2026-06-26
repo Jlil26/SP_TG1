@@ -190,35 +190,59 @@ export default function DashboardTab({
   const chartData = useMemo(() => {
     const days = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
     
-    // If empty state, keep the charts beautifully flat at zero
+    // Initialize day counts to 0
+    const dataMap = days.map(day => ({
+      name: day,
+      Critique: 0,
+      Moyen: 0,
+      Faible: 0
+    }));
+
+    // If empty state, return all zeros
     const totalCount = threats.length + mobileSignals.length + complaints.length;
     if (totalCount === 0) {
-      return days.map(day => ({
-        name: day,
-        Critique: 0,
-        Moyen: 0,
-        Faible: 0
-      }));
+      return dataMap;
     }
 
-    // Dynamic scale depending on threats count to prevent flat lines when populated
-    const critCount = threats.filter(t => t.severity === "Critical").length;
-    const medCount = threats.filter(t => t.severity === "Medium").length;
-    const lowCount = threats.filter(t => t.severity === "Low").length;
-
-    return days.map((day, idx) => {
-      // Small distribution wave over the week to make the chart look alive and premium
-      const factorCrit = ((idx * 3) % 5 + 2) / 10; // 0.2 to 0.6
-      const factorMed = ((idx * 2) % 4 + 3) / 10;  // 0.3 to 0.6
-      const factorLow = ((idx * 4) % 6 + 1) / 10;  // 0.1 to 0.6
-
-      return {
-        name: day,
-        Critique: Math.max(1, Math.round((critCount || 10) * factorCrit)),
-        Moyen: Math.max(2, Math.round((medCount || 15) * factorMed)),
-        Faible: Math.max(3, Math.round((lowCount || 20) * factorLow))
-      };
+    // Group real threats by day of week
+    threats.forEach(t => {
+      try {
+        const date = new Date(t.detectedAt);
+        let dayIdx = date.getDay() - 1; // getDay() is 0 for Sun, 1 for Mon...
+        if (dayIdx === -1) dayIdx = 6; // Sunday is index 6
+        
+        const sev = t.severity;
+        if (sev === "Critical") {
+          dataMap[dayIdx].Critique += 1;
+        } else if (sev === "Medium") {
+          dataMap[dayIdx].Moyen += 1;
+        } else {
+          dataMap[dayIdx].Faible += 1;
+        }
+      } catch (e) {}
     });
+
+    // Group signals by day of week (usually Medium severity)
+    mobileSignals.forEach(s => {
+      try {
+        const date = new Date(s.timestamp || Date.now());
+        let dayIdx = date.getDay() - 1;
+        if (dayIdx === -1) dayIdx = 6;
+        dataMap[dayIdx].Moyen += 1;
+      } catch (e) {}
+    });
+
+    // Group citizen complaints by day (usually Faible/Moyen severity)
+    complaints.forEach(c => {
+      try {
+        const date = new Date(c.createdAt || Date.now());
+        let dayIdx = date.getDay() - 1;
+        if (dayIdx === -1) dayIdx = 6;
+        dataMap[dayIdx].Faible += 1;
+      } catch (e) {}
+    });
+
+    return dataMap;
   }, [threats, mobileSignals, complaints]);
 
   // Geographic Heatmap metrics of Togo regions calculated dynamically from actual locations
@@ -369,75 +393,6 @@ export default function DashboardTab({
         </div>
       </div>
 
-      {/* Sleek Interactive Quick IoC Ingestion Strip */}
-      <div className="bg-[#121A2F]/90 border border-[#3B82F6]/20 backdrop-blur-md rounded-xl p-4 shadow-lg transition duration-300 hover:border-[#3B82F6]/30" id="quick-ioc-strip">
-        <form onSubmit={handleFormSubmit} className="flex flex-col xl:flex-row items-center gap-4 justify-between w-full">
-          <div className="flex items-center gap-2.5 shrink-0 self-start xl:self-auto">
-            <Sparkles className="w-5 h-5 text-[#3B82F6] animate-pulse" />
-            <div>
-              <h3 className="text-xs font-extrabold text-white uppercase tracking-wider font-mono">Signalement Express (IoC)</h3>
-              <p className="text-[10px] text-slate-400">Ingestion et propagation instantanée d'indicateurs</p>
-            </div>
-          </div>
-          
-          <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto flex-1 justify-end">
-            <select
-              value={quickType}
-              onChange={(e) => setQuickType(e.target.value as any)}
-              className="bg-[#0B1020] text-xs text-white border border-slate-800 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-[#3B82F6] font-mono"
-            >
-              <option value="phone">📞 SMS / Téléphone</option>
-              <option value="domain">🌐 Lien / Domaine</option>
-              <option value="ip">🖥️ Adresse IP</option>
-              <option value="email">📧 Adresse E-mail</option>
-            </select>
-
-            <input
-              id="quick-ioc-value"
-              type="text"
-              value={quickValue}
-              onChange={(e) => setQuickValue(e.target.value)}
-              placeholder={quickType === "phone" ? "+228 90 00 00 00" : quickType === "domain" ? "ex: moov-togo-gains.com" : "Valeur de l'indicateur..."}
-              className="bg-[#0B1020] text-xs text-white border border-slate-800 rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#3B82F6] flex-1 max-w-[220px] min-w-[140px] font-mono font-semibold"
-              required
-            />
-
-            <input
-              type="text"
-              value={quickDetails}
-              onChange={(e) => setQuickDetails(e.target.value)}
-              placeholder="Campagne / Détails..."
-              className="bg-[#0B1020] text-xs text-white border border-slate-800 rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#3B82F6] flex-1 max-w-[240px] min-w-[140px]"
-            />
-
-            <select
-              value={quickSeverity}
-              onChange={(e) => setQuickSeverity(e.target.value as any)}
-              className="bg-[#0B1020] text-xs text-white border border-slate-800 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-[#3B82F6] font-mono"
-            >
-              <option value="Low">🟢 Faible</option>
-              <option value="Medium">🟡 Moyen</option>
-              <option value="Critical">🔴 Critique</option>
-            </select>
-
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="bg-[#2563EB] hover:bg-[#2563EB]/90 active:scale-[0.98] text-white font-extrabold text-xs px-4 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50 font-mono shrink-0 uppercase tracking-wider"
-            >
-              Diffuser au Togo
-            </button>
-          </div>
-        </form>
-
-        {successMsg && (
-          <div className="mt-2 text-[10px] text-emerald-400 font-mono bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg animate-fade-in flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-            {successMsg}
-          </div>
-        )}
-      </div>
-
       {/* Beautiful Dynamic Zero-State Card */}
       {threats.length === 0 && mobileSignals.length === 0 && (
         <div className="bg-gradient-to-r from-blue-500/10 to-indigo-500/5 border border-blue-500/20 rounded-2xl p-6 text-center space-y-4 animate-fade-in" id="dashboard-zero-state">
@@ -462,15 +417,6 @@ export default function DashboardTab({
                 Charger les Données de Démo (ANCY)
               </button>
             )}
-            <button
-              onClick={() => {
-                const quickInput = document.getElementById("quick-ioc-value");
-                if (quickInput) quickInput.focus();
-              }}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold font-mono uppercase tracking-wider rounded-xl transition border border-slate-700 active:scale-95 cursor-pointer"
-            >
-              Ajouter un Indicateur Manuellement
-            </button>
           </div>
         </div>
       )}
@@ -776,101 +722,99 @@ export default function DashboardTab({
             {/* Split layout: SVG Map representation + list indicators */}
             <div className="grid grid-cols-12 gap-4 mt-2">
               
-              {/* Minimal Tall Togo SVG Map Outline with pulsing hotspots */}
-              <div className="col-span-4 bg-slate-950/55 rounded-xl border border-slate-800/80 p-2 h-44 flex items-center justify-center relative overflow-hidden">
-                <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px)] [background-size:10px_10px]"></div>
+              {/* Vertical stacked 5-zone representation of Togo */}
+              <div className="col-span-4 bg-slate-950/55 rounded-xl border border-slate-800/80 p-2 h-52 flex flex-col justify-between relative overflow-hidden">
+                <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px)] [background-size:10px_10px] pointer-events-none"></div>
                 
-                {/* Realistic Vector Togo Outline with 5 individually highlightable regions */}
-                <svg className="w-20 h-44 transition-all duration-300" viewBox="0 0 100 350" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  {/* Savanes Region (North) */}
-                  <path 
-                    d="M25,12 L30,12 L43,18 L68,18 L70,25 L68,45 L58,58 L45,55 L32,60 L28,45 L25,32 Z" 
-                    fill={selectedRegion === "savanes" ? "rgba(16, 185, 129, 0.85)" : selectedRegion ? "rgba(30, 41, 59, 0.2)" : "rgba(30, 41, 59, 0.85)"} 
-                    stroke={selectedRegion === "savanes" ? "#10B981" : "#475569"} 
-                    strokeWidth={selectedRegion === "savanes" ? "2" : "1"}
-                    strokeLinejoin="round"
-                    className="cursor-pointer transition-all duration-300 hover:opacity-90"
-                    onClick={() => setSelectedRegion(selectedRegion === "savanes" ? null : "savanes")}
-                  />
+                {/* Savanes */}
+                <button
+                  onClick={() => setSelectedRegion(selectedRegion === "savanes" ? null : "savanes")}
+                  className={`w-full h-[18%] transition-all duration-300 rounded-lg flex items-center justify-between px-2 text-[8px] font-mono border cursor-pointer ${
+                    selectedRegion === "savanes"
+                      ? "bg-emerald-500/15 border-emerald-500 text-white"
+                      : selectedRegion ? "bg-slate-900/10 border-transparent opacity-30 text-slate-500" : "bg-slate-900/50 border-slate-800/60 hover:bg-slate-850 text-slate-300"
+                  }`}
+                >
+                  <div className="flex items-center gap-1">
+                    <span className={`w-1.5 h-1.5 rounded-full ${selectedRegion === "savanes" ? "bg-emerald-400 animate-pulse" : "bg-emerald-500"}`}></span>
+                    <span className="font-bold">SAVANES (NORD)</span>
+                  </div>
+                  <span className="font-bold">
+                    {togoGeographicData.find(r => r.id === "savanes")?.percentage}%
+                  </span>
+                </button>
 
-                  {/* Kara Region */}
-                  <path 
-                    d="M32,60 L45,55 L58,58 L68,45 L68,60 L78,85 L80,105 L65,115 L50,110 L35,115 L32,100 L38,90 L35,80 L38,70 Z" 
-                    fill={selectedRegion === "kara" ? "rgba(239, 68, 68, 0.85)" : selectedRegion ? "rgba(30, 41, 59, 0.2)" : "rgba(30, 41, 59, 0.85)"} 
-                    stroke={selectedRegion === "kara" ? "#EF4444" : "#475569"} 
-                    strokeWidth={selectedRegion === "kara" ? "2" : "1"}
-                    strokeLinejoin="round"
-                    className="cursor-pointer transition-all duration-300 hover:opacity-90"
-                    onClick={() => setSelectedRegion(selectedRegion === "kara" ? null : "kara")}
-                  />
+                {/* Kara */}
+                <button
+                  onClick={() => setSelectedRegion(selectedRegion === "kara" ? null : "kara")}
+                  className={`w-full h-[18%] transition-all duration-300 rounded-lg flex items-center justify-between px-2 text-[8px] font-mono border cursor-pointer ${
+                    selectedRegion === "kara"
+                      ? "bg-red-500/15 border-red-500 text-white"
+                      : selectedRegion ? "bg-slate-900/10 border-transparent opacity-30 text-slate-500" : "bg-slate-900/50 border-slate-800/60 hover:bg-slate-850 text-slate-300"
+                  }`}
+                >
+                  <div className="flex items-center gap-1">
+                    <span className={`w-1.5 h-1.5 rounded-full ${selectedRegion === "kara" ? "bg-red-400 animate-pulse" : "bg-red-500"}`}></span>
+                    <span className="font-bold">KARA</span>
+                  </div>
+                  <span className="font-bold">
+                    {togoGeographicData.find(r => r.id === "kara")?.percentage}%
+                  </span>
+                </button>
 
-                  {/* Centrale Region */}
-                  <path 
-                    d="M35,115 L50,110 L65,115 L80,105 L82,125 L85,150 L75,170 L55,180 L45,170 L38,155 L38,135 Z" 
-                    fill={selectedRegion === "centrale" ? "rgba(16, 185, 129, 0.85)" : selectedRegion ? "rgba(30, 41, 59, 0.2)" : "rgba(30, 41, 59, 0.85)"} 
-                    stroke={selectedRegion === "centrale" ? "#10B981" : "#475569"} 
-                    strokeWidth={selectedRegion === "centrale" ? "2" : "1"}
-                    strokeLinejoin="round"
-                    className="cursor-pointer transition-all duration-300 hover:opacity-90"
-                    onClick={() => setSelectedRegion(selectedRegion === "centrale" ? null : "centrale")}
-                  />
+                {/* Centrale */}
+                <button
+                  onClick={() => setSelectedRegion(selectedRegion === "centrale" ? null : "centrale")}
+                  className={`w-full h-[18%] transition-all duration-300 rounded-lg flex items-center justify-between px-2 text-[8px] font-mono border cursor-pointer ${
+                    selectedRegion === "centrale"
+                      ? "bg-emerald-500/15 border-emerald-500 text-white"
+                      : selectedRegion ? "bg-slate-900/10 border-transparent opacity-30 text-slate-500" : "bg-slate-900/50 border-slate-800/60 hover:bg-slate-850 text-slate-300"
+                  }`}
+                >
+                  <div className="flex items-center gap-1">
+                    <span className={`w-1.5 h-1.5 rounded-full ${selectedRegion === "centrale" ? "bg-emerald-400 animate-pulse" : "bg-emerald-500"}`}></span>
+                    <span className="font-bold">CENTRALE</span>
+                  </div>
+                  <span className="font-bold">
+                    {togoGeographicData.find(r => r.id === "centrale")?.percentage}%
+                  </span>
+                </button>
 
-                  {/* Plateaux Region */}
-                  <path 
-                    d="M45,170 L55,180 L75,170 L85,150 L88,180 L88,215 L88,245 L78,255 L65,255 L50,265 L40,255 L38,230 L38,200 L42,185 Z" 
-                    fill={selectedRegion === "plateaux" ? "rgba(245, 158, 11, 0.85)" : selectedRegion ? "rgba(30, 41, 59, 0.2)" : "rgba(30, 41, 59, 0.85)"} 
-                    stroke={selectedRegion === "plateaux" ? "#F59E0B" : "#475569"} 
-                    strokeWidth={selectedRegion === "plateaux" ? "2" : "1"}
-                    strokeLinejoin="round"
-                    className="cursor-pointer transition-all duration-300 hover:opacity-90"
-                    onClick={() => setSelectedRegion(selectedRegion === "plateaux" ? null : "plateaux")}
-                  />
+                {/* Plateaux */}
+                <button
+                  onClick={() => setSelectedRegion(selectedRegion === "plateaux" ? null : "plateaux")}
+                  className={`w-full h-[18%] transition-all duration-300 rounded-lg flex items-center justify-between px-2 text-[8px] font-mono border cursor-pointer ${
+                    selectedRegion === "plateaux"
+                      ? "bg-amber-500/15 border-amber-500 text-white"
+                      : selectedRegion ? "bg-slate-900/10 border-transparent opacity-30 text-slate-500" : "bg-slate-900/50 border-slate-800/60 hover:bg-slate-850 text-slate-300"
+                  }`}
+                >
+                  <div className="flex items-center gap-1">
+                    <span className={`w-1.5 h-1.5 rounded-full ${selectedRegion === "plateaux" ? "bg-amber-400 animate-pulse" : "bg-amber-500"}`}></span>
+                    <span className="font-bold">PLATEAUX</span>
+                  </div>
+                  <span className="font-bold">
+                    {togoGeographicData.find(r => r.id === "plateaux")?.percentage}%
+                  </span>
+                </button>
 
-                  {/* Maritime Region (Lomé / South) */}
-                  <path 
-                    d="M40,255 L50,265 L65,255 L78,255 L85,260 L85,285 L78,310 L68,325 L50,335 L45,310 L42,285 Z" 
-                    fill={selectedRegion === "maritime" ? "rgba(239, 68, 68, 0.85)" : selectedRegion ? "rgba(30, 41, 59, 0.2)" : "rgba(30, 41, 59, 0.85)"} 
-                    stroke={selectedRegion === "maritime" ? "#EF4444" : "#475569"} 
-                    strokeWidth={selectedRegion === "maritime" ? "2" : "1"}
-                    strokeLinejoin="round"
-                    className="cursor-pointer transition-all duration-300 hover:opacity-90"
-                    onClick={() => setSelectedRegion(selectedRegion === "maritime" ? null : "maritime")}
-                  />
-                  
-                  {/* Pulsing Hotspot: Lomé (South) */}
-                  <g className="cursor-pointer" onClick={() => setSelectedRegion(selectedRegion === "maritime" ? null : "maritime")}>
-                    <circle cx="60" cy="295" r="7" className="fill-red-500/35 animate-ping" />
-                    <circle cx="60" cy="295" r="3.5" className="fill-[#EF4444]" />
-                  </g>
-
-                  {/* Pulsing Hotspot: Atakpamé (Plateaux) */}
-                  <g className="cursor-pointer" onClick={() => setSelectedRegion(selectedRegion === "plateaux" ? null : "plateaux")}>
-                    <circle cx="58" cy="215" r="5" className="fill-amber-500/35 animate-ping" />
-                    <circle cx="58" cy="215" r="3" className="fill-amber-500" />
-                  </g>
-
-                  {/* Pulsing Hotspot: Sokodé (Centrale) */}
-                  <g className="cursor-pointer" onClick={() => setSelectedRegion(selectedRegion === "centrale" ? null : "centrale")}>
-                    <circle cx="58" cy="140" r="4" className="fill-emerald-500/35 animate-ping" style={{ animationDelay: '1s' }} />
-                    <circle cx="58" cy="140" r="2.5" className="fill-emerald-500" />
-                  </g>
-
-                  {/* Pulsing Hotspot: Kara */}
-                  <g className="cursor-pointer" onClick={() => setSelectedRegion(selectedRegion === "kara" ? null : "kara")}>
-                    <circle cx="58" cy="85" r="6" className="fill-red-500/35 animate-ping" style={{ animationDelay: '0.5s' }} />
-                    <circle cx="58" cy="85" r="3" className="fill-[#EF4444]" />
-                  </g>
-
-                  {/* Pulsing Hotspot: Dapaong (Savanes) */}
-                  <g className="cursor-pointer" onClick={() => setSelectedRegion(selectedRegion === "savanes" ? null : "savanes")}>
-                    <circle cx="48" cy="35" r="4" className="fill-emerald-500/35 animate-ping" />
-                    <circle cx="48" cy="35" r="2" className="fill-emerald-500" />
-                  </g>
-                </svg>
-
-                <div className="absolute bottom-1 right-1 text-[7px] font-mono text-slate-500 uppercase">
-                  Interaction Carte active
-                </div>
+                {/* Maritime */}
+                <button
+                  onClick={() => setSelectedRegion(selectedRegion === "maritime" ? null : "maritime")}
+                  className={`w-full h-[18%] transition-all duration-300 rounded-lg flex items-center justify-between px-2 text-[8px] font-mono border cursor-pointer ${
+                    selectedRegion === "maritime"
+                      ? "bg-red-500/15 border-red-500 text-white"
+                      : selectedRegion ? "bg-slate-900/10 border-transparent opacity-30 text-slate-500" : "bg-slate-900/50 border-slate-800/60 hover:bg-slate-850 text-slate-300"
+                  }`}
+                >
+                  <div className="flex items-center gap-1">
+                    <span className={`w-1.5 h-1.5 rounded-full ${selectedRegion === "maritime" ? "bg-red-400 animate-pulse" : "bg-red-500"}`}></span>
+                    <span className="font-bold">MARITIME (SUD)</span>
+                  </div>
+                  <span className="font-bold">
+                    {togoGeographicData.find(r => r.id === "maritime")?.percentage}%
+                  </span>
+                </button>
               </div>
 
               {/* List of Regions & Intensities */}
@@ -916,7 +860,7 @@ export default function DashboardTab({
           </div>
 
           <div className="text-[9px] text-slate-500 mt-4 border-t border-slate-800/60 pt-3 flex justify-between items-center font-mono">
-            <span>Cliquez sur une région ou un point rouge pour inspecter les foyers d'attaques</span>
+            <span>Cliquez sur une zone du rectangle ou de la liste pour filtrer par région</span>
             <span className="text-slate-400">Cordon de sécurité ANCY</span>
           </div>
         </div>

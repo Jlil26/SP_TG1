@@ -7,6 +7,8 @@ import {
   Search, 
   Filter, 
   ShieldAlert, 
+  ShieldCheck,
+  ShieldX,
   Wifi, 
   WifiOff, 
   CornerDownRight, 
@@ -955,7 +957,7 @@ export default function AgentSupervisionTab({
                       ) : incomingCallNumber.trim().match(/^[A-Za-z\s]+$/) ? (
                         <div className="space-y-1 text-center">
                           <div className="text-emerald-400 font-sans font-black text-[8.5px] uppercase tracking-wider flex items-center justify-center gap-1 leading-none">
-                            🟢 SERVICE ENREGISTRÉ SÛR
+                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> SERVICE ENREGISTRÉ SÛR
                           </div>
                           <p className="text-[8px] text-slate-300 leading-normal">
                             C&apos;est un service officiel du Togo (<strong>{incomingCallNumber}</strong>). Sûr à 100%.
@@ -1030,11 +1032,19 @@ export default function AgentSupervisionTab({
                   }`}>
                     <Bell className="w-3 h-3 animate-pulse" />
                     <span>
-                      {containsKnownSignature 
-                        ? "🚨 ARNAQUE CONFIRMÉE PAR LE CENTRE • SP_TG" 
-                        : isGroupSource 
-                          ? "⚠️ MESSAGE SUSPECT EN GROUPE • SP_TG" 
-                          : "⚠️ TENTATIVE D'ARNAQUE DÉTECTÉE • SP_TG"}
+                      {containsKnownSignature ? (
+                        <span className="inline-flex items-center gap-1">
+                          <AlertOctagon className="w-3.5 h-3.5 text-red-400 shrink-0" /> ARNAQUE CONFIRMÉE PAR LE CENTRE • SP_TG
+                        </span>
+                      ) : isGroupSource ? (
+                        <span className="inline-flex items-center gap-1">
+                          <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" /> MESSAGE SUSPECT EN GROUPE • SP_TG
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1">
+                          <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" /> TENTATIVE D'ARNAQUE DÉTECTÉE • SP_TG
+                        </span>
+                      )}
                     </span>
                   </div>
                   <div className="flex items-start gap-2">
@@ -1115,27 +1125,33 @@ export default function AgentSupervisionTab({
                       </div>
                       
                       {isGroupSource ? (
-                        <span className="bg-[#128C7E]/20 text-[#25D366] text-[8px] font-mono font-bold tracking-wider px-2 py-0.5 rounded border border-[#128C7E]/40 uppercase">
-                          💬 Message WhatsApp
+                        <span className="bg-[#128C7E]/20 text-[#25D366] text-[8px] font-mono font-bold tracking-wider px-2 py-0.5 rounded border border-[#128C7E]/40 uppercase flex items-center gap-1">
+                          <Mail className="w-3 h-3 text-[#25D366]" /> Message WhatsApp
                         </span>
                       ) : (
-                        <span className="bg-blue-950/40 text-blue-300 text-[8px] font-mono font-bold tracking-wider px-2 py-0.5 rounded border border-blue-500/30 uppercase">
-                          ✉️ Message SMS
+                        <span className="bg-blue-950/40 text-blue-300 text-[8px] font-mono font-bold tracking-wider px-2 py-0.5 rounded border border-blue-500/30 uppercase flex items-center gap-1">
+                          <Mail className="w-3 h-3 text-blue-400" /> Message SMS
                         </span>
                       )}
                     </div>
 
                     <div className="flex-1 flex flex-col justify-between my-2 space-y-2">
                       <div className="pt-1 select-text">
-                        <h4 className="text-[11px] font-bold text-red-200 leading-snug">
+                        <div className="text-[11px] font-bold text-red-200 leading-snug flex items-center gap-1">
                           {isGroupSource && !containsKnownSignature ? (
-                            "⚠️ Message suspect à vérifier"
+                            <>
+                              <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" /> Message suspect à vérifier
+                            </>
                           ) : isRegisteredContact ? (
-                            "⚠️ Message suspect venant d'un ami"
+                            <>
+                              <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" /> Message suspect venant d&apos;un ami
+                            </>
                           ) : (
-                            "🚨 Attention, tentative d'arnaque !"
+                            <>
+                              <AlertOctagon className="w-3.5 h-3.5 text-red-400 shrink-0 animate-pulse" /> Attention, tentative d&apos;arnaque !
+                            </>
                           )}
-                        </h4>
+                        </div>
                         <p className="text-[9px] text-red-300/80 leading-normal mt-1">
                           {isGroupSource && !containsKnownSignature ? (
                             "Un message suspect a été envoyé dans votre groupe. Prenez garde aux liens."
@@ -1283,8 +1299,8 @@ export default function AgentSupervisionTab({
                             <p className="text-[7.5px] text-slate-400 font-sans leading-none mt-0.5 truncate">
                               Votre gardien contre les arnaques Floov et Tmoney
                             </p>
-                            <p className="text-[8px] font-bold text-emerald-400 tracking-wide mt-1">
-                              🟢 PROTECTEUR ACTIF ET SÛRE
+                            <p className="text-[8px] font-bold text-emerald-400 tracking-wide mt-1 flex items-center gap-1">
+                              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 inline" /> PROTECTEUR ACTIF ET SÛR
                             </p>
                           </div>
 
@@ -1339,12 +1355,12 @@ export default function AgentSupervisionTab({
                       >
                         {isShieldActive ? (
                           <>
-                            <span>🟢 PROTECTION ACTIVÉE ET SÛRE</span>
+                            <span className="flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5 text-white" /> PROTECTION ACTIVÉE ET SÛRE</span>
                             <span className="text-[6.5px] font-semibold opacity-80">(Appuyez pour vérifier à nouveau)</span>
                           </>
                         ) : (
                           <>
-                            <span>🔴 SÉCURITÉ INACTIVE</span>
+                            <span className="flex items-center gap-1"><ShieldX className="w-3.5 h-3.5 text-white animate-pulse" /> SÉCURITÉ INACTIVE</span>
                             <span className="text-[6.5px] font-semibold opacity-80">(Touchez pour activer)</span>
                           </>
                         )}

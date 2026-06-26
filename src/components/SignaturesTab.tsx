@@ -20,6 +20,7 @@ import {
   Sparkles,
   Send,
   ShieldCheck,
+  ShieldAlert,
   AlertOctagon,
   Terminal,
   Shield,
@@ -710,7 +711,18 @@ export default function SignaturesTab({ threats, onRefreshData }: Props) {
                     <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
                       <div>
                         <h4 className="text-xs font-bold text-white tracking-wide uppercase">{manualResult.summary}</h4>
-                        <p className="text-[9px] text-[#3B82F6] font-bold uppercase">Verdict IA : {manualResult.isPhishing ? "🔴 INTRUSION DÉTECTÉE" : "🟢 CONFORME / SAIN"}</p>
+                        <div className="text-[9px] text-[#3B82F6] font-bold uppercase flex items-center gap-1 mt-1.5">
+                          <span>Verdict IA :</span>
+                          {manualResult.isPhishing ? (
+                            <span className="inline-flex items-center gap-1 text-red-400">
+                              <ShieldAlert className="w-3.5 h-3.5 text-red-400" /> INTRUSION DÉTECTÉE
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-emerald-400">
+                              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> CONFORME / SAIN
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <span className={`px-2 py-0.5 rounded text-[8px] uppercase font-bold ${manualResult.severity === "Critical" ? "bg-red-500/10 text-red-400 border border-red-500/10" : "bg-amber-500/10 text-amber-500"}`}>
                         {manualResult.severity}
@@ -813,9 +825,9 @@ export default function SignaturesTab({ threats, onRefreshData }: Props) {
                 className="bg-transparent text-xs font-mono text-slate-300 outline-none cursor-pointer"
               >
                 <option value="all">Toutes les urgences</option>
-                <option value="Critical">Critique 🔴</option>
-                <option value="Medium">Moyen 🟡</option>
-                <option value="Low">Faible ⚪</option>
+                <option value="Critical">Critique (Élevée)</option>
+                <option value="Medium">Moyen (Modérée)</option>
+                <option value="Low">Faible (Mineure)</option>
               </select>
             </div>
           </div>

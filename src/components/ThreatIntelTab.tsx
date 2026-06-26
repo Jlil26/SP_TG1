@@ -259,24 +259,25 @@ export default function ThreatIntelTab({
 
               {showConsole && (
                 <div className="p-4 space-y-1.5 max-h-56 overflow-y-auto font-mono text-[10px] leading-relaxed text-slate-300 bg-[#020617]/95">
-                  {fetchingFeed && lastScrapLogs.length === 0 && (
-                    <div className="text-slate-400 italic py-2 animate-pulse">
+                  {fetchingFeed && lastScrapLogs.length === 0 ? (
+                    <div className="text-slate-400 italic py-2 animate-pulse" key="loading-msg">
                       [INFO] Lancement de l&apos;exfiltration... Requête vers les serveurs gouvernementaux togolais...
                     </div>
+                  ) : (
+                    lastScrapLogs.map((log, index) => {
+                      let logClass = "text-slate-400";
+                      if (log.includes("[SUCCESS]")) logClass = "text-emerald-400 font-bold";
+                      if (log.includes("[WARN]")) logClass = "text-amber-400";
+                      if (log.includes("[ERROR]")) logClass = "text-rose-500 font-bold";
+                      if (log.includes("[SUMMARY]")) logClass = "text-cyan-400 font-bold border-t border-slate-800/50 pt-1.5 mt-1.5";
+                      
+                      return (
+                        <div key={`log-${index}`} className={logClass}>
+                          {log}
+                        </div>
+                      );
+                    })
                   )}
-                  {lastScrapLogs.map((log, index) => {
-                    let logClass = "text-slate-400";
-                    if (log.includes("[SUCCESS]")) logClass = "text-emerald-400 font-bold";
-                    if (log.includes("[WARN]")) logClass = "text-amber-400";
-                    if (log.includes("[ERROR]")) logClass = "text-rose-500 font-bold";
-                    if (log.includes("[SUMMARY]")) logClass = "text-cyan-400 font-bold border-t border-slate-800/50 pt-1.5 mt-1.5";
-                    
-                    return (
-                      <div key={index} className={logClass}>
-                        {log}
-                      </div>
-                    );
-                  })}
                 </div>
               )}
 
@@ -453,7 +454,9 @@ export default function ThreatIntelTab({
                           {/* Dynamic AI Briefing (proven exfiltration) */}
                           {article.analysis.briefing && (
                             <div className="mt-2.5 p-2.5 bg-[#3B82F6]/5 rounded-lg border border-[#3B82F6]/15">
-                              <span className="text-[8px] font-bold text-[#3B82F6] font-mono block uppercase">🤖 RÉSUMÉ DÉLIBÉRÉ DE L&apos;IA :</span>
+                              <span className="text-[8px] font-bold text-[#3B82F6] font-mono flex items-center gap-1 uppercase">
+                                <Sparkles className="w-3.5 h-3.5" /> RÉSUMÉ DÉLIBÉRÉ DE L&apos;IA :
+                              </span>
                               <p className="text-[10px] text-slate-200 mt-1 font-sans leading-relaxed italic">
                                 &ldquo;{article.analysis.briefing}&rdquo;
                               </p>
