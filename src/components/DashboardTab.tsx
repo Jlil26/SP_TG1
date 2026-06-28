@@ -347,56 +347,56 @@ export default function DashboardTab({
   return (
     <div className="space-y-6 animate-fade-in" id="sp-sentinel-dashboard">
       
-      {/* 1. Premium Royal Blue Cyber Hero Banner (IMPÉRATIVEMENT INCHANGÉE) */}
-      <div className="relative bg-gradient-to-r from-[#0F296D] via-[#1C4ED8] to-[#0D1F4D] border border-blue-500/20 shadow-xl rounded-2xl p-6 md:p-8 text-white overflow-hidden select-none" id="dashboard-hero-banner">
-        <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none"></div>
-        <div className="absolute -top-12 -left-12 w-48 h-48 bg-cyan-400/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-blue-400/15 rounded-full blur-3xl pointer-events-none"></div>
+      {/* 1. Premium Cyber-Green Hero Banner - Sovereignty and Real-Time Surveillance */}
+      <div className="relative bg-gradient-to-r from-emerald-950/85 via-[#0c281e]/90 to-teal-950/85 border border-[#10B981]/20 shadow-xl rounded-2xl p-6 md:p-8 text-white overflow-hidden select-none holo-scanline" id="dashboard-hero-banner">
+        <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.02)_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none"></div>
+        <div className="absolute -top-12 -left-12 w-48 h-48 bg-[#10B981]/5 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-[#10B981]/5 rounded-full blur-3xl pointer-events-none"></div>
 
-        {/* Vertical glowing network stream bars */}
-        <div className="absolute right-0 bottom-0 top-0 w-2/5 hidden md:flex items-end justify-between px-10 pb-0 opacity-90 select-none pointer-events-none gap-2">
-          <div className="w-4 bg-gradient-to-t from-[#2563EB]/40 to-[#06B6D4] rounded-t-md animate-pulse" style={{ height: '35%', animationDuration: '3s' }}></div>
-          <div className="w-4 bg-gradient-to-t from-[#2563EB]/50 to-white rounded-t-md animate-pulse" style={{ height: '60%', animationDuration: '4.5s' }}></div>
-          <div className="w-4 bg-gradient-to-t from-[#2563EB] to-[#06B6D4] rounded-t-md" style={{ height: '85%' }}></div>
-          <div className="w-4 bg-gradient-to-t from-[#2563EB]/30 to-white rounded-t-md animate-pulse" style={{ height: '45%', animationDuration: '3.5s' }}></div>
-          <div className="w-4 bg-gradient-to-t from-[#06B6D4] to-white rounded-t-md" style={{ height: '95%' }}></div>
-          <div className="w-4 bg-gradient-to-t from-[#2563EB]/60 to-[#06B6D4] rounded-t-md animate-pulse" style={{ height: '70%', animationDuration: '5s' }}></div>
-          <div className="w-4 bg-gradient-to-t from-[#2563EB]/40 to-white rounded-t-md" style={{ height: '50%' }}></div>
+        {/* Vertical glowing network stream bars in modern green */}
+        <div className="absolute right-0 bottom-0 top-0 w-2/5 hidden md:flex items-end justify-between px-10 pb-0 opacity-85 select-none pointer-events-none gap-2">
+          <div className="w-4 bg-gradient-to-t from-[#10B981]/10 to-[#10B981]/40 rounded-t-md animate-pulse" style={{ height: '35%', animationDuration: '3s' }}></div>
+          <div className="w-4 bg-gradient-to-t from-[#10B981]/20 to-[#10B981]/60 rounded-t-md animate-pulse" style={{ height: '60%', animationDuration: '4.5s' }}></div>
+          <div className="w-4 bg-gradient-to-t from-[#10B981]/30 to-[#10B981]/80 rounded-t-md" style={{ height: '85%' }}></div>
+          <div className="w-4 bg-gradient-to-t from-[#10B981]/10 to-[#10B981]/40 rounded-t-md animate-pulse" style={{ height: '45%', animationDuration: '3.5s' }}></div>
+          <div className="w-4 bg-gradient-to-t from-[#10B981]/40 to-[#10B981] rounded-t-md" style={{ height: '95%' }}></div>
+          <div className="w-4 bg-gradient-to-t from-[#10B981]/25 to-[#10B981]/70 rounded-t-md animate-pulse" style={{ height: '70%', animationDuration: '5s' }}></div>
+          <div className="w-4 bg-gradient-to-t from-[#10B981]/20 to-[#10B981]/50 rounded-t-md" style={{ height: '50%' }}></div>
         </div>
 
         <div className="relative z-10 max-w-xl space-y-3">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-cyan-500/20 border border-cyan-400/30 rounded-full text-xs font-mono font-bold text-cyan-300 uppercase tracking-widest leading-none">
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-300 animate-ping"></span>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#10B981]/15 border border-[#10B981]/30 rounded-full text-xs font-mono font-bold text-[#10B981] uppercase tracking-widest leading-none">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-ping"></span>
             SP SENTINEL NETWORK COGNITIVE
           </div>
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight font-display text-white">
             Supervision Bivalente &amp; Renseignements Cyber en Temps Réel
           </h1>
-          <p className="text-sm text-blue-100 font-sans leading-relaxed max-w-lg opacity-90">
+          <p className="text-sm text-[#94A3B8] font-sans leading-relaxed max-w-lg opacity-90">
             Plateforme souveraine d'échange de signatures de menaces (COI) et de détection automatique d'ingénierie sociale par modèle IA cognitif pour la République du Togo.
           </p>
         </div>
       </div>
 
-      {/* 2. Real-time synchronised TOGO Network Time zone bar (IMPÉRATIVEMENT INCHANGÉE) */}
-      <div className="bg-[#121A2F] border border-white/5 rounded-xl px-5 py-3 flex flex-col sm:flex-row justify-between items-center gap-3 shadow-md" id="dashboard-sync-bar">
+      {/* 2. Real-time synchronised TOGO Network Time zone bar */}
+      <div className="bg-[#111827] border border-white/5 rounded-xl px-5 py-3 flex flex-col sm:flex-row justify-between items-center gap-3 shadow-md" id="dashboard-sync-bar">
         <div className="flex items-center gap-2">
-          <Clock className="w-5 h-5 text-[#3B82F6] animate-pulse" />
-          <span className="text-xs font-mono font-bold text-[#E5E7EB] uppercase tracking-widest">
+          <Clock className="w-5 h-5 text-[#10B981] animate-pulse" />
+          <span className="text-xs font-mono font-bold text-[#94A3B8] uppercase tracking-widest">
             SYNCHRONISATION RENSEIGNEMENT TOGO (GMT NETWORK)
           </span>
         </div>
         
         <div className="text-xs font-mono font-bold text-white bg-[#0B1020]/45 border border-white/5 px-3 py-1.5 rounded-lg flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-[#10B981] animate-ping"></span>
+          <span className="w-2 h-2 rounded-full bg-[#10B981] radar-glow-ring"></span>
           {togoClock || "Synchronisation..."}
         </div>
       </div>
 
       {/* Beautiful Dynamic Zero-State Card */}
       {threats.length === 0 && mobileSignals.length === 0 && (
-        <div className="bg-gradient-to-r from-blue-500/10 to-indigo-500/5 border border-blue-500/20 rounded-2xl p-6 text-center space-y-4 animate-fade-in" id="dashboard-zero-state">
-          <div className="mx-auto w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/20 text-blue-400">
+        <div className="bg-[#111827] border border-white/5 rounded-2xl p-6 text-center space-y-4 animate-fade-in" id="dashboard-zero-state">
+          <div className="mx-auto w-12 h-12 rounded-full bg-[#10B981]/10 flex items-center justify-center border border-[#10B981]/20 text-[#10B981]">
             <Shield className="w-6 h-6 animate-pulse" />
           </div>
           <div className="max-w-md mx-auto space-y-2">
@@ -411,7 +411,7 @@ export default function DashboardTab({
                 onClick={async () => {
                   await onLoadDemoData();
                 }}
-                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white text-xs font-bold font-mono uppercase tracking-wider rounded-xl transition shadow-md active:scale-95 cursor-pointer flex items-center gap-2"
+                className="px-4 py-2 bg-[#10B981] hover:bg-[#10B981]/90 text-white text-xs font-bold font-mono uppercase tracking-wider rounded-xl transition shadow-md active:scale-95 cursor-pointer flex items-center gap-2"
               >
                 <RefreshCw className="w-4 h-4 animate-spin-slow" />
                 Charger les Données de Démo (ANCY)
@@ -425,8 +425,8 @@ export default function DashboardTab({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="kpi-metrics-strip">
         
         {/* KPI 1: Total Menaces Interceptées */}
-        <div className="bg-[#121A2F] border border-slate-800 rounded-xl p-4 flex items-center justify-between shadow-lg relative overflow-hidden group hover:border-[#3B82F6]/30 transition duration-350">
-          <div className="absolute top-0 right-0 w-20 h-20 bg-[#3B82F6]/5 rounded-full blur-2xl group-hover:bg-[#3B82F6]/10 transition"></div>
+        <div className="bg-[#111827] border border-white/5 rounded-xl p-4 flex items-center justify-between shadow-lg relative overflow-hidden group hover:border-[#10B981]/35 transition duration-350">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-[#10B981]/5 rounded-full blur-2xl group-hover:bg-[#10B981]/10 transition"></div>
           <div className="space-y-1">
             <span className="text-[9px] font-mono text-slate-400 uppercase font-black tracking-widest block">Menaces Interceptées</span>
             <div className="flex items-baseline gap-2">
@@ -439,13 +439,13 @@ export default function DashboardTab({
             </div>
             <p className="text-[9px] text-slate-500 font-sans">Bloqué localement sur le territoire</p>
           </div>
-          <div className="p-3 rounded-xl bg-[#3B82F6]/10 text-[#3B82F6] border border-white/5 shrink-0">
+          <div className="p-3 rounded-xl bg-[#10B981]/10 text-[#10B981] border border-white/5 shrink-0">
             <Shield className="w-5 h-5" />
           </div>
         </div>
 
         {/* KPI 2: Signatures Actives en Base */}
-        <div className="bg-[#121A2F] border border-slate-800 rounded-xl p-4 flex items-center justify-between shadow-lg relative overflow-hidden group hover:border-emerald-500/30 transition duration-350">
+        <div className="bg-[#111827] border border-white/5 rounded-xl p-4 flex items-center justify-between shadow-lg relative overflow-hidden group hover:border-[#10B981]/35 transition duration-350">
           <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition"></div>
           <div className="space-y-1">
             <span className="text-[9px] font-mono text-slate-400 uppercase font-black tracking-widest block">Signatures en Base</span>
@@ -465,41 +465,41 @@ export default function DashboardTab({
         </div>
 
         {/* KPI 3: Déclarations Citoyennes Actives */}
-        <div className="bg-[#121A2F] border border-slate-800 rounded-xl p-4 flex items-center justify-between shadow-lg relative overflow-hidden group hover:border-red-500/30 transition duration-350">
-          <div className="absolute top-0 right-0 w-20 h-20 bg-red-500/5 rounded-full blur-2xl group-hover:bg-red-500/10 transition"></div>
+        <div className="bg-[#111827] border border-white/5 rounded-xl p-4 flex items-center justify-between shadow-lg relative overflow-hidden group hover:border-slate-800 transition duration-350">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-red-950/5 rounded-full blur-2xl transition"></div>
           <div className="space-y-1">
             <span className="text-[9px] font-mono text-slate-400 uppercase font-black tracking-widest block">Plaintes Citoyennes</span>
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold font-mono text-[#EF4444] tracking-tight">{kpiStats.citizenComplaints}</span>
+              <span className="text-2xl font-bold font-mono text-white tracking-tight">{kpiStats.citizenComplaints}</span>
               {kpiStats.citizenComplaints > 0 ? (
-                <span className="text-[9px] font-bold text-red-400 font-sans bg-red-500/10 px-1.5 py-0.5 rounded">En Attente</span>
+                <span className="text-[9px] font-bold text-red-300 font-sans bg-red-950/40 px-1.5 py-0.5 rounded border border-red-900/30">En Attente</span>
               ) : (
-                <span className="text-[9px] font-bold text-slate-500 font-sans bg-slate-800 px-1.5 py-0.5 rounded">Stable</span>
+                <span className="text-[9px] font-bold text-slate-500 font-sans bg-slate-850 px-1.5 py-0.5 rounded">Stable</span>
               )}
             </div>
             <p className="text-[9px] text-slate-500 font-sans">Soumissions citoyennes directes</p>
           </div>
-          <div className="p-3 rounded-xl bg-red-500/10 text-red-400 border border-white/5 shrink-0">
+          <div className="p-3 rounded-xl bg-red-950/30 text-red-300 border border-red-900/30 shrink-0">
             <AlertCircle className="w-5 h-5" />
           </div>
         </div>
 
         {/* KPI 4: Agents Mobiles Synchronisés */}
-        <div className="bg-[#121A2F] border border-slate-800 rounded-xl p-4 flex items-center justify-between shadow-lg relative overflow-hidden group hover:border-cyan-500/30 transition duration-350">
-          <div className="absolute top-0 right-0 w-20 h-20 bg-cyan-500/5 rounded-full blur-2xl group-hover:bg-cyan-500/10 transition"></div>
+        <div className="bg-[#111827] border border-white/5 rounded-xl p-4 flex items-center justify-between shadow-lg relative overflow-hidden group hover:border-[#10B981]/35 transition duration-350">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-[#10B981]/5 rounded-full blur-2xl group-hover:bg-[#10B981]/10 transition"></div>
           <div className="space-y-1">
             <span className="text-[9px] font-mono text-slate-400 uppercase font-black tracking-widest block">Terminaux Mobiles</span>
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold font-mono text-[#06B6D4] tracking-tight">{kpiStats.synchronizedAgents.toLocaleString()}</span>
+              <span className="text-2xl font-bold font-mono text-white tracking-tight">{kpiStats.synchronizedAgents.toLocaleString()}</span>
               {kpiStats.synchronizedAgents > 0 ? (
-                <span className="text-[9px] font-bold text-cyan-400 font-sans bg-cyan-500/10 px-1.5 py-0.5 rounded">En ligne</span>
+                <span className="text-[9px] font-bold text-[#10B981] font-sans bg-[#10B981]/10 px-1.5 py-0.5 rounded">En ligne</span>
               ) : (
                 <span className="text-[9px] font-bold text-slate-500 font-sans bg-slate-800 px-1.5 py-0.5 rounded">0</span>
               )}
             </div>
             <p className="text-[9px] text-slate-500 font-sans">Synchronisés en direct au Togo</p>
           </div>
-          <div className="p-3 rounded-xl bg-cyan-500/10 text-cyan-400 border border-white/5 shrink-0">
+          <div className="p-3 rounded-xl bg-[#10B981]/10 text-[#10B981] border border-white/5 shrink-0">
             <Smartphone className="w-5 h-5" />
           </div>
         </div>
@@ -507,14 +507,18 @@ export default function DashboardTab({
       </div>
 
       {/* 4. Zone Centrale Opérationnelle (Layout en 2 Colonnes : 70% / 30%) */}
+      <div className="separator-elegant">
+        <div className="separator-node"></div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-10 gap-6" id="central-operational-zone">
         
         {/* Colonne Gauche (70%) - Flux des Alertes en Temps Réel (Live Threat Feed) */}
-        <div className="bg-[#121A2F] border border-slate-800 rounded-2xl p-5 shadow-xl lg:col-span-7 flex flex-col justify-between">
+        <div className="bg-[#111827] border border-white/5 rounded-2xl p-5 shadow-xl lg:col-span-7 flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+            <div className="flex items-center justify-between border-b border-white/5 pb-3 mb-4">
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span>
+                <span className="w-2 h-2 rounded-full bg-[#10B981] radar-glow-ring"></span>
                 <h3 className="text-xs font-bold text-white tracking-widest font-mono uppercase">
                   FLUX DES ALERTES DE MENACES EN TEMPS RÉEL (SOC LIVE)
                 </h3>
@@ -523,19 +527,19 @@ export default function DashboardTab({
                 Lomé (GMT+0)
               </span>
             </div>
-
+ 
             {/* Event List Table */}
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-800 text-[8.5px] font-mono uppercase text-slate-500 tracking-wider">
-                    <th className="pb-2 font-black">Heure Lomé</th>
-                    <th className="pb-2 font-black">Type d'arnaque / Alerte</th>
-                    <th className="pb-2 font-black">Expéditeur / Source</th>
-                    <th className="pb-2 font-black text-right">Statut SOC</th>
+                  <tr className="border-b border-white/5 text-[8.5px] font-mono uppercase text-slate-500 tracking-wider">
+                    <th className="pb-2 font-black text-slate-400">Heure Lomé</th>
+                    <th className="pb-2 font-black text-slate-400">Type d'arnaque / Alerte</th>
+                    <th className="pb-2 font-black text-slate-400">Expéditeur / Source</th>
+                    <th className="pb-2 font-black text-right text-slate-400">Statut SOC</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/40 text-[10px] font-mono">
+                <tbody className="divide-y divide-white/5 text-[10px] font-mono">
                   {liveThreatFeed.map((alert) => (
                     <tr key={alert.id} className="hover:bg-slate-950/20 transition-all group">
                       <td className="py-3 text-slate-400 font-bold whitespace-nowrap">
@@ -545,8 +549,8 @@ export default function DashboardTab({
                         <div className="flex flex-col">
                           <span className={`px-2 py-0.5 rounded text-[8.5px] font-black w-fit font-sans ${
                             alert.severity === "Critical" 
-                              ? "bg-[#EF4444]/15 text-[#EF4444] border border-[#EF4444]/20" 
-                              : "bg-amber-500/10 text-amber-500 border border-amber-500/15"
+                              ? "bg-red-950/40 text-red-300 border border-red-900/30" 
+                              : "bg-slate-800/60 text-slate-300 border border-slate-700"
                           }`}>
                             {alert.type}
                           </span>
@@ -561,10 +565,10 @@ export default function DashboardTab({
                       <td className="py-3 text-right">
                         <span className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider ${
                           alert.status === "Bloqué" 
-                            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" 
+                            ? "bg-emerald-500/15 text-[#10B981] border border-[#10B981]/25" 
                             : alert.status === "En Quarantaine"
-                            ? "bg-amber-500/10 text-amber-500 border border-amber-500/20"
-                            : "bg-[#06B6D4]/10 text-[#06B6D4] border border-[#06B6D4]/20"
+                            ? "bg-slate-800/40 text-slate-300 border border-slate-700"
+                            : "bg-emerald-500/10 text-[#10B981] border border-[#10B981]/20"
                         }`}>
                           {alert.status}
                         </span>
@@ -575,36 +579,36 @@ export default function DashboardTab({
               </table>
             </div>
           </div>
-
-          <div className="text-[9px] text-slate-500 mt-4 border-t border-slate-800/60 pt-3 flex justify-between items-center font-mono">
+ 
+          <div className="text-[9px] text-slate-500 mt-4 border-t border-white/5 pt-3 flex justify-between items-center font-mono">
             <span>Flux de surveillance unifié (Appels + SMS)</span>
             <span>{threats.length} signatures de l'opérateur actives</span>
           </div>
         </div>
-
+ 
         {/* Colonne Droite (30%) - Statut des Scrapers & IA (Threat Intel Engine) */}
-        <div className="bg-[#121A2F] border border-slate-800 rounded-2xl p-5 shadow-xl lg:col-span-3 flex flex-col justify-between">
+        <div className="bg-[#111827] border border-white/5 rounded-2xl p-5 shadow-xl lg:col-span-3 flex flex-col justify-between">
           <div className="space-y-4">
-            <div className="border-b border-slate-800 pb-3">
+            <div className="border-b border-white/5 pb-3">
               <h3 className="text-xs font-bold text-white tracking-widest font-mono uppercase flex items-center gap-1.5">
                 <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
                 MOTEURS SCRAPERS &amp; IA
               </h3>
             </div>
-
+ 
             {/* Scraping state */}
             <div className="space-y-2.5">
               <span className="text-[8.5px] font-mono font-bold text-slate-400 uppercase tracking-widest block">Sources Cyber Connectées :</span>
               
-              <div className="bg-slate-950/40 border border-slate-800 rounded-lg p-2.5 flex items-center justify-between">
+              <div className="bg-slate-950/40 border border-white/5 rounded-lg p-2.5 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                   <span className="text-[10px] font-bold text-slate-200 font-mono">CERT.TG</span>
                 </div>
                 <span className="text-[8.5px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded uppercase">Opérationnel</span>
               </div>
-
-              <div className="bg-slate-950/40 border border-slate-800 rounded-lg p-2.5 flex items-center justify-between">
+ 
+              <div className="bg-slate-950/40 border border-white/5 rounded-lg p-2.5 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                   <span className="text-[10px] font-bold text-slate-200 font-mono">ANCY.GOUV.TG</span>
@@ -612,22 +616,22 @@ export default function DashboardTab({
                 <span className="text-[8.5px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded uppercase">Connecté</span>
               </div>
             </div>
-
+ 
             {/* Last Gemini Analysis */}
             <div className="space-y-2 pt-1">
               <span className="text-[8.5px] font-mono font-bold text-slate-400 uppercase tracking-widest block">Dernière Analyse Gemini :</span>
               
-              <div className="bg-[#0B1020] border border-slate-800 rounded-xl p-3 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-12 h-12 bg-blue-500/5 rounded-full blur-xl"></div>
+              <div className="bg-[#0B1020] border border-white/5 rounded-xl p-3 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-12 h-12 bg-emerald-500/5 rounded-full blur-xl"></div>
                 
                 <div className="flex items-center gap-1.5 mb-2">
-                  <Sparkles className="w-3.5 h-3.5 text-[#3B82F6]" />
+                  <Sparkles className="w-3.5 h-3.5 text-[#10B981]" />
                   <span className="text-[9px] font-black text-white font-mono uppercase">EXTRACTION COGNITIVE</span>
                 </div>
-
+ 
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-1.5">
-                    <span className="px-1 py-0.5 bg-red-500/10 border border-red-500/20 rounded text-[7.5px] text-red-400 font-bold uppercase font-mono">
+                    <span className="px-1 py-0.5 bg-red-950/40 border border-red-900/30 rounded text-[7.5px] text-red-300 font-bold uppercase font-mono">
                       {latestGeminiIoC.type}
                     </span>
                     <span className="text-[10px] font-bold text-slate-200 font-mono truncate select-all">
@@ -641,10 +645,10 @@ export default function DashboardTab({
               </div>
             </div>
           </div>
-
-          <div className="pt-3 border-t border-slate-800/60 mt-4 text-[8.5px] font-mono text-slate-500 flex items-center justify-between">
+ 
+          <div className="pt-3 border-t border-white/5 mt-4 text-[8.5px] font-mono text-slate-500 flex items-center justify-between">
             <span>IA: Gemini 3.5 Flash</span>
-            <span className="text-[#3B82F6] font-bold">Modèle ACTIF</span>
+            <span className="text-[#10B981] font-bold">Modèle ACTIF</span>
           </div>
         </div>
 
@@ -654,12 +658,12 @@ export default function DashboardTab({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" id="dashboard-lower-zone">
         
         {/* Graphique de comportement de fraude */}
-        <div className="bg-[#121A2F] border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+        <div className="bg-[#111827] border border-white/5 rounded-2xl p-5 shadow-xl flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+            <div className="flex items-center justify-between border-b border-white/5 pb-3 mb-4">
               <div className="space-y-0.5">
                 <h3 className="text-xs font-bold text-white tracking-widest font-mono uppercase flex items-center gap-1.5">
-                  <TrendingUp className="w-3.5 h-3.5 text-[#3B82F6]" />
+                  <TrendingUp className="w-3.5 h-3.5 text-[#10B981]" />
                   COURBE DE DÉBITS DES FRAUDES EN DIRECT
                 </h3>
                 <p className="text-[10px] text-slate-400">Chronologie hebdomadaire consolidée par criticité de menaces.</p>
@@ -672,12 +676,12 @@ export default function DashboardTab({
                 <AreaChart data={chartData} margin={{ left: -25, top: 5, right: 5, bottom: 0 }}>
                   <defs>
                     <linearGradient id="critGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#EF4444" stopOpacity={0.15}/>
-                      <stop offset="95%" stopColor="#EF4444" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#991B1B" stopOpacity={0.15}/>
+                      <stop offset="95%" stopColor="#991B1B" stopOpacity={0}/>
                     </linearGradient>
                     <linearGradient id="medGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.15}/>
-                      <stop offset="95%" stopColor="#F59E0B" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#475569" stopOpacity={0.15}/>
+                      <stop offset="95%" stopColor="#475569" stopOpacity={0}/>
                     </linearGradient>
                     <linearGradient id="faibleGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#10B981" stopOpacity={0.15}/>
@@ -688,31 +692,31 @@ export default function DashboardTab({
                   <XAxis dataKey="name" stroke="#64748b" style={{ fontSize: 9, fontFamily: "monospace" }} />
                   <YAxis stroke="#64748b" style={{ fontSize: 9, fontFamily: "monospace" }} />
                   <Tooltip 
-                    contentStyle={{ backgroundColor: "#121A2F", borderColor: "rgba(255,255,255,0.08)", color: "#E5E7EB" }}
+                    contentStyle={{ backgroundColor: "#111827", borderColor: "rgba(255,255,255,0.08)", color: "#E5E7EB" }}
                     labelStyle={{ fontFamily: "monospace", color: "#94A3B8" }}
                   />
                   <Legend wrapperStyle={{ fontSize: 9, fontFamily: "monospace", paddingTop: 10 }} />
-                  <Area type="monotone" dataKey="Critique" stroke="#EF4444" strokeWidth={1.5} fillOpacity={1} fill="url(#critGrad)" name="Critique" />
-                  <Area type="monotone" dataKey="Moyen" stroke="#F59E0B" strokeWidth={1.5} fillOpacity={1} fill="url(#medGrad)" name="Moyen" />
+                  <Area type="monotone" dataKey="Critique" stroke="#991B1B" strokeWidth={1.5} fillOpacity={1} fill="url(#critGrad)" name="Critique" />
+                  <Area type="monotone" dataKey="Moyen" stroke="#475569" strokeWidth={1.5} fillOpacity={1} fill="url(#medGrad)" name="Moyen" />
                   <Area type="monotone" dataKey="Faible" stroke="#10B981" strokeWidth={1.5} fillOpacity={1} fill="url(#faibleGrad)" name="Faible" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </div>
 
-          <div className="pt-2 border-t border-slate-800/60 mt-4 text-[8px] font-mono text-slate-500 flex justify-between">
+          <div className="pt-2 border-t border-white/5 mt-4 text-[8px] font-mono text-slate-500 flex justify-between">
             <span>Pics d'activité calculés en temps réel</span>
             <span>Régions interconnectées</span>
           </div>
         </div>
 
         {/* Mini-Carte Thermique & Répartition Géographique au Togo */}
-        <div className="bg-[#121A2F] border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+        <div className="bg-[#111827] border border-white/5 rounded-2xl p-5 shadow-xl flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+            <div className="flex items-center justify-between border-b border-white/5 pb-3 mb-4">
               <div className="space-y-0.5">
                 <h3 className="text-xs font-bold text-white tracking-widest font-mono uppercase flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+                  <MapPin className="w-3.5 h-3.5 text-[#10B981]" />
                   REPARTITION GÉOGRAPHIQUE &amp; HEATMAP (TOGO)
                 </h3>
                 <p className="text-[10px] text-slate-400">Concentration spatiale des campagnes d'escroqueries par SMS.</p>
@@ -723,7 +727,7 @@ export default function DashboardTab({
             <div className="grid grid-cols-12 gap-4 mt-2">
               
               {/* Vertical stacked 5-zone representation of Togo */}
-              <div className="col-span-4 bg-slate-950/55 rounded-xl border border-slate-800/80 p-2 h-52 flex flex-col justify-between relative overflow-hidden">
+              <div className="col-span-4 bg-slate-950/55 rounded-xl border border-white/5 p-2 h-52 flex flex-col justify-between relative overflow-hidden">
                 <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px)] [background-size:10px_10px] pointer-events-none"></div>
                 
                 {/* Savanes */}
@@ -731,12 +735,12 @@ export default function DashboardTab({
                   onClick={() => setSelectedRegion(selectedRegion === "savanes" ? null : "savanes")}
                   className={`w-full h-[18%] transition-all duration-300 rounded-lg flex items-center justify-between px-2 text-[8px] font-mono border cursor-pointer ${
                     selectedRegion === "savanes"
-                      ? "bg-emerald-500/15 border-emerald-500 text-white"
+                      ? "bg-[#10B981]/15 border-[#10B981] text-white"
                       : selectedRegion ? "bg-slate-900/10 border-transparent opacity-30 text-slate-500" : "bg-slate-900/50 border-slate-800/60 hover:bg-slate-850 text-slate-300"
                   }`}
                 >
                   <div className="flex items-center gap-1">
-                    <span className={`w-1.5 h-1.5 rounded-full ${selectedRegion === "savanes" ? "bg-emerald-400 animate-pulse" : "bg-emerald-500"}`}></span>
+                    <span className={`w-1.5 h-1.5 rounded-full ${selectedRegion === "savanes" ? "bg-[#10B981] animate-pulse" : "bg-[#10B981]"}`}></span>
                     <span className="font-bold">SAVANES (NORD)</span>
                   </div>
                   <span className="font-bold">
@@ -749,12 +753,12 @@ export default function DashboardTab({
                   onClick={() => setSelectedRegion(selectedRegion === "kara" ? null : "kara")}
                   className={`w-full h-[18%] transition-all duration-300 rounded-lg flex items-center justify-between px-2 text-[8px] font-mono border cursor-pointer ${
                     selectedRegion === "kara"
-                      ? "bg-red-500/15 border-red-500 text-white"
+                      ? "bg-[#10B981]/15 border-[#10B981] text-white"
                       : selectedRegion ? "bg-slate-900/10 border-transparent opacity-30 text-slate-500" : "bg-slate-900/50 border-slate-800/60 hover:bg-slate-850 text-slate-300"
                   }`}
                 >
                   <div className="flex items-center gap-1">
-                    <span className={`w-1.5 h-1.5 rounded-full ${selectedRegion === "kara" ? "bg-red-400 animate-pulse" : "bg-red-500"}`}></span>
+                    <span className={`w-1.5 h-1.5 rounded-full ${selectedRegion === "kara" ? "bg-[#10B981] animate-pulse" : "bg-[#10B981]"}`}></span>
                     <span className="font-bold">KARA</span>
                   </div>
                   <span className="font-bold">
@@ -767,12 +771,12 @@ export default function DashboardTab({
                   onClick={() => setSelectedRegion(selectedRegion === "centrale" ? null : "centrale")}
                   className={`w-full h-[18%] transition-all duration-300 rounded-lg flex items-center justify-between px-2 text-[8px] font-mono border cursor-pointer ${
                     selectedRegion === "centrale"
-                      ? "bg-emerald-500/15 border-emerald-500 text-white"
+                      ? "bg-[#10B981]/15 border-[#10B981] text-white"
                       : selectedRegion ? "bg-slate-900/10 border-transparent opacity-30 text-slate-500" : "bg-slate-900/50 border-slate-800/60 hover:bg-slate-850 text-slate-300"
                   }`}
                 >
                   <div className="flex items-center gap-1">
-                    <span className={`w-1.5 h-1.5 rounded-full ${selectedRegion === "centrale" ? "bg-emerald-400 animate-pulse" : "bg-emerald-500"}`}></span>
+                    <span className={`w-1.5 h-1.5 rounded-full ${selectedRegion === "centrale" ? "bg-[#10B981] animate-pulse" : "bg-[#10B981]"}`}></span>
                     <span className="font-bold">CENTRALE</span>
                   </div>
                   <span className="font-bold">
@@ -785,12 +789,12 @@ export default function DashboardTab({
                   onClick={() => setSelectedRegion(selectedRegion === "plateaux" ? null : "plateaux")}
                   className={`w-full h-[18%] transition-all duration-300 rounded-lg flex items-center justify-between px-2 text-[8px] font-mono border cursor-pointer ${
                     selectedRegion === "plateaux"
-                      ? "bg-amber-500/15 border-amber-500 text-white"
+                      ? "bg-[#10B981]/15 border-[#10B981] text-white"
                       : selectedRegion ? "bg-slate-900/10 border-transparent opacity-30 text-slate-500" : "bg-slate-900/50 border-slate-800/60 hover:bg-slate-850 text-slate-300"
                   }`}
                 >
                   <div className="flex items-center gap-1">
-                    <span className={`w-1.5 h-1.5 rounded-full ${selectedRegion === "plateaux" ? "bg-amber-400 animate-pulse" : "bg-amber-500"}`}></span>
+                    <span className={`w-1.5 h-1.5 rounded-full ${selectedRegion === "plateaux" ? "bg-[#10B981] animate-pulse" : "bg-[#10B981]"}`}></span>
                     <span className="font-bold">PLATEAUX</span>
                   </div>
                   <span className="font-bold">
@@ -803,12 +807,12 @@ export default function DashboardTab({
                   onClick={() => setSelectedRegion(selectedRegion === "maritime" ? null : "maritime")}
                   className={`w-full h-[18%] transition-all duration-300 rounded-lg flex items-center justify-between px-2 text-[8px] font-mono border cursor-pointer ${
                     selectedRegion === "maritime"
-                      ? "bg-red-500/15 border-red-500 text-white"
+                      ? "bg-[#10B981]/15 border-[#10B981] text-white"
                       : selectedRegion ? "bg-slate-900/10 border-transparent opacity-30 text-slate-500" : "bg-slate-900/50 border-slate-800/60 hover:bg-slate-850 text-slate-300"
                   }`}
                 >
                   <div className="flex items-center gap-1">
-                    <span className={`w-1.5 h-1.5 rounded-full ${selectedRegion === "maritime" ? "bg-red-400 animate-pulse" : "bg-red-500"}`}></span>
+                    <span className={`w-1.5 h-1.5 rounded-full ${selectedRegion === "maritime" ? "bg-[#10B981] animate-pulse" : "bg-[#10B981]"}`}></span>
                     <span className="font-bold">MARITIME (SUD)</span>
                   </div>
                   <span className="font-bold">
@@ -825,13 +829,13 @@ export default function DashboardTab({
                     onClick={() => setSelectedRegion(selectedRegion === reg.id ? null : reg.id)}
                     className={`p-1.5 rounded-lg border transition cursor-pointer ${
                       selectedRegion === reg.id 
-                        ? "bg-[#3B82F6]/10 border-[#3B82F6]/35" 
+                        ? "bg-[#10B981]/10 border-[#10B981]/35" 
                         : "bg-slate-950/20 border-transparent hover:border-slate-800"
                     }`}
                   >
                     <div className="flex justify-between items-center text-[9px] font-mono">
                       <span className="text-white font-bold">{reg.region}</span>
-                      <span className={`font-bold ${reg.percentage > 50 ? "text-red-400" : "text-emerald-400"}`}>
+                      <span className="font-bold text-[#10B981]">
                         {reg.incidents} cas ({reg.percentage}%)
                       </span>
                     </div>
@@ -839,15 +843,13 @@ export default function DashboardTab({
                     {/* Visual bar meter */}
                     <div className="w-full bg-slate-900 h-1.5 mt-1 rounded overflow-hidden">
                       <div 
-                        className={`h-full rounded transition-all duration-700 ${
-                          reg.percentage > 50 ? "bg-[#EF4444]" : "bg-emerald-500"
-                        }`} 
+                        className="h-full rounded transition-all duration-700 bg-[#10B981]" 
                         style={{ width: `${reg.percentage}%` }}
                       ></div>
                     </div>
 
                     {selectedRegion === reg.id && (
-                      <div className="mt-1.5 text-[8px] font-mono text-slate-400 border-t border-slate-800 pt-1 leading-normal animate-fade-in space-y-0.5">
+                      <div className="mt-1.5 text-[8px] font-mono text-slate-400 border-t border-white/5 pt-1 leading-normal animate-fade-in space-y-0.5">
                         <div><strong className="text-white">Foyers:</strong> {reg.hotspot}</div>
                         <div><strong className="text-white">Tendance:</strong> {reg.trend}</div>
                       </div>
@@ -859,7 +861,7 @@ export default function DashboardTab({
             </div>
           </div>
 
-          <div className="text-[9px] text-slate-500 mt-4 border-t border-slate-800/60 pt-3 flex justify-between items-center font-mono">
+          <div className="text-[9px] text-slate-500 mt-4 border-t border-white/5 pt-3 flex justify-between items-center font-mono">
             <span>Cliquez sur une zone du rectangle ou de la liste pour filtrer par région</span>
             <span className="text-slate-400">Cordon de sécurité ANCY</span>
           </div>

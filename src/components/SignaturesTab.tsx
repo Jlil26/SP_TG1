@@ -461,7 +461,7 @@ export default function SignaturesTab({ threats, onRefreshData }: Props) {
             </div>
           </div>
           <div className="flex items-center gap-1.5 text-[10px] text-[#94A3B8] leading-normal pt-1 pl-1 bg-[#10B981]/5 p-2 rounded-md">
-            <span className="inline-block w-2 h-2 rounded-full bg-[#10B981] animate-ping"></span>
+            <span className="inline-block w-2 h-2 rounded-full bg-[#10B981] radar-glow-ring"></span>
             <span>
               <strong className="text-emerald-300">Diffusion d&apos;immunisation :</strong> Les agents terminaux Kéfyl Shield obtiendront cette signature de blocage passive à la reconnexion ou lors de sa prochaine mise à jour hertzienne de sécurité.
             </span>
@@ -470,10 +470,10 @@ export default function SignaturesTab({ threats, onRefreshData }: Props) {
       )}
 
       {/* Upper header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#121A2F] border border-white/5 rounded-xl p-6 shadow-md">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#111827] border border-white/5 rounded-xl p-6 shadow-md">
         <div>
           <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2">
-            <Database className="w-4.5 h-4.5 text-[#3B82F6]" />
+            <Database className="w-4.5 h-4.5 text-[#10B981]" />
             Console d&apos;Administration et d&apos;Édition de la Base Active
           </h3>
           <p className="text-[11px] text-[#94A3B8] mt-1 font-sans">
@@ -504,14 +504,14 @@ export default function SignaturesTab({ threats, onRefreshData }: Props) {
               className="px-3 py-2 bg-[#0B1020] border border-white/5 hover:border-[#1A2542] hover:bg-[#1A2542] text-slate-200 text-[10px] font-mono font-bold rounded-lg uppercase tracking-wider transition flex items-center gap-1.5 cursor-pointer shadow-sm"
               title="Importer et fusionner un lot de signatures (.json)"
             >
-              <Upload className="w-3.5 h-3.5 text-[#3B82F6]" />
+              <Upload className="w-3.5 h-3.5 text-[#10B981]" />
               IMPORTER
             </button>
           </div>
 
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="px-4 py-2 bg-[#3B82F6] hover:bg-[#3B82F6]/90 text-white font-mono text-xs font-bold rounded-xl uppercase tracking-wider transition flex items-center gap-2 cursor-pointer shadow-sm"
+            className="px-4 py-2 bg-[#10B981] hover:bg-[#10B981]/85 text-white font-mono text-xs font-bold rounded-xl uppercase tracking-wider transition flex items-center gap-2 cursor-pointer shadow-sm"
           >
             {showAddForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
             {showAddForm ? "Fermer" : "Ajouter une Signature"}
@@ -521,13 +521,13 @@ export default function SignaturesTab({ threats, onRefreshData }: Props) {
 
       {/* Add Signature Panel Form with Tabs */}
       {showAddForm && (
-        <div className="bg-[#121A2F] border border-white/5 p-6 rounded-xl space-y-5 animate-fade-in shadow-md">
+        <div className="bg-[#111827] border border-white/5 p-6 rounded-xl space-y-5 animate-fade-in shadow-md">
           {/* Sub tabs inside additive form */}
           <div className="flex border-b border-white/5 w-full bg-[#0B1020]/45 rounded-lg p-1">
             <button
               type="button"
               onClick={() => setFormMode("direct")}
-              className={`flex-1 py-2 font-mono text-[10px] font-bold flex items-center justify-center gap-1.5 rounded-md transition-all cursor-pointer ${formMode === "direct" ? "bg-[#3B82F6] text-white shadow" : "text-[#94A3B8] hover:text-[#E5E7EB]"}`}
+              className={`flex-1 py-2 font-mono text-[10px] font-bold flex items-center justify-center gap-1.5 rounded-md transition-all cursor-pointer ${formMode === "direct" ? "bg-[#10B981] text-white shadow" : "text-[#94A3B8] hover:text-[#E5E7EB]"}`}
             >
               <Plus className="w-3.5 h-3.5" />
               SAISIE MANUELLE DIRECTE
@@ -535,7 +535,7 @@ export default function SignaturesTab({ threats, onRefreshData }: Props) {
             <button
               type="button"
               onClick={() => setFormMode("ai_analysis")}
-              className={`flex-1 py-2 font-mono text-[10px] font-bold flex items-center justify-center gap-1.5 rounded-md transition-all cursor-pointer ${formMode === "ai_analysis" ? "bg-[#3B82F6] text-white shadow" : "text-[#94A3B8] hover:text-[#E5E7EB]"}`}
+              className={`flex-1 py-2 font-mono text-[10px] font-bold flex items-center justify-center gap-1.5 rounded-md transition-all cursor-pointer ${formMode === "ai_analysis" ? "bg-[#10B981] text-white shadow" : "text-[#94A3B8] hover:text-[#E5E7EB]"}`}
             >
               <Cpu className="w-3.5 h-3.5" />
               ANALYSE COGNITIVE PAR IA (SMS / WEB)
@@ -552,7 +552,7 @@ export default function SignaturesTab({ threats, onRefreshData }: Props) {
                   value={newValue}
                   onChange={(e) => setNewValue(e.target.value)}
                   placeholder="Ex. +228 99 88 77 66 ou ceet-pay.xyz"
-                  className="w-full bg-[#0B1020] border border-white/5 focus:border-[#3B82F6] p-2.5 rounded-lg text-white outline-none"
+                  className="w-full bg-[#0B1020] border border-white/5 focus:border-[#10B981] p-2.5 rounded-lg text-white outline-none"
                 />
               </div>
 
@@ -642,7 +642,7 @@ export default function SignaturesTab({ threats, onRefreshData }: Props) {
                         key={idx}
                         type="button"
                         onClick={() => setSuspectText(sample.text)}
-                        className="text-left text-[11px] bg-[#0B1020]/50 hover:bg-[#3B82F6]/10 p-2 rounded-lg border border-white/5 text-[#94A3B8] hover:text-white transition block truncate cursor-pointer font-bold"
+                        className="text-left text-[11px] bg-[#0B1020]/50 hover:bg-[#10B981]/10 p-2 rounded-lg border border-white/5 text-[#94A3B8] hover:text-white transition block truncate cursor-pointer font-bold"
                       >
                         💡 {sample.title}
                       </button>
@@ -656,7 +656,7 @@ export default function SignaturesTab({ threats, onRefreshData }: Props) {
                     <select
                       value={selectedModel}
                       onChange={(e) => setSelectedModel(e.target.value as any)}
-                      className="w-full bg-[#0B1020] border border-white/5 p-2.5 rounded-lg text-slate-300 focus:outline-none focus:border-[#3B82F6] font-mono text-xs cursor-pointer"
+                      className="w-full bg-[#0B1020] border border-white/5 p-2.5 rounded-lg text-slate-300 focus:outline-none focus:border-[#10B981] font-mono text-xs cursor-pointer"
                     >
                       <option value="gemini">✨ Gemini Flash Enterprise (Défaut SOC)</option>
                       <option value="claude">Anthropic Claude 3.5 Sonnet</option>
@@ -672,14 +672,14 @@ export default function SignaturesTab({ threats, onRefreshData }: Props) {
                       onChange={(e) => setSuspectText(e.target.value)}
                       rows={4}
                       placeholder="Collez ici le SMS ou le lien à tester avant son inscription dans le registre d'immunisation..."
-                      className="w-full bg-[#0B1020] border border-white/5 p-3 rounded-lg text-xs text-slate-300 focus:outline-none focus:border-[#3B82F6] leading-relaxed"
+                      className="w-full bg-[#0B1020] border border-white/5 p-3 rounded-lg text-xs text-slate-300 focus:outline-none focus:border-[#10B981] leading-relaxed"
                     ></textarea>
                   </div>
 
                   <button
                     type="submit"
                     disabled={analyzingManual || suspectText.trim().length === 0}
-                    className="w-full py-2.5 bg-[#3B82F6] hover:bg-[#3B82F6]/90 font-mono text-xs font-bold uppercase rounded-lg text-white flex items-center justify-center gap-2 disabled:bg-[#121A2F] disabled:text-slate-650 transition cursor-pointer"
+                    className="w-full py-2.5 bg-[#10B981] hover:bg-[#10B981]/90 font-mono text-xs font-bold uppercase rounded-lg text-white flex items-center justify-center gap-2 disabled:bg-[#121A2F] disabled:text-slate-650 transition cursor-pointer"
                   >
                     {analyzingManual ? (
                       <>
@@ -688,7 +688,7 @@ export default function SignaturesTab({ threats, onRefreshData }: Props) {
                       </>
                     ) : (
                       <>
-                        <Sparkles className="w-3.5 h-3.5 text-[#06B6D4]" />
+                        <Sparkles className="w-3.5 h-3.5 text-[#10B981]" />
                         Analyse et Vérification par l&apos;IA
                       </>
                     )}
@@ -700,7 +700,7 @@ export default function SignaturesTab({ threats, onRefreshData }: Props) {
               <div className="lg:col-span-7 bg-[#0B1020]/25 rounded-xl border border-white/5 p-4 flex flex-col justify-between">
                 {analyzingManual ? (
                   <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-3 min-h-[220px]">
-                    <Cpu className="w-9 h-9 text-[#06B6D4] animate-spin" />
+                    <Cpu className="w-9 h-9 text-[#10B981] animate-spin" />
                     <div>
                       <h4 className="text-xs font-bold text-white uppercase font-mono">Décodage Cognitive Heuristique</h4>
                       <p className="text-[10px] text-slate-500 font-mono uppercase mt-1">Comparaison en temps réel avec le registre d&apos;immunisation mobile...</p>
@@ -711,15 +711,15 @@ export default function SignaturesTab({ threats, onRefreshData }: Props) {
                     <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
                       <div>
                         <h4 className="text-xs font-bold text-white tracking-wide uppercase">{manualResult.summary}</h4>
-                        <div className="text-[9px] text-[#3B82F6] font-bold uppercase flex items-center gap-1 mt-1.5">
+                        <div className="text-[9px] text-[#10B981] font-bold uppercase flex items-center gap-1 mt-1.5">
                           <span>Verdict IA :</span>
                           {manualResult.isPhishing ? (
                             <span className="inline-flex items-center gap-1 text-red-400">
                               <ShieldAlert className="w-3.5 h-3.5 text-red-400" /> INTRUSION DÉTECTÉE
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 text-emerald-400">
-                              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> CONFORME / SAIN
+                            <span className="inline-flex items-center gap-1 text-[#10B981]">
+                              <ShieldCheck className="w-3.5 h-3.5 text-[#10B981]" /> CONFORME / SAIN
                             </span>
                           )}
                         </div>
@@ -729,8 +729,8 @@ export default function SignaturesTab({ threats, onRefreshData }: Props) {
                       </span>
                     </div>
 
-                    <div className="bg-[#3B82F6]/5 border border-[#3B82F6]/10 p-3 rounded-lg text-[11px] text-slate-350 leading-relaxed font-sans">
-                      <strong className="text-[#3B82F6] font-mono uppercase text-[9px] block mb-1">MÉCANISME D&apos;ATTENTION FRAUDULEUX IDENTIFIÉ :</strong>
+                    <div className="bg-[#10B981]/5 border border-[#10B981]/10 p-3 rounded-lg text-[11px] text-slate-350 leading-relaxed font-sans">
+                      <strong className="text-[#10B981] font-mono uppercase text-[9px] block mb-1">MÉCANISME D&apos;ATTENTION FRAUDULEUX IDENTIFIÉ :</strong>
                       {manualResult.explanation}
                     </div>
 
@@ -796,7 +796,7 @@ export default function SignaturesTab({ threats, onRefreshData }: Props) {
               placeholder="Rechercher par valeur, emplacement, description..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-[#0B1020] border border-white/5 focus:border-[#3B82F6] pl-10 pr-4 py-2 rounded-xl text-xs font-mono text-slate-200 outline-none transition"
+              className="w-full bg-[#0B1020] border border-white/5 focus:border-[#10B981] pl-10 pr-4 py-2 rounded-xl text-xs font-mono text-slate-200 outline-none transition"
             />
           </div>
 

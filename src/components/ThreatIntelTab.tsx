@@ -133,13 +133,13 @@ export default function ThreatIntelTab({
       
       {/* Exfiltration automatic engine (cert.tg, ancy.gouv.tg) */}
       <div className="space-y-6 animate-fade-in text-xs font-mono">
-        <div className="bg-[#121A2F]/90 border border-white/5 rounded-xl p-6 shadow-md relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="bg-[#111827]/90 border border-white/5 rounded-xl p-6 shadow-md relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[#10B981]/5 rounded-full blur-3xl pointer-events-none"></div>
           
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2">
-                <Rss className="w-4.5 h-4.5 text-[#3B82F6] animate-pulse" />
+                <Rss className="w-4.5 h-4.5 text-[#10B981] animate-pulse" />
                 EXFILTRATION CYBER AUTOMATISÉE EN DIRECT (CERT.TG &amp; ANCY)
               </h3>
               <p className="text-[11px] text-[#94A3B8] mt-1 font-sans">
@@ -154,11 +154,11 @@ export default function ThreatIntelTab({
             {/* Left: Date Preset Intervals matching user constraints */}
             <div className="flex flex-wrap items-center gap-3">
               <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest flex items-center gap-1.5 mr-1">
-                <Filter className="w-3.5 h-3.5 text-[#3B82F6]" />
+                <Filter className="w-3.5 h-3.5 text-[#10B981]" />
                 INTERVALLE DE RECHERCHE :
               </span>
               
-              <div className="flex flex-wrap bg-[#121A2F]/90 rounded-lg p-0.5 border border-white/5">
+              <div className="flex flex-wrap bg-slate-900/95 rounded-lg p-0.5 border border-white/5">
                 {[
                   { value: "all", label: "Toutes" },
                   { value: "today", label: "Aujourd'hui" },
@@ -174,7 +174,7 @@ export default function ThreatIntelTab({
                     onClick={() => setDatePreset(preset.value as any)}
                     className={`px-2.5 py-1.5 rounded text-[10px] font-bold uppercase transition-all duration-200 cursor-pointer ${
                       datePreset === preset.value 
-                        ? "bg-[#3B82F6] text-white shadow-sm font-black" 
+                        ? "bg-[#10B981] text-white shadow-sm font-black" 
                         : "text-slate-400 hover:text-white hover:bg-white/5"
                     }`}
                   >
@@ -186,7 +186,7 @@ export default function ThreatIntelTab({
               {/* Collapsible custom date bounds */}
               {datePreset === "custom" && (
                 <div className="flex flex-wrap items-center gap-2 animate-fade-in">
-                  <div className="flex items-center gap-2 bg-[#121A2F]/80 px-2.5 py-1.5 rounded-lg border border-white/5">
+                  <div className="flex items-center gap-2 bg-slate-900/80 px-2.5 py-1.5 rounded-lg border border-white/5">
                     <span className="text-[9px] text-slate-500 uppercase">Du</span>
                     <input 
                       type="date" 
@@ -195,7 +195,7 @@ export default function ThreatIntelTab({
                       className="bg-transparent border-none text-white text-[11px] font-mono focus:outline-none w-28 [color-scheme:dark]"
                     />
                   </div>
-                  <div className="flex items-center gap-2 bg-[#121A2F]/80 px-2.5 py-1.5 rounded-lg border border-white/5">
+                  <div className="flex items-center gap-2 bg-slate-900/80 px-2.5 py-1.5 rounded-lg border border-white/5">
                     <span className="text-[9px] text-slate-500 uppercase">Au</span>
                     <input 
                       type="date" 
@@ -217,7 +217,7 @@ export default function ThreatIntelTab({
               <button 
                 onClick={onRefreshFeeds}
                 disabled={fetchingFeed}
-                className="px-4 py-2 bg-[#3B82F6] hover:bg-[#3B82F6]/90 active:bg-indigo-700 disabled:bg-[#121A2F] disabled:text-slate-500 text-white rounded-lg text-xs font-mono font-bold tracking-wider uppercase flex items-center gap-2 shrink-0 transition cursor-pointer shadow-sm border border-white/5"
+                className="px-4 py-2 bg-[#10B981] hover:bg-[#10B981]/90 active:bg-emerald-700 disabled:bg-slate-900 disabled:text-slate-500 text-white rounded-lg text-xs font-mono font-bold tracking-wider uppercase flex items-center gap-2 shrink-0 transition cursor-pointer shadow-sm border border-white/5"
               >
                 {fetchingFeed ? (
                   <>
@@ -313,7 +313,7 @@ export default function ThreatIntelTab({
               </span>
               <button
                 onClick={onResetDeleted}
-                className="px-3 py-1.5 bg-[#3B82F6] hover:bg-[#3B82F6]/90 text-white rounded text-[10px] font-bold uppercase tracking-wider font-mono transition cursor-pointer"
+                className="px-3 py-1.5 bg-[#10B981] hover:bg-[#10B981]/90 text-white rounded text-[10px] font-bold uppercase tracking-wider font-mono transition cursor-pointer"
               >
                 Tout réafficher
               </button>
@@ -361,7 +361,7 @@ export default function ThreatIntelTab({
                             article.source === "CERT.TG" 
                               ? "bg-[#EF4444]/15 text-[#EF4444] border-[#EF4444]/25" 
                               : article.source === "ANCY.GOUV.TG"
-                              ? "bg-teal-500/10 text-teal-400 border border-teal-500/20"
+                              ? "bg-slate-800 text-slate-300 border border-slate-700"
                               : "bg-purple-500/10 text-purple-400 border border-purple-500/20"
                           }`}>
                             {article.source}
@@ -389,7 +389,7 @@ export default function ThreatIntelTab({
                       
                       <h4 className="text-xs font-bold text-white tracking-wider mb-2 font-mono uppercase leading-relaxed">{article.title}</h4>
                       <p className="text-[11px] text-[#94A3B8] leading-relaxed font-sans">{article.snippet}</p>
-
+ 
                       {/* Associated downloaded PDFs matching Requirement 9 */}
                       {article.pdfUrl && (
                         <div className="mt-3.5 p-2.5 bg-[#EF4444]/5 border border-[#EF4444]/10 rounded-lg flex items-center justify-between">
@@ -409,7 +409,7 @@ export default function ThreatIntelTab({
                         </div>
                       )}
                     </div>
-
+ 
                     <div className="mt-5 pt-4 border-t border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[10px] font-mono">
                       <span className="text-slate-500 truncate max-w-xs">{article.sourceUrl}</span>
                       
@@ -423,16 +423,16 @@ export default function ThreatIntelTab({
                         <button 
                           onClick={() => processArticle(article.id)}
                           disabled={processingArticles[article.id]}
-                          className="px-3 py-1.5 bg-[#3B82F6]/10 hover:bg-[#3B82F6] text-[#3B82F6] hover:text-white border border-[#3B82F6]/25 font-mono text-[10px] font-bold uppercase rounded transition flex items-center gap-1.5 shrink-0 cursor-pointer"
+                          className="px-3 py-1.5 bg-[#10B981]/10 hover:bg-[#10B981] text-[#10B981] hover:text-white border border-[#10B981]/25 font-mono text-[10px] font-bold uppercase rounded transition flex items-center gap-1.5 shrink-0 cursor-pointer"
                         >
                           {processingArticles[article.id] ? (
                             <>
-                              <span className="w-3 h-3 border-2 border-indigo-400/30 border-t-indigo-400 rounded-full animate-spin"></span>
+                              <span className="w-3 h-3 border-2 border-[#10B981]/30 border-t-[#10B981] rounded-full animate-spin"></span>
                               Traitement...
                             </>
                           ) : (
                             <>
-                              <Sparkles className="w-3 h-3 text-[#06B6D4]" />
+                              <Sparkles className="w-3 h-3 text-[#10B981]" />
                               Analyser par l&apos;IA
                             </>
                           )}
@@ -440,21 +440,21 @@ export default function ThreatIntelTab({
                       )}
                     </div>
                   </div>
-
+ 
                   {/* Right Column: AI Extraction and action push to Database */}
                   <div className="p-5 xl:col-span-5 bg-[#0B1020]/25 flex flex-col justify-between">
                     {article.processed && article.analysis ? (
                       <div className="space-y-4 h-full flex flex-col justify-between">
                         <div>
                           <p className="text-[9px] font-mono text-slate-500 uppercase font-bold flex items-center gap-1">
-                            <Cpu className="w-3.5 h-3.5 text-[#3B82F6]" />
+                            <Cpu className="w-3.5 h-3.5 text-[#10B981]" />
                             INTELLIGENCE COGNITIVE DE MENACE (IoC)
                           </p>
                           
                           {/* Dynamic AI Briefing (proven exfiltration) */}
                           {article.analysis.briefing && (
-                            <div className="mt-2.5 p-2.5 bg-[#3B82F6]/5 rounded-lg border border-[#3B82F6]/15">
-                              <span className="text-[8px] font-bold text-[#3B82F6] font-mono flex items-center gap-1 uppercase">
+                            <div className="mt-2.5 p-2.5 bg-[#10B981]/5 rounded-lg border border-[#10B981]/15">
+                              <span className="text-[8px] font-bold text-[#10B981] font-mono flex items-center gap-1 uppercase">
                                 <Sparkles className="w-3.5 h-3.5" /> RÉSUMÉ DÉLIBÉRÉ DE L&apos;IA :
                               </span>
                               <p className="text-[10px] text-slate-200 mt-1 font-sans leading-relaxed italic">
@@ -482,13 +482,13 @@ export default function ThreatIntelTab({
                                 {article.analysis.detectedMaliciousIndicators.map((ioc, idx) => (
                                   <div key={idx} className="bg-[#0B1020] border border-white/5 rounded p-2 flex items-center justify-between text-xs">
                                     <div className="font-mono flex items-center gap-2 truncate">
-                                      <span className={`px-1.5 py-0.5 rounded text-[8px] uppercase font-bold border ${ioc.type === "domain" ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20" : ioc.type === "phone" ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20" : "bg-[#121A2F] text-slate-400 border border-white/5"}`}>
+                                      <span className={`px-1.5 py-0.5 rounded text-[8px] uppercase font-bold border ${ioc.type === "domain" ? "bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/20" : "bg-slate-800 text-slate-300 border border-slate-700"}`}>
                                         {ioc.type}
                                       </span>
                                       <span className="text-white truncate font-bold">{ioc.valeur}</span>
                                     </div>
                                     <div className="flex items-center gap-2 shrink-0">
-                                      <span className={`px-1 rounded text-[8px] uppercase font-bold ${ioc.severity === "Critical" ? "bg-[#EF4444]/15 text-[#EF4444]" : "bg-amber-500/10 text-amber-500"}`}>
+                                      <span className={`px-1 rounded text-[8px] uppercase font-bold ${ioc.severity === "Critical" ? "bg-red-950/40 text-red-300" : "bg-slate-800 text-slate-300"}`}>
                                         {ioc.severity}
                                       </span>
                                       <button 
@@ -505,7 +505,7 @@ export default function ThreatIntelTab({
                               </div>
                             ) : (
                               <div className="p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-xl text-center space-y-1">
-                                <span className="text-[10px] font-mono font-black text-emerald-400 block uppercase">
+                                <span className="text-[10px] font-mono font-black text-[#10B981] block uppercase">
                                   ✅ AUCUNE SIGNATURE MALVEILLANTE
                                 </span>
                                 <p className="text-[9px] text-slate-400 leading-normal font-sans">

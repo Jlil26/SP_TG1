@@ -486,15 +486,15 @@ Cyber Expert Certifié - SOC ANCY - République Togolaise.
       {/* PROFESSIONAL SLATE CONTROL HEADER */}
       <div className="bg-[#0B1020]/45 border border-white/5 rounded-2xl p-4">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-white/5 pb-3 mb-3">
-          <div className="text-xs font-mono font-bold text-[#3B82F6] tracking-widest uppercase flex items-center gap-2">
-            <Gavel className="w-4 h-4 text-[#3B82F6]" />
+          <div className="text-xs font-mono font-bold text-[#10B981] tracking-widest uppercase flex items-center gap-2">
+            <Gavel className="w-4 h-4 text-[#10B981]" />
             Centre d&apos;Investigation Forensique (SOC ANCY)
           </div>
           <button
             onClick={onRefreshData}
             className="px-4 py-1.5 bg-[#121A2F]/80 border border-white/5 hover:border-white/10 hover:bg-[#121A2F] text-white rounded-xl text-xs font-mono flex items-center gap-2 cursor-pointer transition shadow-sm self-start sm:self-auto shrink-0"
           >
-            <RefreshCw className="w-3.5 h-3.5 text-[#3B82F6]" />
+            <RefreshCw className="w-3.5 h-3.5 text-[#10B981]" />
             SYNCHRONISER LES PREUVES
           </button>
         </div>
@@ -505,7 +505,7 @@ Cyber Expert Certifié - SOC ANCY - République Togolaise.
             onClick={() => { setActiveSubTab("history"); setSelectedDossier(null); }}
             className={`py-3 text-xs uppercase font-mono font-bold tracking-wider transition cursor-pointer relative flex items-center justify-center w-full text-center rounded-xl border ${
               activeSubTab === "history" 
-                ? "text-white bg-[#3B82F6]/10 border-[#3B82F6]/30 shadow-[0_0_12px_rgba(59,130,246,0.06)]" 
+                ? "text-white bg-[#10B981]/10 border-[#10B981]/30 shadow-[0_0_12px_rgba(16,185,129,0.06)]" 
                 : "text-slate-400 border-transparent hover:text-white hover:bg-[#121A2F]/45"
             }`}
           >
@@ -516,7 +516,7 @@ Cyber Expert Certifié - SOC ANCY - République Togolaise.
             onClick={() => { setActiveSubTab("correlation"); setSelectedHistoryAlert(null); }}
             className={`py-3 text-xs uppercase font-mono font-bold tracking-wider transition cursor-pointer relative flex items-center justify-center gap-1.5 w-full text-center rounded-xl border ${
               activeSubTab === "correlation" 
-                ? "text-white bg-[#3B82F6]/10 border-[#3B82F6]/30 shadow-[0_0_12px_rgba(59,130,246,0.06)]" 
+                ? "text-white bg-[#10B981]/10 border-[#10B981]/30 shadow-[0_0_12px_rgba(16,185,129,0.06)]" 
                 : "text-slate-400 border-transparent hover:text-white hover:bg-[#121A2F]/45"
             }`}
           >
@@ -573,7 +573,7 @@ Cyber Expert Certifié - SOC ANCY - République Togolaise.
                   <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-500" />
                   <input
                     type="text"
-                    className="w-full bg-[#121A2F]/80 border border-white/5 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#3B82F6]"
+                    className="w-full bg-[#121A2F]/80 border border-white/5 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#10B981]"
                     placeholder="Filtrer par sonde, numéro, texte..."
                     value={historySearchQuery}
                     onChange={(e) => setHistorySearchQuery(e.target.value)}
@@ -617,7 +617,7 @@ Cyber Expert Certifié - SOC ANCY - République Togolaise.
                             <td className="py-3.5 px-4 font-mono font-bold text-white text-[11px] min-w-[170px]">
                               <div className="flex items-center gap-1.5">
                                 <span className={`w-1.5 h-1.5 rounded-full ${
-                                  curStatus === "approved" ? "bg-emerald-500" : curStatus === "false_positive" ? "bg-red-500" : "bg-[#3B82F6]"
+                                  curStatus === "approved" ? "bg-emerald-500" : curStatus === "false_positive" ? "bg-red-500" : "bg-[#10B981]"
                                 }`}></span>
                                 {sig.agentName || sig.deviceId}
                               </div>
@@ -647,7 +647,7 @@ Cyber Expert Certifié - SOC ANCY - République Togolaise.
                               {sig.location} • {new Date(sig.timestamp).toLocaleDateString("fr-FR", {day: "2-digit", month: "2-digit", year: "numeric"})} à {new Date(sig.timestamp).toLocaleTimeString("fr-FR", {hour: '2-digit', minute:'2-digit'})}
                             </td>
                             <td className="py-3.5 px-4 text-right">
-                              <span className="text-[10px] font-mono font-bold text-[#3B82F6] opacity-80 group-hover:opacity-100 group-hover:underline transition">
+                              <span className="text-[10px] font-mono font-bold text-[#10B981] opacity-80 group-hover:opacity-100 group-hover:underline transition">
                                 Ouvrir le dossier →
                               </span>
                             </td>
@@ -721,7 +721,7 @@ Cyber Expert Certifié - SOC ANCY - République Togolaise.
                         onClick={() => handleGroupingKeyChange(btn.key as any)}
                         className={`px-3 py-1.5 rounded-xl text-[10px] font-mono font-bold border transition flex items-center gap-1.5 cursor-pointer ${
                           isSelected 
-                            ? "bg-[#3B82F6] text-white border-[#3B82F6]"
+                            ? "bg-[#10B981] text-white border-[#10B981]"
                             : "bg-[#121A2F]/60 text-slate-400 border-white/5 hover:text-white"
                         }`}
                       >
@@ -782,7 +782,7 @@ Cyber Expert Certifié - SOC ANCY - République Togolaise.
                               ⚪ Faux Positif
                             </span>
                           ) : (
-                            <span className="text-[8px] bg-[#121A2F]/80 text-[#3B82F6] px-1.5 py-0.5 rounded font-bold uppercase font-mono tracking-tight shrink-0">
+                            <span className="text-[8px] bg-[#121A2F]/80 text-[#10B981] px-1.5 py-0.5 rounded font-bold uppercase font-mono tracking-tight shrink-0">
                               Surveillé
                             </span>
                           )}
@@ -791,7 +791,7 @@ Cyber Expert Certifié - SOC ANCY - République Togolaise.
                         <button
                           type="button"
                           onClick={() => openDossierModal(dossier)}
-                          className="text-[10px] font-mono font-black text-[#3B82F6] group-hover:text-blue-400 transition cursor-pointer flex items-center gap-1"
+                          className="text-[10px] font-mono font-black text-[#10B981] group-hover:text-emerald-400 transition cursor-pointer flex items-center gap-1"
                         >
                           Ouvrir le dossier →
                         </button>
@@ -1145,7 +1145,7 @@ Cyber Expert Certifié - SOC ANCY - République Togolaise.
               {/* Header */}
               <div className="bg-[#0B1020] border-b border-white/5 p-5 flex items-center justify-between">
                 <div className="space-y-1">
-                  <div className="flex items-center gap-1.5 text-[9px] font-mono font-bold text-[#3B82F6] uppercase tracking-widest">
+                  <div className="flex items-center gap-1.5 text-[9px] font-mono font-bold text-[#10B981] uppercase tracking-widest">
                     <Shield className="w-3.5 h-3.5" />
                     Chambre d&apos;Investigation criminelle souveraine (ANCY)
                   </div>
@@ -1312,7 +1312,7 @@ Cyber Expert Certifié - SOC ANCY - République Togolaise.
                           onClick={() => setShowHistoryReport(!showHistoryReport)}
                           className={`px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold border transition cursor-pointer ${
                             showHistoryReport 
-                              ? "bg-[#3B82F6]/20 text-[#3B82F6] border-[#3B82F6]/50"
+                              ? "bg-[#10B981]/20 text-[#10B981] border-[#10B981]/50"
                               : "bg-transparent text-slate-400 border-white/5 hover:text-white"
                           }`}
                         >
@@ -1336,7 +1336,7 @@ Cyber Expert Certifié - SOC ANCY - République Togolaise.
                             <button
                               type="button"
                               onClick={handleDownloadHistoryReport}
-                              className="text-[9px] font-mono text-[#3B82F6] hover:underline flex items-center gap-1 cursor-pointer"
+                              className="text-[9px] font-mono text-[#10B981] hover:underline flex items-center gap-1 cursor-pointer"
                             >
                               <Download className="w-3 h-3" />
                               Télécharger PV (TXT)
@@ -1413,7 +1413,7 @@ Cyber Expert Certifié - SOC ANCY - République Togolaise.
               {/* Modal Header */}
               <div className="bg-[#0B1020] border-b border-white/5 p-5 flex items-center justify-between">
                 <div className="space-y-1">
-                  <div className="flex items-center gap-1.5 text-[9px] font-mono font-bold text-[#3B82F6] uppercase tracking-widest">
+                  <div className="flex items-center gap-1.5 text-[9px] font-mono font-bold text-[#10B981] uppercase tracking-widest">
                     <Shield className="w-3.5 h-3.5" />
                     Chambre d&apos;Investigation criminelle souveraine (ANCY)
                   </div>
@@ -1458,7 +1458,7 @@ Cyber Expert Certifié - SOC ANCY - République Togolaise.
                               onClick={() => setActiveSignalId(sig.id)}
                               className={`p-2.5 rounded-xl border text-left cursor-pointer transition ${
                                 isCurrentActive 
-                                  ? "bg-[#1C2542] border-[#3B82F6]/50" 
+                                  ? "bg-[#1C2542] border-[#10B981]/50" 
                                   : "bg-[#121A2F]/40 border-white/3 hover:border-white/10"
                               }`}
                             >
@@ -1492,7 +1492,7 @@ Cyber Expert Certifié - SOC ANCY - République Togolaise.
                         >
                           <div className="flex items-center justify-between border-b border-white/5 pb-2 text-[9px] font-mono text-slate-500">
                             <span className="flex items-center gap-1">
-                              <Smartphone className="w-3.5 h-3.5 text-[#3B82F6]" />
+                              <Smartphone className="w-3.5 h-3.5 text-[#10B981]" />
                               Copie de l&apos;interception : {activeSignal.agentName || activeSignal.deviceId}
                             </span>
                             <span>Localisation : {activeSignal.location}</span>
@@ -1645,7 +1645,7 @@ Cyber Expert Certifié - SOC ANCY - République Togolaise.
                         onClick={() => setShowDossierReport(!showDossierReport)}
                         className={`px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold border transition cursor-pointer ${
                           showDossierReport 
-                            ? "bg-[#3B82F6]/20 text-[#3B82F6] border-[#3B82F6]/50"
+                            ? "bg-[#10B981]/20 text-[#10B981] border-[#10B981]/50"
                             : "bg-transparent text-slate-400 border-white/5 hover:text-white"
                         }`}
                       >
@@ -1667,14 +1667,14 @@ Cyber Expert Certifié - SOC ANCY - République Togolaise.
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-[9px] font-mono font-bold text-slate-350 uppercase tracking-widest flex items-center gap-1">
-                        <FileSignature className="w-3.5 h-3.5 text-[#3B82F6]" />
+                        <FileSignature className="w-3.5 h-3.5 text-[#10B981]" />
                         Procès-verbal de Corrélation
                       </span>
 
                       <button
                         type="button"
                         onClick={handleDownloadDossierReport}
-                        className="text-[9px] font-mono text-[#3B82F6] hover:underline flex items-center gap-1 cursor-pointer"
+                        className="text-[9px] font-mono text-[#10B981] hover:underline flex items-center gap-1 cursor-pointer"
                       >
                         <Download className="w-3 h-3" />
                         Télécharger le rapport d&apos;activité (TXT)
