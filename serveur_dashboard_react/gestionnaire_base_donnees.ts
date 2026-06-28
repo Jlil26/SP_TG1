@@ -474,7 +474,11 @@ class DBManager {
         password: hashPassword(a.password)
       }));
     }
-    this.save();
+    if (!this.db.threats || this.db.threats.length === 0) {
+      this.loadMocks();
+    } else {
+      this.save();
+    }
   }
 
   private initDatabaseFile() {
