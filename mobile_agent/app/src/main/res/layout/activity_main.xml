@@ -29,72 +29,72 @@
                 android:padding="24dp">
 
                 <!-- Header logo & Premium Brand block -->
-                <LinearLayout
+                <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
                     android:layout_marginBottom="28dp">
 
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="72dp"
-                        android:layout_height="42dp"
-                        app:cardCornerRadius="21dp"
-                        app:cardElevation="4dp"
-                        app:cardBackgroundColor="#00C896">
-                        
-                        <androidx.cardview.widget.CardView
-                            android:layout_width="68dp"
-                            android:layout_height="38dp"
-                            android:layout_gravity="center"
-                            app:cardCornerRadius="19dp"
-                            app:cardElevation="0dp"
-                            app:cardBackgroundColor="#0B0F14">
-                            
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:gravity="center"
-                                android:orientation="horizontal">
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="S"
-                                    android:textColor="#00C896"
-                                    android:textSize="20sp"
-                                    android:textStyle="bold"
-                                    android:fontFamily="sans-serif-black" />
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="P"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="20sp"
-                                    android:textStyle="bold"
-                                    android:fontFamily="sans-serif-black"
-                                    android:layout_marginStart="2dp" />
-                            </LinearLayout>
-                        </androidx.cardview.widget.CardView>
-                    </androidx.cardview.widget.CardView>
-
                     <LinearLayout
-                        android:layout_width="0dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:layout_weight="1"
-                        android:layout_marginStart="16dp">
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_alignParentLeft="true"
+                        android:layout_centerVertical="true">
+
+                        <androidx.cardview.widget.CardView
+                            android:layout_width="52dp"
+                            android:layout_height="32dp"
+                            app:cardCornerRadius="16dp"
+                            app:cardElevation="0dp"
+                            app:cardBackgroundColor="#00C896">
+                            
+                            <androidx.cardview.widget.CardView
+                                android:layout_width="48dp"
+                                android:layout_height="28dp"
+                                android:layout_gravity="center"
+                                app:cardCornerRadius="14dp"
+                                app:cardElevation="0dp"
+                                app:cardBackgroundColor="#0B0F14">
+                                
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:gravity="center"
+                                    android:orientation="horizontal">
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="S"
+                                        android:textColor="#00C896"
+                                        android:textSize="14sp"
+                                        android:textStyle="bold"
+                                        android:fontFamily="sans-serif-black" />
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="P"
+                                        android:textColor="#FFFFFF"
+                                        android:textSize="14sp"
+                                        android:textStyle="bold"
+                                        android:fontFamily="sans-serif-black"
+                                        android:layout_marginStart="1dp" />
+                                </LinearLayout>
+                            </androidx.cardview.widget.CardView>
+                        </androidx.cardview.widget.CardView>
 
                         <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
-                            android:gravity="center_vertical">
+                            android:gravity="center_vertical"
+                            android:layout_marginStart="12dp">
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="SP "
                                 android:textColor="#00C896"
-                                android:textSize="20sp"
+                                android:textSize="17sp"
                                 android:textStyle="bold"
                                 android:fontFamily="sans-serif-black"
                                 android:letterSpacing="0.05" />
@@ -103,53 +103,39 @@
                                 android:layout_height="wrap_content"
                                 android:text="SENTINEL"
                                 android:textColor="#FFFFFF"
-                                android:textSize="20sp"
+                                android:textSize="17sp"
                                 android:textStyle="bold"
                                 android:fontFamily="sans-serif-black"
                                 android:letterSpacing="0.05" />
                         </LinearLayout>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Protection nationale contre les arnaques"
-                            android:textColor="#94A3B8"
-                            android:textSize="11sp"
-                            android:layout_marginTop="2dp" />
-
-                        <!-- Dynamic Status Badge Capsule -->
-                        <androidx.cardview.widget.CardView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            app:cardCornerRadius="6dp"
-                            app:cardElevation="0dp"
-                            app:cardBackgroundColor="#111827"
-                            android:layout_marginTop="8dp">
-                            <TextView
-                                android:id="@+id/tvStatusHeader"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="🟢 PROTECTION ACTIVE"
-                                android:textColor="#00C896"
-                                android:textSize="10sp"
-                                android:textStyle="bold"
-                                android:fontFamily="monospace"
-                                android:paddingHorizontal="8dp"
-                                android:paddingVertical="4dp" />
-                        </androidx.cardview.widget.CardView>
                     </LinearLayout>
 
-                    <!-- Settings ImageButton -->
-                    <ImageButton
+                    <!-- Dynamic Status Badge Capsule on the right, also acts as btnOpenSettings -->
+                    <androidx.cardview.widget.CardView
                         android:id="@+id/btnOpenSettings"
-                        android:layout_width="44dp"
-                        android:layout_height="44dp"
-                        android:background="?android:attr/selectableItemBackgroundBorderless"
-                        android:src="@android:drawable/ic_menu_preferences"
-                        android:tint="#00C896"
-                        android:contentDescription="Paramètres"
-                        android:layout_gravity="top" />
-                </LinearLayout>
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:cardCornerRadius="16dp"
+                        app:cardElevation="0dp"
+                        app:cardBackgroundColor="#111827"
+                        android:foreground="?android:attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:layout_alignParentRight="true"
+                        android:layout_centerVertical="true">
+                        <TextView
+                            android:id="@+id/tvStatusHeader"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="● ACTIF"
+                            android:textColor="#00C896"
+                            android:textSize="9sp"
+                            android:textStyle="bold"
+                            android:fontFamily="sans-serif-black"
+                            android:paddingHorizontal="12dp"
+                            android:paddingVertical="6dp" />
+                    </androidx.cardview.widget.CardView>
+                </RelativeLayout>
 
                 <!-- SECURITY RISK ALERT PANEL (Permissions warning) -->
                 <androidx.cardview.widget.CardView
@@ -213,213 +199,170 @@
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
-                <!-- SECURITY INSTRUMENTATION DIAGRAM -->
-                <androidx.cardview.widget.CardView
+                <!-- 3D HIGH-TECH SPINNING GLOBE -->
+                <com.kefyl.shield.GlobeView
+                    android:id="@+id/globeView"
                     android:layout_width="match_parent"
-                    android:layout_height="130dp"
-                    app:cardCornerRadius="20dp"
-                    app:cardElevation="0dp"
-                    app:cardBackgroundColor="#111827"
-                    android:layout_marginBottom="24dp">
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_margin="1dp"
-                        app:cardCornerRadius="19dp"
-                        app:cardElevation="0dp"
-                        app:cardBackgroundColor="#0B0F14">
-                        <RelativeLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:padding="20dp">
-                            <LinearLayout
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:orientation="vertical"
-                                android:layout_alignParentLeft="true"
-                                android:layout_centerVertical="true">
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="CYBER-RÉSEAU SOC"
-                                    android:textColor="#94A3B8"
-                                    android:textSize="9sp"
-                                    android:fontFamily="monospace"
-                                    android:letterSpacing="0.1" />
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Bouclier de Protection"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="16sp"
-                                    android:textStyle="bold"
-                                    android:layout_marginTop="2dp" />
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Analyse heuristique temps réel"
-                                    android:textColor="#00C896"
-                                    android:textSize="10sp"
-                                    android:layout_marginTop="4dp" />
-                            </LinearLayout>
-                            <androidx.cardview.widget.CardView
-                                android:layout_width="74dp"
-                                android:layout_height="74dp"
-                                app:cardCornerRadius="37dp"
-                                app:cardBackgroundColor="#161E2E"
-                                android:layout_alignParentRight="true"
-                                android:layout_centerVertical="true">
-                                <androidx.cardview.widget.CardView
-                                    android:layout_width="68dp"
-                                    android:layout_height="68dp"
-                                    android:layout_gravity="center"
-                                    app:cardCornerRadius="34dp"
-                                    app:cardBackgroundColor="#0B0F14">
-                                    <LinearLayout
-                                        android:layout_width="match_parent"
-                                        android:layout_height="match_parent"
-                                        android:gravity="center"
-                                        android:orientation="vertical">
-                                        <TextView
-                                            android:layout_width="wrap_content"
-                                            android:layout_height="wrap_content"
-                                            android:text="🛡️"
-                                            android:textSize="22sp" />
-                                        <TextView
-                                            android:layout_width="wrap_content"
-                                            android:layout_height="wrap_content"
-                                            android:text="ACTIF"
-                                            android:textColor="#00C896"
-                                            android:textSize="8sp"
-                                            android:fontFamily="monospace"
-                                            android:textStyle="bold" />
-                                    </LinearLayout>
-                                </androidx.cardview.widget.CardView>
-                            </androidx.cardview.widget.CardView>
-                        </RelativeLayout>
-                    </androidx.cardview.widget.CardView>
-                </androidx.cardview.widget.CardView>
+                    android:layout_height="200dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="16dp" />
 
-                <!-- Stats Dashboard Block (LEFT: SIGNATURES, RIGHT: BLOCKED) -->
-                <LinearLayout
+                <!-- Protection Status Titles -->
+                <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:weightSum="2"
-                    android:layout_marginBottom="24dp">
+                    android:text="PROTECTION GLOBALE ACTIVÉE"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-black"
+                    android:gravity="center"
+                    android:letterSpacing="0.05" />
 
-                    <!-- LEFT CARD: ARNAQUES SMS CONNUES -->
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="0dp"
+                <TextView
+                    android:id="@+id/tvLocationStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Liaison cryptée active • Lomé, Togo"
+                    android:textColor="#94A3B8"
+                    android:textSize="12sp"
+                    android:gravity="center"
+                    android:layout_marginTop="6dp"
+                    android:layout_marginBottom="32dp" />
+
+                <!-- Unified 3-Column Stats Card (SIGNATURES, MENACES, CONTACTS) -->
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardCornerRadius="18dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="#111827"
+                    android:layout_marginBottom="28dp">
+                    
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        app:cardCornerRadius="18dp"
-                        app:cardElevation="2dp"
-                        app:cardBackgroundColor="#1C1E24"
-                        android:layout_marginEnd="8dp">
-                        <androidx.cardview.widget.CardView
-                            android:layout_width="match_parent"
+                        android:orientation="horizontal"
+                        android:paddingVertical="20dp"
+                        android:weightSum="3">
+                        
+                        <!-- Col 1: SIGNATURES CONNUES -->
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_margin="1dp"
-                            app:cardCornerRadius="17dp"
-                            app:cardBackgroundColor="#111827">
-                            <LinearLayout
-                                android:layout_width="match_parent"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center">
+                            <TextView
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:orientation="vertical"
-                                android:padding="20dp">
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="ARNAQUES CONNUES"
-                                    android:textColor="#94A3B8"
-                                    android:textSize="9sp"
-                                    android:fontFamily="monospace"
-                                    android:textStyle="bold" />
-                                <TextView
-                                    android:id="@+id/tvSignaturesCount"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="0"
-                                    android:textColor="#00C896"
-                                    android:textSize="36sp"
-                                    android:textStyle="bold"
-                                    android:layout_marginTop="4dp" />
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Profils malveillants"
-                                    android:textColor="#64748B"
-                                    android:textSize="10sp"
-                                    android:layout_marginTop="2dp" />
-                            </LinearLayout>
-                        </androidx.cardview.widget.CardView>
-                    </androidx.cardview.widget.CardView>
-
-                    <!-- RIGHT CARD: PIÈGES ÉVITÉS -->
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        app:cardCornerRadius="18dp"
-                        app:cardElevation="2dp"
-                        app:cardBackgroundColor="#1C1E24"
-                        android:layout_marginStart="8dp">
-                        <androidx.cardview.widget.CardView
-                            android:layout_width="match_parent"
+                                android:text="SIGNATURES\nCONNUES"
+                                android:textColor="#94A3B8"
+                                android:textSize="9sp"
+                                android:textStyle="bold"
+                                android:fontFamily="sans-serif-black"
+                                android:gravity="center"
+                                android:lineSpacingMultiplier="0.9" />
+                            <TextView
+                                android:id="@+id/tvSignaturesCount"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="11"
+                                android:textColor="#FFFFFF"
+                                android:textSize="24sp"
+                                android:textStyle="bold"
+                                android:fontFamily="sans-serif-black"
+                                android:layout_marginTop="8dp" />
+                        </LinearLayout>
+                        
+                        <!-- Divider 1 -->
+                        <View
+                            android:layout_width="1dp"
+                            android:layout_height="match_parent"
+                            android:background="#1E293B" />
+                        
+                        <!-- Col 2: MENACES DÉTECTÉES -->
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_margin="1dp"
-                            app:cardCornerRadius="17dp"
-                            app:cardBackgroundColor="#111827">
-                            <LinearLayout
-                                android:layout_width="match_parent"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center">
+                            <TextView
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:orientation="vertical"
-                                android:padding="20dp">
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="PIÈGES ÉVITÉS"
-                                    android:textColor="#94A3B8"
-                                    android:textSize="9sp"
-                                    android:fontFamily="monospace"
-                                    android:textStyle="bold" />
-                                <TextView
-                                    android:id="@+id/tvBlockedCount"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="0"
-                                    android:textColor="#EF4444"
-                                    android:textSize="36sp"
-                                    android:textStyle="bold"
-                                    android:layout_marginTop="4dp" />
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Tentatives bloquées"
-                                    android:textColor="#64748B"
-                                    android:textSize="10sp"
-                                    android:layout_marginTop="2dp" />
-                            </LinearLayout>
-                        </androidx.cardview.widget.CardView>
-                    </androidx.cardview.widget.CardView>
-                </LinearLayout>
+                                android:text="MENACES\nDÉTECTÉES"
+                                android:textColor="#94A3B8"
+                                android:textSize="9sp"
+                                android:textStyle="bold"
+                                android:fontFamily="sans-serif-black"
+                                android:gravity="center"
+                                android:lineSpacingMultiplier="0.9" />
+                            <TextView
+                                android:id="@+id/tvBlockedCount"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="4"
+                                android:textColor="#FFFFFF"
+                                android:textSize="24sp"
+                                android:textStyle="bold"
+                                android:fontFamily="sans-serif-black"
+                                android:layout_marginTop="8dp" />
+                        </LinearLayout>
+                        
+                        <!-- Divider 2 -->
+                        <View
+                            android:layout_width="1dp"
+                            android:layout_height="match_parent"
+                            android:background="#1E293B" />
+                        
+                        <!-- Col 3: CONTACTS DANGEREUX -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="CONTACTS\nDANGEREUX"
+                                android:textColor="#94A3B8"
+                                android:textSize="9sp"
+                                android:textStyle="bold"
+                                android:fontFamily="sans-serif-black"
+                                android:gravity="center"
+                                android:lineSpacingMultiplier="0.9" />
+                            <TextView
+                                android:id="@+id/tvDangerousContactsCount"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="6"
+                                android:textColor="#FFFFFF"
+                                android:textSize="24sp"
+                                android:textStyle="bold"
+                                android:fontFamily="sans-serif-black"
+                                android:layout_marginTop="8dp" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
 
-                <!-- Big Simplified Security Status Button -->
+                <!-- Emerald Pill Action Button -->
                 <Button
                     android:id="@+id/btnSyncNow"
                     android:layout_width="match_parent"
-                    android:layout_height="72dp"
-                    android:text="🟢 PROTECTION ACTIVE ET SYNC\n(Touchez ici pour synchroniser)"
+                    android:layout_height="56dp"
+                    android:text="((●)) VÉRIFIER LA PROTECTION ACTIVE"
                     android:backgroundTint="#00C896"
                     android:textColor="#FFFFFF"
-                    android:textSize="13sp"
+                    android:textSize="12.5sp"
                     android:textStyle="bold"
-                    android:gravity="center"
-                    android:lineSpacingExtra="3sp"
+                    android:fontFamily="sans-serif-black"
+                    android:letterSpacing="0.02"
                     android:layout_marginBottom="16dp"
-                    app:cornerRadius="18dp" />
+                    app:cornerRadius="28dp" />
 
+                <!-- Subtitle Text -->
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

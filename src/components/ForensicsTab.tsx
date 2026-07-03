@@ -815,7 +815,7 @@ Cyber Expert Certifié - SOC ANCY - République Togolaise.
           >
             {/* COMPLAINTS ANALYTICS STATS */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-[#121A2F]/60 border border-white/5 p-4 rounded-xl flex items-center justify-between shadow-sm">
+              <div className="bg-[#121A2F]/30 border border-white/5 p-4 rounded-xl flex items-center justify-between shadow-sm">
                 <div>
                   <span className="text-[10px] font-mono font-bold text-slate-400 block uppercase">TOTAL PLAINTE CITOYENNES</span>
                   <strong className="text-xl font-mono text-white block mt-1">{complaints.length}</strong>
@@ -825,36 +825,36 @@ Cyber Expert Certifié - SOC ANCY - République Togolaise.
                 </div>
               </div>
 
-              <div className="bg-[#121A2F]/60 border border-white/5 p-4 rounded-xl flex items-center justify-between shadow-sm">
+              <div className="bg-[#121A2F]/30 border border-white/5 p-4 rounded-xl flex items-center justify-between shadow-sm">
                 <div>
-                  <span className="text-[10px] font-mono font-bold text-amber-400 block uppercase">EN ATTENTE D'AUDIT</span>
-                  <strong className="text-xl font-mono text-amber-400 block mt-1">
+                  <span className="text-[10px] font-mono font-bold text-slate-400 block uppercase">EN ATTENTE D'AUDIT</span>
+                  <strong className="text-xl font-mono text-white block mt-1">
                     {complaints.filter(c => c.status === "pending").length}
                   </strong>
                 </div>
-                <div className="p-2.5 bg-amber-500/10 rounded-lg text-amber-400">
-                  <RefreshCw className="w-5 h-5 animate-spin" style={{ animationDuration: '3s' }} />
+                <div className="p-2.5 bg-white/5 rounded-lg text-slate-400">
+                  <RefreshCw className="w-5 h-5 animate-spin" style={{ animationDuration: '6s' }} />
                 </div>
               </div>
 
-              <div className="bg-[#121A2F]/60 border border-white/5 p-4 rounded-xl flex items-center justify-between shadow-sm">
+              <div className="bg-[#121A2F]/30 border border-white/5 p-4 rounded-xl flex items-center justify-between shadow-sm">
                 <div>
-                  <span className="text-[10px] font-mono font-bold text-red-500 block uppercase">NUMÉROS BLOQUÉS (BASE SYNC)</span>
+                  <span className="text-[10px] font-mono font-bold text-slate-400 block uppercase">NUMÉROS BLOQUÉS (BASE SYNC)</span>
                   <strong className="text-xl font-mono text-white block mt-1">{scams.length}</strong>
                 </div>
-                <div className="p-2.5 bg-red-500/10 rounded-lg text-red-400">
+                <div className="p-2.5 bg-white/5 rounded-lg text-slate-400">
                   <Shield className="w-5 h-5" />
                 </div>
               </div>
 
-              <div className="bg-[#121A2F]/60 border border-white/5 p-4 rounded-xl flex items-center justify-between shadow-sm">
+              <div className="bg-[#121A2F]/30 border border-white/5 p-4 rounded-xl flex items-center justify-between shadow-sm">
                 <div>
-                  <span className="text-[10px] font-mono font-bold text-emerald-400 block uppercase">RÉPUTATIONS NETTES</span>
-                  <strong className="text-xl font-mono text-emerald-400 block mt-1">
+                  <span className="text-[10px] font-mono font-bold text-slate-400 block uppercase">RÉPUTATIONS NETTES</span>
+                  <strong className="text-xl font-mono text-white block mt-1">
                     {complaints.filter(c => c.status === "dismissed").length}
                   </strong>
                 </div>
-                <div className="p-2.5 bg-emerald-500/10 rounded-lg text-emerald-400">
+                <div className="p-2.5 bg-white/5 rounded-lg text-slate-400">
                   <Check className="w-5 h-5" />
                 </div>
               </div>
@@ -945,19 +945,19 @@ Cyber Expert Certifié - SOC ANCY - République Togolaise.
                         const isHighFrequency = duplicateCount >= 2;
 
                         return (
-                          <tr key={c.id} className="hover:bg-slate-800/25 transition group text-slate-300">
+                          <tr key={c.id} className="hover:bg-white/[0.01] transition group text-slate-300">
                             <td className="py-3.5 px-4 font-mono text-white text-[11px] min-w-[150px]">
                               <div>
                                 <span className="font-bold block leading-tight">{c.agentName || "Citoyen"}</span>
                                 <span className="text-[9px] text-slate-500 block font-mono">{c.agentId.substring(0, 15)}</span>
                               </div>
                             </td>
-                            <td className="py-3.5 px-4 font-mono font-bold text-red-500 text-[11px] select-all">
+                            <td className="py-3.5 px-4 font-mono font-bold text-slate-200 text-[11px] select-all">
                               {c.phoneNumber}
                             </td>
                             <td className="py-3.5 px-4 max-w-xs">
                               <div>
-                                <span className="text-[10px] font-mono font-bold text-amber-500 block leading-tight uppercase">
+                                <span className="text-[10px] font-mono font-extrabold text-slate-300 block leading-tight uppercase">
                                   {c.category}
                                 </span>
                                 {c.description && (
@@ -969,27 +969,27 @@ Cyber Expert Certifié - SOC ANCY - République Togolaise.
                             </td>
                             <td className="py-3.5 px-4">
                               {c.status === "confirmed_scam" ? (
-                                <span className="px-2 py-0.5 bg-red-500/10 text-red-400 border border-red-500/25 text-[8.5px] font-mono font-bold uppercase tracking-wide rounded">
-                                  🔴 Bloqué (Escroc)
+                                <span className="px-2 py-0.5 bg-red-950/20 text-red-400 border border-red-500/20 text-[8.5px] font-mono font-bold uppercase tracking-wide rounded">
+                                  Bloqué (Escroc)
                                 </span>
                               ) : c.status === "dismissed" ? (
-                                <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 text-[8.5px] font-mono font-bold uppercase tracking-wide rounded">
-                                  🟢 Faux Positif (Sûr)
+                                <span className="px-2 py-0.5 bg-emerald-950/20 text-emerald-400 border border-emerald-500/20 text-[8.5px] font-mono font-bold uppercase tracking-wide rounded">
+                                  Faux Positif (Sûr)
                                 </span>
                               ) : (
-                                <span className="px-2 py-0.5 bg-[#EF4444]/10 text-amber-400 border border-amber-500/15 text-[8.5px] font-mono font-bold uppercase tracking-wide rounded animate-pulse">
-                                  🟡 À investiguer
+                                <span className="px-2 py-0.5 bg-slate-900/50 text-slate-400 border border-white/5 text-[8.5px] font-mono font-bold uppercase tracking-wide rounded">
+                                  À investiguer
                                 </span>
                               )}
                             </td>
                             <td className="py-3.5 px-4 font-mono text-[10.5px]">
                               <div className="flex items-center gap-1.5">
-                                <span className={`w-2 h-2 rounded-full ${isHighFrequency ? "bg-red-500 animate-pulse" : "bg-slate-700"}`}></span>
+                                <span className={`w-2 h-2 rounded-full ${isHighFrequency ? "bg-amber-500" : "bg-slate-700"}`}></span>
                                 <strong className="text-white">{duplicateCount}</strong>
                                 <span className="text-slate-500 text-[8.5px]">Plainte(s)</span>
                               </div>
                               {differentAgents >= 2 && (
-                                <span className="text-[8px] bg-red-550/15 text-red-400 px-1 py-0.5 rounded uppercase font-bold mt-1 block">
+                                <span className="text-[8px] bg-red-950/35 text-red-400 px-1 py-0.5 border border-red-500/10 rounded uppercase font-bold mt-1 block">
                                   Multi-agents ({differentAgents})
                                 </span>
                               )}
@@ -1002,9 +1002,9 @@ Cyber Expert Certifié - SOC ANCY - République Togolaise.
                                       type="button"
                                       onClick={() => handleConfirmComplaint(c.id)}
                                       title="Valider et bloquer à l'échelle nationale"
-                                      className="px-2 py-1 bg-red-650 hover:bg-red-600 text-white rounded text-[9px] font-mono font-bold uppercase tracking-wide flex items-center gap-1 cursor-pointer transition shadow"
+                                      className="px-2 py-1 bg-red-950/20 hover:bg-red-900/30 border border-red-500/30 text-red-400 rounded text-[9px] font-mono font-bold uppercase tracking-wide flex items-center gap-1 cursor-pointer transition shadow"
                                     >
-                                      <ShieldAlert className="w-3.5 h-3.5 text-white" /> Bloquer
+                                      <ShieldAlert className="w-3.5 h-3.5 text-red-400" /> Bloquer
                                     </button>
                                     <button
                                       type="button"
@@ -1022,9 +1022,9 @@ Cyber Expert Certifié - SOC ANCY - République Togolaise.
                                     type="button"
                                     onClick={() => handleTriggerMassSensitization(c.phoneNumber)}
                                     title="Déclencher de toute urgence une campagne de sensibilisation massive (SMS/Moov/Togo)"
-                                    className="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-black font-mono font-bold uppercase text-[9px] rounded flex items-center gap-1 cursor-pointer shadow-lg animate-bounce"
+                                    className="px-2 py-1 bg-amber-950/20 hover:bg-amber-900/30 border border-amber-500/30 text-amber-400 rounded text-[9px] font-mono font-bold uppercase tracking-wide flex items-center gap-1 cursor-pointer transition shadow"
                                   >
-                                    <Radio className="w-3.5 h-3.5 text-black shrink-0 animate-pulse" /> Sensibiliser
+                                    <Radio className="w-3.5 h-3.5 text-amber-400 shrink-0" /> Sensibiliser
                                   </button>
                                 )}
 
@@ -1032,7 +1032,7 @@ Cyber Expert Certifié - SOC ANCY - République Togolaise.
                                   type="button"
                                   onClick={() => handleDeleteComplaint(c.id)}
                                   title="Supprimer la fiche"
-                                  className="p-1 px-1.5 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded transition cursor-pointer"
+                                  className="p-1 px-1.5 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded transition cursor-pointer text-xs leading-none"
                                 >
                                   ×
                                 </button>

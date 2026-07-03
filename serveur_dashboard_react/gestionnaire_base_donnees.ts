@@ -474,11 +474,9 @@ class DBManager {
         password: hashPassword(a.password)
       }));
     }
-    if (!this.db.threats || this.db.threats.length === 0) {
-      this.loadMocks();
-    } else {
-      this.save();
-    }
+    // Start completely at 0 for real-world production.
+    // Mocks can still be reloaded on-demand via the admin panel / API.
+    this.save();
   }
 
   private initDatabaseFile() {
@@ -1006,6 +1004,17 @@ class DBManager {
       return true;
     }
     return false;
+  }
+
+  public updateScam(id: string, updatedFields: Partial<Omit<ScamPhoneNumber, "id" | "addedAt">>): ScamPhoneNumber | null {
+    if (!this.db.scams) return null;
+    const item = this.db.scams.find(s => s.id === id);
+    if (item) {
+      Object.assign(item, updatedFields);
+      this.save();
+      return item;
+    }
+    return null;
   }
 }
 

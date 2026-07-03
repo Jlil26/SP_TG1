@@ -26,16 +26,18 @@ import {
   Shield,
   Building,
   CheckCircle,
-  HelpCircle
+  HelpCircle,
+  PhoneCall
 } from "lucide-react";
-import { Threat } from "../types";
+import { Threat, ScamPhoneNumber } from "../types";
 
 interface Props {
   threats: Threat[];
+  scams: ScamPhoneNumber[];
   onRefreshData: () => Promise<void>;
 }
 
-export default function SignaturesTab({ threats, onRefreshData }: Props) {
+export default function SignaturesTab({ threats, scams, onRefreshData }: Props) {
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [severityFilter, setSeverityFilter] = useState("all");
@@ -73,6 +75,19 @@ export default function SignaturesTab({ threats, onRefreshData }: Props) {
   const [newSeverity, setNewSeverity] = useState<"Low" | "Medium" | "Critical">("Medium");
   const [newLocation, setNewLocation] = useState("Lomé");
   const [newDetails, setNewDetails] = useState("");
+
+  // Scams management sub-tab states
+  const [subTab, setSubTab] = useState<"threats" | "scams">("threats");
+  const [scamSearchTerm, setScamSearchTerm] = useState("");
+  const [editingScam, setEditingScam] = useState<ScamPhoneNumber | null>(null);
+  const [showAddScamForm, setShowAddScamForm] = useState(false);
+  const [newScamPhone, setNewScamPhone] = useState("");
+  const [newScamReason, setNewScamReason] = useState("");
+  const [newScamReportedCount, setNewScamReportedCount] = useState(1);
+  const [editScamPhone, setEditScamPhone] = useState("");
+  const [editScamReason, setEditScamReason] = useState("");
+  const [editScamReportedCount, setEditScamReportedCount] = useState(1);
+  const [editScamStatus, setEditScamStatus] = useState<"active" | "archived">("active");
 
   // Togolese samples for rapid testing
   const suspectSamples = [
@@ -270,6 +285,15 @@ export default function SignaturesTab({ threats, onRefreshData }: Props) {
     });
   }, [threats, searchTerm, typeFilter, severityFilter]);
 
+  const filteredScams = useMemo(() => {
+    return scams.filter(s => {
+      const matchSearch = scamSearchTerm.trim() === "" || 
+        s.phoneNumber.toLowerCase().includes(scamSearchTerm.toLowerCase()) ||
+        s.reason.toLowerCase().includes(scamSearchTerm.toLowerCase());
+      return matchSearch;
+    });
+  }, [scams, scamSearchTerm]);
+
   const handleStartEdit = (threat: Threat) => {
     setEditingThreat(threat);
     setEditValue(threat.value);
@@ -383,6 +407,103 @@ export default function SignaturesTab({ threats, onRefreshData }: Props) {
     }
   };
 
+  // --- HANDLERS FOR SCAMS MANAGEMENT (DANGEROUS NUMBERS) ---
+  const handleAddScamSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanPhone = newScamPhone.trim();
+    if (!cleanPhone) {
+      showFeedback("error", "Veuillez saisir un numéro de téléphone.");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/scams", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phoneNumber: cleanPhone,
+          reason: newScamReason.trim() || "Numéro dangereux signalé manuellement",
+          reportedCount: newScamReportedCount
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setNewScamPhone("");
+        setNewScamReason("");
+        setNewScamReportedCount(1);
+        setShowAddScamForm(false);
+        showFeedback("success", `Numéro dangereux "${cleanPhone}" ajouté et synchronisé avec succès.`);
+        await onRefreshData();
+      } else {
+        showFeedback("error", "Erreur lors de l'ajout : " + data.error);
+      }
+    } catch (err) {
+      console.error(err);
+      showFeedback("error", "Erreur de communication avec le serveur.");
+    }
+  };
+
+  const handleStartEditScam = (scam: ScamPhoneNumber) => {
+    setEditingScam(scam);
+    setEditScamPhone(scam.phoneNumber);
+    setEditScamReason(scam.reason);
+    setEditScamReportedCount(scam.reportedCount);
+    setEditScamStatus(scam.status);
+  };
+
+  const handleUpdateScamSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingScam) return;
+
+    try {
+      const response = await fetch(`/api/scams/${editingScam.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phoneNumber: editScamPhone.trim(),
+          reason: editScamReason.trim(),
+          reportedCount: editScamReportedCount,
+          status: editScamStatus
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setEditingScam(null);
+        showFeedback("success", "Numéro dangereux mis à jour avec succès.");
+        await onRefreshData();
+      } else {
+        showFeedback("error", "Erreur lors de la mise à jour : " + data.error);
+      }
+    } catch (err) {
+      console.error(err);
+      showFeedback("error", "Erreur réseau lors de la mise à jour.");
+    }
+  };
+
+  const handleDeleteScam = async (id: string, phone: string) => {
+    if (!window.confirm(`Voulez-vous définitivement supprimer le numéro "${phone}" de la base de blocage ?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/scams/${id}`, {
+        method: "DELETE"
+      });
+      const data = await response.json();
+      if (data.success) {
+        showFeedback("success", `Le numéro "${phone}" a été supprimé définitivement.`);
+        await onRefreshData();
+      } else {
+        showFeedback("error", "Erreur lors de la suppression : " + data.error);
+      }
+    } catch (err) {
+      console.error(err);
+      showFeedback("error", "Erreur de connexion lors de la suppression.");
+    }
+  };
+
   // --- COMPORTEMENT RECH/FILTRE ET CRUD SIGNATURES ---
 
   return (
@@ -469,7 +590,289 @@ export default function SignaturesTab({ threats, onRefreshData }: Props) {
         </div>
       )}
 
-      {/* Upper header */}
+      {/* Selection of Sub-Tab */}
+      <div className="flex bg-[#111827] border border-white/5 rounded-xl p-1.5 shadow-md">
+        <button
+          onClick={() => setSubTab("threats")}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-mono text-xs font-bold transition-all ${
+            subTab === "threats"
+              ? "bg-[#10B981] text-white shadow-md"
+              : "text-[#94A3B8] hover:text-[#E5E7EB] hover:bg-white/5"
+          }`}
+        >
+          <Database className="w-4 h-4" />
+          BASE DES SIGNATURES IOC (WEB / DOMAINES / SMS)
+        </button>
+        <button
+          onClick={() => setSubTab("scams")}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-mono text-xs font-bold transition-all ${
+            subTab === "scams"
+              ? "bg-red-600 text-white shadow-md"
+              : "text-[#94A3B8] hover:text-[#E5E7EB] hover:bg-white/5"
+          }`}
+        >
+          <PhoneCall className="w-4 h-4" />
+          BASE DES NUMÉROS DANGEREUX
+          <span className="bg-red-950/40 text-red-400 px-1.5 py-0.5 rounded text-[10px] border border-red-500/20 font-sans">
+            {scams.length}
+          </span>
+        </button>
+      </div>
+
+      {subTab === "scams" ? (
+        <>
+          {/* Upper header for Scams */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#111827] border border-white/5 rounded-xl p-6 shadow-md">
+            <div>
+              <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2">
+                <PhoneCall className="w-4.5 h-4.5 text-red-500" />
+                Registre National des Numéros Dangereux et Escrocs
+              </h3>
+              <p className="text-[11px] text-[#94A3B8] mt-1 font-sans">
+                Consultez, modifiez, supprimez et enregistrez manuellement les numéros de téléphone impliqués dans des escroqueries ou usurpations au Togo.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2.5">
+              <button
+                onClick={() => setShowAddScamForm(!showAddScamForm)}
+                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-mono text-xs font-bold rounded-xl uppercase tracking-wider transition flex items-center gap-2 cursor-pointer shadow-sm"
+              >
+                {showAddScamForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                {showAddScamForm ? "Fermer" : "Ajouter un Numéro"}
+              </button>
+            </div>
+          </div>
+
+          {/* Add Scam Form */}
+          {showAddScamForm && (
+            <div className="bg-[#111827] border border-white/5 p-6 rounded-xl space-y-4 animate-fade-in shadow-md">
+              <div className="border-b border-white/5 pb-2">
+                <span className="text-xs font-bold text-white font-mono tracking-wider uppercase block">
+                  Enrôlement Manuel d&apos;un Numéro Escroc / Dangereux
+                </span>
+              </div>
+              <form onSubmit={handleAddScamSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4 font-mono text-xs">
+                <div className="space-y-1">
+                  <label className="text-slate-400 font-bold block uppercase text-[10px]">Numéro de téléphone :</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="+228 90 00 00 00"
+                    value={newScamPhone}
+                    onChange={(e) => setNewScamPhone(e.target.value)}
+                    className="w-full bg-[#0B1020] border border-white/5 focus:border-red-500 p-2.5 rounded-lg text-white outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-slate-400 font-bold block uppercase text-[10px]">Nombre de signalements :</label>
+                  <input
+                    type="number"
+                    min="1"
+                    required
+                    value={newScamReportedCount}
+                    onChange={(e) => setNewScamReportedCount(parseInt(e.target.value) || 1)}
+                    className="w-full bg-[#0B1020] border border-white/5 focus:border-red-500 p-2.5 rounded-lg text-white outline-none"
+                  />
+                </div>
+                <div className="md:col-span-2 space-y-1">
+                  <label className="text-slate-400 font-bold block uppercase text-[10px]">Motif du blocage / Preuves :</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Tentative de faux dépôt Flooz / Tmoney usurpant..."
+                    value={newScamReason}
+                    onChange={(e) => setNewScamReason(e.target.value)}
+                    className="w-full bg-[#0B1020] border border-white/5 focus:border-red-500 p-2.5 rounded-lg text-white outline-none"
+                  />
+                </div>
+                <div className="md:col-span-4 flex justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddScamForm(false)}
+                    className="px-4 py-2 border border-white/5 text-[#94A3B8] hover:text-white rounded-lg transition cursor-pointer"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg transition cursor-pointer"
+                  >
+                    Confirmer l&apos;ajout national
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Edit Scam Form */}
+          {editingScam && (
+            <div className="bg-amber-950/10 border border-amber-500/25 p-6 rounded-xl space-y-4 animate-fade-in">
+              <div className="flex justify-between items-center pb-2 border-b border-amber-500/15">
+                <span className="text-xs font-bold text-amber-500 font-mono tracking-wider uppercase block flex items-center gap-1.5">
+                  <AlertCircle className="w-4 h-4 text-amber-500" />
+                  Modification du Numéro Dangereux : &quot;{editingScam.phoneNumber}&quot;
+                </span>
+                <button onClick={() => setEditingScam(null)} className="text-[#94A3B8] hover:text-white cursor-pointer">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handleUpdateScamSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4 font-mono text-xs">
+                <div className="space-y-1">
+                  <label className="text-slate-400 font-bold block uppercase text-[10px]">Numéro de téléphone :</label>
+                  <input
+                    type="text"
+                    required
+                    value={editScamPhone}
+                    onChange={(e) => setEditScamPhone(e.target.value)}
+                    className="w-full bg-[#0B1020] border border-white/5 p-2.5 rounded-lg text-white outline-none focus:border-amber-500"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-slate-400 font-bold block uppercase text-[10px]">Nombre de rapports :</label>
+                  <input
+                    type="number"
+                    min="1"
+                    required
+                    value={editScamReportedCount}
+                    onChange={(e) => setEditScamReportedCount(parseInt(e.target.value) || 1)}
+                    className="w-full bg-[#0B1020] border border-white/5 p-2.5 rounded-lg text-white outline-none focus:border-amber-500"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-slate-400 font-bold block uppercase text-[10px]">Statut :</label>
+                  <select
+                    value={editScamStatus}
+                    onChange={(e) => setEditScamStatus(e.target.value as any)}
+                    className="w-full bg-[#0B1020] border border-white/5 p-2.5 rounded-lg text-slate-300 outline-none cursor-pointer"
+                  >
+                    <option value="active">Active (Bloqué)</option>
+                    <option value="archived">Archivé (Surveillance)</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-slate-400 font-bold block uppercase text-[10px]">Motif / Preuves détaillées :</label>
+                  <input
+                    type="text"
+                    required
+                    value={editScamReason}
+                    onChange={(e) => setEditScamReason(e.target.value)}
+                    className="w-full bg-[#0B1020] border border-white/5 p-2.5 rounded-lg text-white outline-none focus:border-amber-500"
+                  />
+                </div>
+                <div className="md:col-span-4 flex justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditingScam(null)}
+                    className="px-4 py-2 border border-white/5 text-[#94A3B8] hover:text-white rounded-lg transition cursor-pointer"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg transition cursor-pointer"
+                  >
+                    Enregistrer les modifications
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Scams Search Panel and Grid Table representation */}
+          <div className="bg-[#121A2F] border border-white/5 rounded-xl p-6 space-y-4 shadow-md">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-4">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <input
+                  type="text"
+                  placeholder="Rechercher un numéro d'escroc ou un motif..."
+                  value={scamSearchTerm}
+                  onChange={(e) => setScamSearchTerm(e.target.value)}
+                  className="w-full bg-[#0B1020] border border-white/5 focus:border-red-500 pl-10 pr-4 py-2 rounded-xl text-xs font-mono text-slate-200 outline-none transition"
+                />
+              </div>
+            </div>
+
+            <div className="overflow-x-auto border border-white/5 rounded-lg">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-[#0B1020]/80 border-b border-white/5 text-[10px] font-mono text-slate-500 uppercase">
+                    <th className="py-3 px-4 font-bold">Numéro Suspect</th>
+                    <th className="py-3 px-4 font-bold">Motif du Signalement</th>
+                    <th className="py-3 px-4 font-bold">Nombre de signalements</th>
+                    <th className="py-3 px-4 font-bold">Enregistré le</th>
+                    <th className="py-3 px-4 font-bold">Statut de blocage</th>
+                    <th className="py-3 px-4 font-bold">Actions d&apos;Équipe</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5 font-mono text-xs text-slate-300">
+                  {filteredScams.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-slate-500 text-xs">
+                        Aucun numéro dangereux ne correspond à votre recherche.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredScams.map((scam) => (
+                      <tr key={scam.id} className="hover:bg-white/[0.02] transition">
+                        <td className="py-3.5 px-4 font-bold text-white break-all">{scam.phoneNumber}</td>
+                        <td className="py-3.5 px-4 text-slate-400 text-[11px] max-w-sm truncate" title={scam.reason}>
+                          {scam.reason}
+                        </td>
+                        <td className="py-3.5 px-4 text-slate-400">
+                          <span className="px-2 py-0.5 rounded text-[10px] bg-[#0B1020] text-slate-300 border border-white/5 font-medium">
+                            {scam.reportedCount} rapports
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4 text-slate-400">
+                          {new Date(scam.addedAt).toLocaleDateString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                            scam.status === "active" ? "bg-red-500/15 text-red-400 border-red-500/25" : "bg-slate-500/15 text-slate-400 border-slate-500/25"
+                          }`}>
+                            {scam.status === "active" ? "BLOQUÉ" : "SURVEILLANCE"}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleStartEditScam(scam)}
+                              className="p-1 px-2.5 rounded bg-amber-500/10 hover:bg-amber-500 text-amber-400 hover:text-slate-950 transition flex items-center gap-1 font-bold text-[10px] uppercase font-mono cursor-pointer"
+                              title="Modifier ce numéro"
+                            >
+                              <Edit2 className="w-3" />
+                              Éditer
+                            </button>
+                            <button
+                              onClick={() => handleDeleteScam(scam.id, scam.phoneNumber)}
+                              className="p-1 px-2.5 rounded bg-[#EF4444]/10 hover:bg-[#EF4444] text-[#EF4444] hover:text-white transition flex items-center gap-1 font-bold text-[10px] uppercase font-mono cursor-pointer"
+                              title="Supprimer ce numéro"
+                            >
+                              <Trash2 className="w-3" />
+                              Supprimer
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Footing info count */}
+            <div className="flex items-center justify-between text-[10px] text-slate-550 pt-2 font-mono uppercase">
+              <span>Affichage de {filteredScams.length} sur {scams.length} numéros dangereux</span>
+              <span>Registre de blocage national togolais</span>
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Upper header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#111827] border border-white/5 rounded-xl p-6 shadow-md">
         <div>
           <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2">
@@ -1009,6 +1412,8 @@ export default function SignaturesTab({ threats, onRefreshData }: Props) {
           <span>Secteurs du Togo protégés par synchronisation cellulaire</span>
         </div>
       </div>
+        </>
+      )}
 
     </div>
   );

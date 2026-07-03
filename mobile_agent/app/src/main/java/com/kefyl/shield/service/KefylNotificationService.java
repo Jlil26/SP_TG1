@@ -118,13 +118,15 @@ public class KefylNotificationService extends NotificationListenerService {
         executorService.execute(() -> {
             Log.d(TAG, "Interception de notification de " + title + " : " + text);
             
-            // Règle automatique Togo : si le nom d'expéditeur est principalement alphabétique (comme "ORABANK", "CEET", "SURPRISE")
-            // et ne ressemble pas à un numéro de téléphone, on le considère automatiquement comme un service officiel de confiance.
-            String letterCheck = title.replaceAll("[^a-zA-Z]", "");
-            String digitCheck = title.replaceAll("[^0-9]", "");
-            if (letterCheck.length() >= 2 && digitCheck.length() < 5) {
-                Log.i(TAG, "🛡️ Règle automatique Togo : '" + title + "' est un émetteur à identifiant alphabétique (SenderID officiel). Analyse de sécurité bypassée automatiquement.");
-                return;
+            // Détection si l'expéditeur est un SenderID officiel SMS (ex: "ORABANK", "CEET", "SURPRISE")
+            boolean isSmsSenderIdOfficial = false;
+            if (packageName.contains("sms") || packageName.contains("mms") || packageName.contains("messaging") || packageName.contains("messenger")) {
+                String letterCheck = title.replaceAll("[^a-zA-Z]", "");
+                String digitCheck = title.replaceAll("[^0-9]", "");
+                if (letterCheck.length() >= 2 && digitCheck.length() < 5) {
+                    isSmsSenderIdOfficial = true;
+                    Log.i(TAG, "🛡️ Règle automatique Togo : '" + title + "' détecté comme un SenderID officiel SMS.");
+                }
             }
             
             // Détection si c'est un message de groupe (WhatsApp / SMS groupé)
@@ -140,7 +142,7 @@ public class KefylNotificationService extends NotificationListenerService {
             }
 
             // 1. Étape d'identification du contact (Annuaire vs Inconnu)
-            boolean isKnown = isContactInPhonebook(this, title);
+            boolean isKnown = isContactInPhonebook(this, title) || isSmsSenderIdOfficial;
             
             // Récupérer et normaliser l'identifiant de contact
             String contactPhone = getCleanedPhoneNumber(title);

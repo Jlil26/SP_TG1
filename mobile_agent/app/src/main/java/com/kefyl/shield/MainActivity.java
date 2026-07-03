@@ -21,6 +21,7 @@ import androidx.work.OneTimeWorkRequest;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
+import android.util.Log;
 
 import com.kefyl.shield.api.RetrofitClient;
 import com.kefyl.shield.data.AppDatabase;
@@ -36,6 +37,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvStatusHeader;
     private TextView tvBlockedCount;
     private TextView tvSignaturesCount;
+    private TextView tvDangerousContactsCount;
+    private TextView tvLocationStatus;
     private TextView tvLastUpdate;
     private TextView tvPermissionWarning;
     private View tvPermissionWarningLayout;
@@ -87,6 +90,17 @@ public class MainActivity extends AppCompatActivity {
         // Si l'application vient d'être installée ou n'a pas encore fait sa première synchronisation manuelle
         // réussie avec succès, on s'assure d'initialiser d'office les signatures locales et les compteurs à zéro.
         SharedPreferences initPrefs = getSharedPreferences("kefyl_prefs", MODE_PRIVATE);
+        
+        // Force server IP to https://sp-sentinel-hq.onrender.com for production alignment
+        boolean isForcedUrlSet = initPrefs.getBoolean("is_forced_url_v25_set_v3", false);
+        if (!isForcedUrlSet || !initPrefs.getString("server_ip_address", "").equals("https://sp-sentinel-hq.onrender.com")) {
+            initPrefs.edit()
+                .putString("server_ip_address", "https://sp-sentinel-hq.onrender.com")
+                .putBoolean("is_forced_url_v25_set_v3", true)
+                .apply();
+            Log.i("MainActivity", "Force-set central SOC gateway server IP to: https://sp-sentinel-hq.onrender.com");
+        }
+
         boolean isFirstSyncDone = initPrefs.getBoolean("is_first_sync_done", false);
         if (!isFirstSyncDone) {
             initPrefs.edit()
@@ -105,6 +119,8 @@ public class MainActivity extends AppCompatActivity {
         tvStatusHeader = findViewById(R.id.tvStatusHeader);
         tvBlockedCount = findViewById(R.id.tvBlockedCount);
         tvSignaturesCount = findViewById(R.id.tvSignaturesCount);
+        tvDangerousContactsCount = findViewById(R.id.tvDangerousContactsCount);
+        tvLocationStatus = findViewById(R.id.tvLocationStatus);
         tvLastUpdate = findViewById(R.id.tvLastUpdate);
         tvPermissionWarning = findViewById(R.id.tvPermissionWarning);
         tvPermissionWarningLayout = findViewById(R.id.tvPermissionWarningLayout);
@@ -164,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
         if (btnTabParametres != null) btnTabParametres.setOnClickListener(v -> selectTab("parametres"));
 
         // Actionneur pour les paramètres d'URL en entête (clic sur engrenage redirige vers l'onglet paramètres)
-        android.widget.ImageButton btnOpenSettings = findViewById(R.id.btnOpenSettings);
+        android.view.View btnOpenSettings = findViewById(R.id.btnOpenSettings);
         if (btnOpenSettings != null) {
             btnOpenSettings.setOnClickListener(v -> selectTab("parametres"));
         }
@@ -605,13 +621,27 @@ public class MainActivity extends AppCompatActivity {
         // 3. Compter le nombre d'indicateurs d'attaques actifs en SQLite (Room)
         Executors.newSingleThreadExecutor().execute(() -> {
             int count = isFirstSyncDone ? db.signatureDao().getCount() : 0;
+            int contactsCount = isFirstSyncDone ? db.contactStateDao().getCount() : 0;
             runOnUiThread(() -> {
                 tvSignaturesCount.setText(String.valueOf(count));
+                if (tvDangerousContactsCount != null) {
+                    tvDangerousContactsCount.setText(String.valueOf(contactsCount));
+                }
+                
+                String city = prefs.getString("agent_registered_city", "Lomé, Togo");
+                if (tvLocationStatus != null) {
+                    if ("Non défini".equalsIgnoreCase(city) || city.isEmpty()) {
+                        tvLocationStatus.setText("Liaison cryptée active • Lomé, Togo");
+                    } else {
+                        tvLocationStatus.setText("Liaison cryptée active • " + city);
+                    }
+                }
+                
                 if (!isFirstSyncDone) {
-                    btnSyncNow.setText("🔄 SYNCHRONISATION REQUISE\n(Appuyez pour synchroniser)");
+                    btnSyncNow.setText("((●)) VÉRIFIER LA PROTECTION ACTIVE");
                     btnSyncNow.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF59E0B)); // Amber
                 } else {
-                    btnSyncNow.setText("🟢 SURVEILLANCE ACTIVE ET PROTÉGÉE\n(Appuyez pour mettre à jour la base)");
+                    btnSyncNow.setText("((●)) VÉRIFIER LA PROTECTION ACTIVE");
                     btnSyncNow.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFF00C896)); // Green emerald
                 }
             });
@@ -635,7 +665,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (isListenerGranted && isPostNotificationGranted) {
             if (!canDrawOverlays) {
-                tvStatusHeader.setText("🟡 SP SENTINEL ACTIF (Écrans Restreints)");
+                tvStatusHeader.setText("● RESTREINT");
                 tvStatusHeader.setTextColor(android.graphics.Color.parseColor("#D4AF37"));
                 if (tvPermissionWarningLayout != null) {
                     tvPermissionWarningLayout.setVisibility(View.VISIBLE);
@@ -650,7 +680,7 @@ public class MainActivity extends AppCompatActivity {
                         .append("👉 Touchez ici pour ouvrir l'assistant d'activation (ÉTAPE 3).");
                 tvPermissionWarning.setText(warningText.toString());
             } else {
-                tvStatusHeader.setText("🟢 SP SENTINEL ACTIF");
+                tvStatusHeader.setText("● ACTIF");
                 tvStatusHeader.setTextColor(android.graphics.Color.parseColor("#00C896"));
                 if (tvPermissionWarningLayout != null) {
                     tvPermissionWarningLayout.setVisibility(View.GONE);
@@ -659,7 +689,7 @@ public class MainActivity extends AppCompatActivity {
                 btnEnablePermission.setVisibility(View.GONE);
             }
         } else {
-            tvStatusHeader.setText("🔴 EN ATTENTE DE PERMISSIONS");
+            tvStatusHeader.setText("● ALERTE");
             tvStatusHeader.setTextColor(android.graphics.Color.parseColor("#EF4444"));
             if (tvPermissionWarningLayout != null) {
                 tvPermissionWarningLayout.setVisibility(View.VISIBLE);

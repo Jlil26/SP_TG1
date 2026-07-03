@@ -894,7 +894,8 @@ export default function App() {
               {activeTab === "signatures" && (
                 <SignaturesTab 
                   threats={threats} 
-                  onRefreshData={() => fetchAllData(true)}
+                  scams={scams}
+                  onRefreshData={async () => { await fetchAllData(true); }}
                 />
               )}
             </motion.div>

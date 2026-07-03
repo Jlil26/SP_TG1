@@ -263,4 +263,21 @@ Le lendemain matin, ce même citoyen reçoit un SMS WhatsApp : *"Remboursement i
 
 ---
 
+## 🔒 NOUVEAUTÉS DE LA VERSION DE PRODUCTION RÉELLE (HACKATHON V2.5)
+
+### 📞 1. Registre National des Numéros Dangereux (Base des Escrocs)
+Afin de neutraliser les arnaques vocales et de démarchages frauduleux sur le territoire togolais, la plateforme intègre désormais une section **Base des Numéros Dangereux** au sein de l'onglet **Signatures**. 
+*   **Administration Complète (CRUD)** : Permet aux agents de l'État d'ajouter manuellement un numéro suspect, de modifier ses preuves ou son motif de signalement, d'ajuster le nombre de rapports citoyens et de le supprimer de la liste de blocage.
+*   **Moteur de Synchronisation** : Les numéros répertoriés sont diffusés en direct sur tous les téléphones citoyens équipés de KefyShield pour activer l'interception et la mise en quarantaine immédiate lors de tentatives d'appel ou d'envoi de messages de ces expéditeurs.
+
+### 🎨 2. Raffinement Visuel Anti-Bruit (Style Militaire & Épuré)
+L'interface de l'onglet **Investigation** a été entièrement retravaillée pour adopter la charte graphique rigoureuse d'un vrai centre opérationnel de cybersécurité (SOC) :
+*   **Élimination des Distractions** : Suppression des animations trop agressives (clignotements `animate-pulse` ou sauts de boutons `animate-bounce` pour la sensibilisation).
+*   **Harmonisation Chromatique** : Remplacement des couleurs criardes d'alertes par des tons de gris métallisés, d'acier trempé, et de sombres accents de bronze et de rouge bordeaux. Cela permet aux analystes de rester concentrés et réactifs sans surcharge cognitive lors des crises de smishing nationales.
+
+### 🔄 3. Initialisation "Zéro-Bruit" pour Production Réelle
+Pour permettre à l'autorité publique d'observer en direct l'échange de flux cellulaires réels sans pollution de démonstrations, la base de données SOC démarre désormais à un état initial de **0 donnée (Zéro-Trust)**. Un bouton de secours **"Recharger les Démos"** reste disponible d'un clic pour présenter des scénarios simulés au jury.
+
+---
+
 *Ce document d'architecture est certifié conforme par la direction de l'ingénierie et de la sécurité des systèmes d'information de la plateforme SP Sentinel Togo.*

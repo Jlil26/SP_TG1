@@ -422,6 +422,21 @@ async function startServer() {
     }
   });
 
+  app.put("/api/scams/:id", (req, res) => {
+    try {
+      const { id } = req.params;
+      const { phoneNumber, reason, reportedCount, status } = req.body;
+      const updated = dbManager.updateScam(id, { phoneNumber, reason, reportedCount, status });
+      if (updated) {
+        res.json({ success: true, message: "Numéro d'escroc modifié avec succès.", data: updated });
+      } else {
+        res.status(404).json({ success: false, error: "Numéro d'escroc introuvable." });
+      }
+    } catch (e: any) {
+      res.status(500).json({ success: false, error: e.message });
+    }
+  });
+
   // --- API ROUTING INTERFACES ---
 
   // 1. Threat and Database APIs
